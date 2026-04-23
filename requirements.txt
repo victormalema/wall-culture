@@ -18,7 +18,7 @@ flask-sqlalchemy==3.0.5
 fsspec==2025.10.0
 greenlet==3.2.5
 gunicorn==23.0.0
-gyp==0.1
+
 h11==0.16.0
 h2==4.3.0
 hpack==4.1.0
