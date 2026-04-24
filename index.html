@@ -29,7 +29,6 @@
             margin: 0 auto;
         }
 
-        /* Brand Header */
         .brand {
             text-align: center;
             margin-bottom: 32px;
@@ -49,7 +48,6 @@
             margin-top: 6px;
         }
 
-        /* Card */
         .auth-card {
             background: rgba(255, 245, 235, 0.95);
             backdrop-filter: blur(12px);
@@ -58,7 +56,6 @@
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 140, 80, 0.2);
         }
 
-        /* Tabs */
         .auth-tabs {
             display: flex;
             gap: 12px;
@@ -85,7 +82,6 @@
             box-shadow: 0 4px 12px #FF6B4A40;
         }
 
-        /* Forms */
         .auth-form {
             display: none;
         }
@@ -140,7 +136,6 @@
             color: #D4A574;
         }
 
-        /* Referral Code (signup only) */
         .referral-row {
             background: #FFF0E5;
             border-radius: 60px;
@@ -152,9 +147,7 @@
             font-size: 0.75rem;
             color: #B45A2E;
         }
-        .referral-row i {
-            font-size: 1rem;
-        }
+        .referral-row i { font-size: 1rem; }
         .referral-row input {
             flex: 1;
             background: transparent;
@@ -164,11 +157,8 @@
             font-weight: 500;
             color: #4A2A1A;
         }
-        .referral-row input::placeholder {
-            color: #D4A574;
-        }
+        .referral-row input::placeholder { color: #D4A574; }
 
-        /* Buttons */
         .btn-primary {
             width: 100%;
             background: linear-gradient(95deg, #FF6B4A, #FF8E53);
@@ -186,9 +176,7 @@
             transform: scale(1.02);
             box-shadow: 0 8px 20px #FF6B4A60;
         }
-        .btn-primary:active {
-            transform: scale(0.98);
-        }
+        .btn-primary:active { transform: scale(0.98); }
 
         .forgot-link {
             text-align: center;
@@ -204,33 +192,34 @@
             text-decoration: underline;
         }
 
-        /* Messages */
+        /* FIX: Message now uses visibility + opacity instead of display:none
+           so inline style overrides can't permanently hide it */
         .message {
             margin-top: 16px;
             padding: 10px;
             border-radius: 60px;
             font-size: 0.75rem;
             text-align: center;
-            display: none;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s;
+        }
+        .message.visible {
+            opacity: 1;
+            visibility: visible;
         }
         .message.error {
             background: #FFE0D6;
             color: #E85D2E;
-            display: block;
         }
         .message.success {
             background: #D4EFDF;
             color: #27AE60;
-            display: block;
         }
 
-        /* Modal */
         .modal {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0, 0, 0, 0.8);
             backdrop-filter: blur(8px);
             display: none;
@@ -246,10 +235,7 @@
             width: 90%;
             text-align: center;
         }
-        .modal-content h3 {
-            color: #4A2A1A;
-            margin-bottom: 12px;
-        }
+        .modal-content h3 { color: #4A2A1A; margin-bottom: 12px; }
         .modal-content input {
             width: 100%;
             padding: 12px;
@@ -259,7 +245,6 @@
             outline: none;
         }
 
-        /* Footer */
         .auth-footer {
             text-align: center;
             margin-top: 24px;
@@ -267,7 +252,6 @@
             color: #C48356;
         }
 
-        /* Loading state */
         .btn-primary.loading {
             opacity: 0.7;
             cursor: not-allowed;
@@ -282,7 +266,6 @@
     </div>
 
     <div class="auth-card">
-        <!-- Tabs -->
         <div class="auth-tabs">
             <button class="tab-btn active" data-tab="login">Sign In</button>
             <button class="tab-btn" data-tab="signup">Create Account</button>
@@ -346,6 +329,7 @@
 
         <div id="messageBox" class="message"></div>
     </div>
+
     <div class="auth-footer">
         <i class="fas fa-crown"></i> earn points · unlock posters · become campus legend
     </div>
@@ -363,10 +347,8 @@
 </div>
 
 <script>
-    // API Configuration
     const API_URL = 'https://wall-culture-3.onrender.com/api';
-   
-       // DOM Elements
+
     const loginForm = document.getElementById('loginForm');
     const signupForm = document.getElementById('signupForm');
     const tabBtns = document.querySelectorAll('.tab-btn');
@@ -374,13 +356,20 @@
     const forgotModal = document.getElementById('forgotModal');
     const forgotBtn = document.getElementById('forgotBtn');
 
+    // FIX: Check if already logged in and redirect away from auth page
+    (function checkExistingSession() {
+        const token = localStorage.getItem('wall_culture_token');
+        if (token) {
+            window.location.href = 'dashboard.html';
+        }
+    })();
+
     // Tab Switching
     tabBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             const tab = btn.dataset.tab;
             tabBtns.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            
             if (tab === 'login') {
                 loginForm.classList.add('active');
                 signupForm.classList.remove('active');
@@ -392,31 +381,31 @@
         });
     });
 
+    // FIX: Rewrote showMessage to use class toggling only — no inline display style
+    let messageTimeout = null;
     function showMessage(text, type = 'error') {
+        if (messageTimeout) clearTimeout(messageTimeout);
         messageBox.textContent = text;
-        messageBox.className = `message ${type}`;
-        setTimeout(() => {
-            if (messageBox.className.includes(type)) {
-                messageBox.style.display = 'none';
-                messageBox.className = 'message';
-            }
+        // Reset classes first, then apply
+        messageBox.className = 'message ' + type + ' visible';
+        messageTimeout = setTimeout(() => {
+            messageBox.classList.remove('visible');
         }, 5000);
     }
 
     function clearMessage() {
-        messageBox.style.display = 'none';
+        if (messageTimeout) clearTimeout(messageTimeout);
         messageBox.className = 'message';
+        messageBox.textContent = '';
     }
 
-    // Store token and user data
     function storeAuthData(token, user) {
         localStorage.setItem('wall_culture_token', token);
         localStorage.setItem('wall_culture_user', JSON.stringify(user));
     }
 
-    // Redirect to dashboard
     function redirectToDashboard() {
-        window.location.href = 'dashboard.html'; // Change to your main app page
+        window.location.href = 'home.html';
     }
 
     // LOGIN
@@ -424,7 +413,7 @@
         e.preventDefault();
         const email = document.getElementById('loginEmail').value.trim();
         const password = document.getElementById('loginPassword').value;
-        
+
         if (!email || !password) {
             showMessage('Please fill in all fields');
             return;
@@ -448,11 +437,13 @@
                 showMessage(`Welcome back, ${data.user.name}! Redirecting...`, 'success');
                 setTimeout(() => redirectToDashboard(), 1500);
             } else {
-                showMessage(data.error || 'Login failed');
+                // FIX: Show the actual error from the server
+                showMessage(data.error || 'Login failed. Please try again.');
             }
         } catch (error) {
+            // FIX: Show a real network error message, not a misleading one
             console.error('Login error:', error);
-            showMessage('Cannot connect to server. Is the backend running?');
+            showMessage('Network error — please check your connection and try again.');
         } finally {
             btn.classList.remove('loading');
             btn.disabled = false;
@@ -466,12 +457,12 @@
         const email = document.getElementById('signupEmail').value.trim();
         const password = document.getElementById('signupPassword').value;
         const referralCode = document.getElementById('referralCode').value.trim();
-        
+
         if (!name || !email || !password) {
             showMessage('Please fill in all required fields');
             return;
         }
-        
+
         if (password.length < 6) {
             showMessage('Password must be at least 6 characters');
             return;
@@ -485,11 +476,11 @@
             const response = await fetch(`${API_URL}/auth/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    name, 
-                    email, 
-                    password, 
-                    referralCode: referralCode || null 
+                body: JSON.stringify({
+                    name,
+                    email,
+                    password,
+                    referralCode: referralCode || null
                 })
             });
 
@@ -500,11 +491,11 @@
                 showMessage(`Welcome to Wall Culture, ${name}! You earned 100 bonus points.`, 'success');
                 setTimeout(() => redirectToDashboard(), 1500);
             } else {
-                showMessage(data.error || 'Registration failed');
+                showMessage(data.error || 'Registration failed. Please try again.');
             }
         } catch (error) {
             console.error('Signup error:', error);
-            showMessage('Cannot connect to server. Please try again.');
+            showMessage('Network error — please check your connection and try again.');
         } finally {
             btn.classList.remove('loading');
             btn.disabled = false;
@@ -526,48 +517,14 @@
             alert('Please enter your email');
             return;
         }
-        
-        // For now, show demo message (you can implement actual reset later)
-        alert(`Password reset link sent to ${email} (demo mode - check console)`);
+        alert(`Password reset link sent to ${email} (demo mode)`);
         forgotModal.style.display = 'none';
         document.getElementById('resetEmail').value = '';
-        
-        // In production, you'd call:
-        // await fetch(`${API_URL}/auth/forgot-password`, { method: 'POST', body: JSON.stringify({ email }) })
     });
 
-    // Close modal when clicking outside
     forgotModal.addEventListener('click', (e) => {
-        if (e.target === forgotModal) {
-            forgotModal.style.display = 'none';
-        }
+        if (e.target === forgotModal) forgotModal.style.display = 'none';
     });
-
-    // Check if already logged in
-    function checkExistingSession() {
-        const token = localStorage.getItem('wall_culture_token');
-        if (token && window.location.pathname.includes('auth.html') === false) {
-            // Redirect to dashboard if on auth page and already logged in
-            if (window.location.pathname.includes('auth') || window.location.pathname === '/' || window.location.pathname === '/index.html') {
-                redirectToDashboard();
-            }
-        }
-    }
-    
-    // Demo mode - if backend not running, show demo credentials
-    window.demoCredentials = {
-        email: 'demo@wallculture.com',
-        password: 'demo123'
-    };
-    
-    // Add demo hint
-    const demoHint = document.createElement('div');
-    demoHint.style.textAlign = 'center';
-    demoHint.style.marginTop = '16px';
-    demoHint.style.fontSize = '0.7rem';
-    demoHint.style.color = '#C48356';
-    demoHint.innerHTML = '<i class="fas fa-flask"></i> Demo: demo@wallculture.com / demo123';
-    document.querySelector('.auth-card').appendChild(demoHint);
 </script>
 </body>
 </html>

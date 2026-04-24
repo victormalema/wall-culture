@@ -114,10 +114,7 @@
         .earn-item { background: #FFE0C8; padding: 4px 10px; border-radius: 30px; font-size: 0.65rem; color: #B45A2E; }
         .modal {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.8);
             backdrop-filter: blur(8px);
             display: none;
@@ -130,6 +127,10 @@
         .theme-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 12px; margin-bottom: 8px; }
         .theme-tab { background: #FFE8D8; padding: 8px 20px; border-radius: 40px; font-size: 0.8rem; font-weight: 600; white-space: nowrap; cursor: pointer; }
         .theme-tab.active { background: #FF8E53; color: white; }
+
+        /* Logout button */
+        .logout-btn { background: none; border: 1px solid #FFB47A; color: #B45A2E; padding: 8px 20px; border-radius: 60px; font-size: 0.75rem; font-weight: 600; cursor: pointer; margin-top: 12px; width: 100%; }
+        .logout-btn:hover { background: #FFE8DC; }
     </style>
 </head>
 <body>
@@ -148,8 +149,10 @@
                     <div><span style="font-size: 0.7rem;">🔥 <span id="homeStreak">0</span> day streak</span></div>
                     <div class="streak-badge"><i class="fas fa-fire"></i> <span id="homeStreakDisplay">0</span> day streak!</div>
                 </div>
-                <h2 style="margin: 12px 0 4px;">Hey, Jordan!</h2>
+                <h2 style="margin: 12px 0 4px;">Hey, <span id="homeUserName">there</span>!</h2>
                 <p style="font-size: 0.8rem;">Earn points, unlock posters, decorate your wall 🎨</p>
+                <!-- FIX: Added missing homeWeekly element -->
+                <p style="font-size: 0.7rem; margin-top: 6px; opacity: 0.8;">This week: <strong><span id="homeWeekly">0</span> pts</strong></p>
             </div>
             <div class="card">
                 <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
@@ -166,7 +169,6 @@
                 </div>
             </div>
 
-            <!-- EARN POINTS GUIDE - ALL CATEGORIES -->
             <div class="card">
                 <h3><i class="fas fa-book-open"></i> Ways to Earn Points</h3>
                 <div class="earn-category">
@@ -231,14 +233,13 @@
                 <div style="background:#FFD9B5; border-radius:30px; height:8px; margin:8px 0;"><div id="homeProgressFill" style="width:0%; height:100%; background:linear-gradient(90deg,#FF8E53,#FF6B4A); border-radius:30px;"></div></div>
             </div>
 
-            <!-- Points Audit / Records -->
             <div class="card">
                 <h3><i class="fas fa-history"></i> Points Audit Log</h3>
                 <div id="auditLogContainer" style="max-height: 200px; overflow-y: auto;"></div>
             </div>
         </div>
 
-        <!-- GALLERY SCREEN (Collections) -->
+        <!-- GALLERY SCREEN -->
         <div id="galleryScreen" class="screen">
             <div class="card" style="background:#FFE8DC;">
                 <h3><i class="fas fa-images"></i> Poster Collections</h3>
@@ -281,7 +282,7 @@
                 <p style="font-size:0.75rem;">Surprise poster! +150pts, 1.5x boost</p>
                 <button id="addMysteryBtn" class="btn btn-primary" style="width:100%;"><i class="fas fa-question-circle"></i> Add Mystery Pack ($30)</button>
             </div>
-            
+
             <div class="card">
                 <h3><i class="fas fa-clock"></i> Limited Edition</h3>
                 <div class="gallery-grid" id="limitedGrid"></div>
@@ -302,7 +303,9 @@
         <div id="profileScreen" class="screen">
             <div class="card" style="text-align:center;">
                 <div style="width:70px;height:70px;background:#FFB87A;border-radius:50%;margin:0 auto;display:flex;align-items:center;justify-content:center;"><i class="fas fa-user-astronaut" style="font-size:2rem; color:#4A2A1A;"></i></div>
-                <h3>Jordan Liu</h3><p>jordan@university.edu</p>
+                <!-- FIX: Name pulled from stored user data, not hardcoded -->
+                <h3 id="profileName">—</h3>
+                <p id="profileEmail" style="font-size:0.8rem; color:#B45A2E;">—</p>
             </div>
             <div class="card">
                 <h4>📊 Points Summary</h4>
@@ -314,7 +317,15 @@
                     <i class="fas fa-trophy"></i> <strong>Milestone Rewards:</strong> 250pts → Sticker pack | 500pts → 15% off | 1000pts → Free Mini Poster | 2500pts → Wall of Honor | 5000pts → Bronze Card
                 </div>
             </div>
-            <div class="card"><h4>Referral Code</h4><div style="background:#FFE8DC; border-radius:40px; padding:12px; text-align:center; font-weight:bold;"><strong id="profileCode">JORDANX7</strong></div><button id="copyCodeBtn" class="btn btn-secondary" style="margin-top:8px; width:100%;"><i class="fas fa-copy"></i> Copy Code</button></div>
+            <div class="card">
+                <h4>Referral Code</h4>
+                <div style="background:#FFE8DC; border-radius:40px; padding:12px; text-align:center; font-weight:bold;"><strong id="profileCode">—</strong></div>
+                <button id="copyCodeBtn" class="btn btn-secondary" style="margin-top:8px; width:100%;"><i class="fas fa-copy"></i> Copy Code</button>
+            </div>
+            <!-- FIX: Added logout button -->
+            <div class="card">
+                <button class="logout-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
+            </div>
         </div>
     </div>
 
@@ -329,10 +340,20 @@
 <!-- QR Modal -->
 <div id="qrModal" class="modal"><div class="modal-content"><i class="fas fa-qrcode" style="font-size:3rem; color:#FF8E53;"></i><h3>Scan QR Code</h3><p>+15 points earned!</p><button id="closeModal" class="btn btn-primary">Got it</button></div></div>
 <!-- Referral Modal -->
-<div id="referralModal" class="modal"><div class="modal-content"><h3><i class="fas fa-user-friends"></i> Refer a Friend</h3><p>Your code: <strong id="modalReferralCode">JORDANX7</strong></p><button id="copyReferralModalBtn" class="btn btn-primary">Copy Code</button><button id="closeReferralModal" class="btn btn-secondary" style="margin-top:8px;">Close</button></div></div>
+<div id="referralModal" class="modal"><div class="modal-content"><h3><i class="fas fa-user-friends"></i> Refer a Friend</h3><p>Your code: <strong id="modalReferralCode">—</strong></p><button id="copyReferralModalBtn" class="btn btn-primary">Copy Code</button><button id="closeReferralModal" class="btn btn-secondary" style="margin-top:8px;">Close</button></div></div>
 
 <script>
-    // POSTERS DATABASE
+    // FIX: Auth guard — redirect to login if no token
+    (function authGuard() {
+        const token = localStorage.getItem('wall_culture_token');
+        if (!token) {
+            window.location.href = 'index.html';
+        }
+    })();
+
+    // Load stored user info from auth
+    const storedUser = JSON.parse(localStorage.getItem('wall_culture_user') || '{}');
+
     const postersDB = {
         aesthetic: [{ id: "aes1", name: "Soft Sunset", emoji: "🌅", price: 15, points: 100, bg: "#FFDAB9" },{ id: "aes2", name: "Minimal Waves", emoji: "🌊", price: 15, points: 100, bg: "#B0E0E6" },{ id: "aes3", name: "Abstract Geometry", emoji: "🔷", price: 15, points: 100, bg: "#DDA0DD" },{ id: "aes4", name: "Dreamy Cloud", emoji: "☁️", price: 15, points: 100, bg: "#E6E6FA" }],
         girlish: [{ id: "gir1", name: "Floral Heart", emoji: "🌸", price: 15, points: 100, bg: "#FFB7C5" },{ id: "gir2", name: "Butterfly Dreams", emoji: "🦋", price: 15, points: 100, bg: "#C5E1FF" },{ id: "gir3", name: "Pastel Stars", emoji: "⭐", price: 15, points: 100, bg: "#FFF0B5" },{ id: "gir4", name: "Cozy Vibes", emoji: "🧸", price: 15, points: 100, bg: "#E0BBE4" }],
@@ -347,31 +368,80 @@
 
     let cart = [];
     let auditLog = [];
-    let user = { points: 680, multiplier: 1.2, multiplierExpiry: Date.now() + 3*86400000, referralCode: "JORDANX7", name: "Jordan Liu", weeklyPoints: 412, streak: 5, lastCheckin: new Date().toDateString(), usedRoomTour: false, storySharesThisWeek: 1 };
-    let globalRanking = [{ name: "Alex Chen", points: 3120 },{ name: "Maya R.", points: 2780 },{ name: "Jordan Liu", points: user.points },{ name: "Sam Kim", points: 1950 }];
+    let user = {
+        points: storedUser.points || 100,
+        multiplier: 1.0,
+        multiplierExpiry: 0,
+        referralCode: storedUser.referralCode || "—",
+        name: storedUser.name || "User",
+        email: storedUser.email || "",
+        weeklyPoints: 0,
+        streak: 0,
+        lastCheckin: null,
+        usedRoomTour: false,
+        storySharesThisWeek: 0
+    };
+    let globalRanking = [
+        { name: "Alex Chen", points: 3120 },
+        { name: "Maya R.", points: 2780 },
+        { name: user.name, points: user.points },
+        { name: "Sam Kim", points: 1950 }
+    ];
     let currentCustomImage = null;
 
     function addAudit(action, points) { auditLog.unshift({ action, points, timestamp: new Date().toLocaleTimeString() }); if(auditLog.length > 20) auditLog.pop(); renderAudit(); }
     function renderAudit() { let container = document.getElementById("auditLogContainer"); if(!container) return; container.innerHTML = auditLog.map(a => `<div class="audit-item"><span>${a.action}</span><span>${a.points > 0 ? '+' : ''}${a.points} pts</span><span style="font-size:0.6rem;">${a.timestamp}</span></div>`).join(""); if(auditLog.length === 0) container.innerHTML = "<div style='padding:8px;text-align:center;'>No activity yet</div>"; }
 
     function saveUser() { localStorage.setItem("wallrank_user", JSON.stringify(user)); localStorage.setItem("wallrank_audit", JSON.stringify(auditLog)); updateGlobal(); refreshAllUI(); }
-    function loadUser() { let s = localStorage.getItem("wallrank_user"); if(s) { try { user = { ...user, ...JSON.parse(s) }; } catch(e){} } let a = localStorage.getItem("wallrank_audit"); if(a) { try { auditLog = JSON.parse(a); } catch(e){} } if(!user.referralCode) user.referralCode = "JORDANX7"; updateGlobal(); refreshAllUI(); renderAudit(); }
-    function updateGlobal() { let idx = globalRanking.findIndex(u => u.name === "Jordan Liu"); if(idx !== -1) globalRanking[idx].points = user.points; else globalRanking.push({ name: "Jordan Liu", points: user.points }); globalRanking.sort((a,b)=>b.points - a.points); }
+    function loadUser() {
+        let s = localStorage.getItem("wallrank_user");
+        if(s) { try { user = { ...user, ...JSON.parse(s) }; } catch(e){} }
+        // Always sync name/email/referralCode from auth token data
+        if(storedUser.name) user.name = storedUser.name;
+        if(storedUser.email) user.email = storedUser.email;
+        if(storedUser.referralCode) user.referralCode = storedUser.referralCode;
+        let a = localStorage.getItem("wallrank_audit"); if(a) { try { auditLog = JSON.parse(a); } catch(e){} }
+        updateGlobal(); refreshAllUI(); renderAudit();
+    }
+    function updateGlobal() { let idx = globalRanking.findIndex(u => u.name === user.name); if(idx !== -1) globalRanking[idx].points = user.points; else globalRanking.push({ name: user.name, points: user.points }); globalRanking.sort((a,b)=>b.points - a.points); }
     function getBoost() { return (user.multiplierExpiry && user.multiplierExpiry > Date.now()) ? user.multiplier : 1.0; }
-    function getRank() { updateGlobal(); return globalRanking.findIndex(u => u.name === "Jordan Liu") + 1; }
+    function getRank() { updateGlobal(); return globalRanking.findIndex(u => u.name === user.name) + 1; }
     function addPoints(base, action, showMsg = true) { let gain = Math.floor(base * getBoost()); user.points += gain; user.weeklyPoints += gain; addAudit(action, gain); saveUser(); if(showMsg) showToast(`+${gain} pts (${action})`); }
 
-    function showToast(msg) { let d = document.createElement("div"); d.innerText = msg; d.style.position = "fixed"; d.style.bottom = "80px"; d.style.left = "20px"; d.style.right = "20px"; d.style.background = "#FFE0B5"; d.style.color = "#4A2A1A"; d.style.padding = "12px"; d.style.borderRadius = "60px"; d.style.textAlign = "center"; d.style.fontWeight = "bold"; d.style.zIndex = "2000"; document.body.appendChild(d); setTimeout(() => d.remove(), 2000); }
+    function showToast(msg) { let d = document.createElement("div"); d.innerText = msg; d.style.cssText = "position:fixed;bottom:80px;left:20px;right:20px;background:#FFE0B5;color:#4A2A1A;padding:12px;border-radius:60px;text-align:center;font-weight:bold;z-index:2000;"; document.body.appendChild(d); setTimeout(() => d.remove(), 2000); }
 
     function refreshAllUI() {
-        document.getElementById("globalPoints").innerText = user.points; document.getElementById("profilePoints").innerText = user.points; document.getElementById("homeStreak").innerText = user.streak; document.getElementById("homeStreakDisplay").innerText = user.streak; document.getElementById("homeWeekly").innerText = user.weeklyPoints;
-        let boost = getBoost(); document.getElementById("boostValue").innerText = boost.toFixed(1)+"x"; document.getElementById("profileBoost").innerText = boost.toFixed(1)+"x";
-        let days = user.multiplierExpiry ? Math.max(0, Math.ceil((user.multiplierExpiry - Date.now())/86400000)) : 0; document.getElementById("boostDays").innerText = days;
-        let rank = getRank(); document.getElementById("userRank").innerText = rank; document.getElementById("profileRankNum").innerText = rank;
+        document.getElementById("globalPoints").innerText = user.points;
+        document.getElementById("profilePoints").innerText = user.points;
+        document.getElementById("homeStreak").innerText = user.streak;
+        document.getElementById("homeStreakDisplay").innerText = user.streak;
+        // FIX: homeWeekly now exists in DOM
+        document.getElementById("homeWeekly").innerText = user.weeklyPoints;
+        // FIX: Profile name and email from real user data
+        document.getElementById("homeUserName").innerText = user.name.split(" ")[0];
+        document.getElementById("profileName").innerText = user.name;
+        document.getElementById("profileEmail").innerText = user.email;
+
+        let boost = getBoost();
+        document.getElementById("boostValue").innerText = boost.toFixed(1)+"x";
+        document.getElementById("profileBoost").innerText = boost.toFixed(1)+"x";
+        let days = user.multiplierExpiry ? Math.max(0, Math.ceil((user.multiplierExpiry - Date.now())/86400000)) : 0;
+        document.getElementById("boostDays").innerText = days;
+        let rank = getRank();
+        document.getElementById("userRank").innerText = rank;
+        document.getElementById("profileRankNum").innerText = rank;
         document.getElementById("profileCode").innerText = user.referralCode;
-        let milestones = [250,500,1000,2500]; let next = milestones.find(m => user.points < m) || 5000; let prev = milestones.filter(m => m <= user.points).pop() || 0; let percent = ((user.points - prev) / (next - prev)) * 100;
-        document.getElementById("homeProgressFill").style.width = percent + "%"; let rewardMap = {250:"Sticker pack",500:"15% off",1000:"Free mini poster",2500:"Wall of Honor"}; document.getElementById("nextMilestoneText").innerText = rewardMap[next] || "Legend"; document.getElementById("nextPointsNeeded").innerText = next + " pts";
-        let tierPercent = (user.points % 1000) / 1000 * 100; document.getElementById("rankProgressBar").style.width = Math.min(100, tierPercent) + "%";
+
+        let milestones = [250,500,1000,2500];
+        let next = milestones.find(m => user.points < m) || 5000;
+        let prev = milestones.filter(m => m <= user.points).pop() || 0;
+        let percent = ((user.points - prev) / (next - prev)) * 100;
+        document.getElementById("homeProgressFill").style.width = percent + "%";
+        let rewardMap = {250:"Sticker pack",500:"15% off",1000:"Free mini poster",2500:"Wall of Honor"};
+        document.getElementById("nextMilestoneText").innerText = rewardMap[next] || "Legend";
+        document.getElementById("nextPointsNeeded").innerText = next + " pts";
+        let tierPercent = (user.points % 1000) / 1000 * 100;
+        document.getElementById("rankProgressBar").style.width = Math.min(100, tierPercent) + "%";
         renderCartUI();
     }
 
@@ -388,7 +458,7 @@
         });
         container.innerHTML = html;
         document.getElementById("cartTotalAmount").innerText = total;
-        document.querySelectorAll(".remove-cart-btn").forEach(btn => { btn.addEventListener("click", (e) => { let idx = parseInt(btn.dataset.idx); if(!isNaN(idx) && cart[idx]) { if(cart[idx].qty > 1) cart[idx].qty--; else cart.splice(idx,1); renderCartUI(); refreshAllUI(); } }); });
+        document.querySelectorAll(".remove-cart-btn").forEach(btn => { btn.addEventListener("click", () => { let idx = parseInt(btn.dataset.idx); if(!isNaN(idx) && cart[idx]) { if(cart[idx].qty > 1) cart[idx].qty--; else cart.splice(idx,1); renderCartUI(); refreshAllUI(); } }); });
     }
 
     function renderGalleryCollections(theme) {
@@ -437,11 +507,18 @@
         }
     }
 
-    function dailyCheck() { let today = new Date().toDateString(); if(user.lastCheckin === today) { showToast("Already checked in!"); return; } let bonus = 0; let prev = user.lastCheckin ? new Date(user.lastCheckin) : null; let yesterday = new Date(); yesterday.setDate(yesterday.getDate()-1); if(prev && prev.toDateString() === yesterday.toDateString()) user.streak++; else user.streak = 1; if(user.streak >= 7) bonus = 100; user.lastCheckin = today; addPoints(5 + bonus, "Daily check-in"); saveUser(); }
+    function dailyCheck() { let today = new Date().toDateString(); if(user.lastCheckin === today) { showToast("Already checked in!"); return; } let prev = user.lastCheckin ? new Date(user.lastCheckin) : null; let yesterday = new Date(); yesterday.setDate(yesterday.getDate()-1); if(prev && prev.toDateString() === yesterday.toDateString()) user.streak++; else user.streak = 1; let bonus = user.streak >= 7 ? 100 : 0; user.lastCheckin = today; addPoints(5 + bonus, "Daily check-in"); saveUser(); }
     function scanQR() { addPoints(15, "QR Scan"); }
     function shareStory() { if(user.storySharesThisWeek >= 3) { showToast("Max 3 story shares per week"); return; } user.storySharesThisWeek++; addPoints(25, "Instagram Story"); saveUser(); }
     function roomTour() { if(user.usedRoomTour) { showToast("Room tour already used this month"); return; } user.usedRoomTour = true; addPoints(150, "Room Tour"); saveUser(); }
     function referFriend() { document.getElementById("modalReferralCode").innerText = user.referralCode; document.getElementById("referralModal").style.display = "flex"; }
+
+    // FIX: Logout function
+    function logout() {
+        localStorage.removeItem('wall_culture_token');
+        localStorage.removeItem('wall_culture_user');
+        window.location.href = 'index.html';
+    }
 
     let screens = { home:"homeScreen", gallery:"galleryScreen", shop:"shopScreen", profile:"profileScreen" };
     function showScreen(s) { Object.values(screens).forEach(sc => document.getElementById(sc).classList.remove("active")); document.getElementById(screens[s]).classList.add("active"); document.querySelectorAll(".tab-item").forEach(t=>t.classList.remove("active")); document.querySelector(`.tab-item[data-tab="${s}"]`).classList.add("active"); if(s === "gallery") renderGalleryCollections(currentGalleryTheme); if(s === "shop") { renderLimited(); renderCartUI(); } if(s === "profile") refreshAllUI(); }
@@ -459,6 +536,7 @@
     document.getElementById("copyCodeBtn").onclick = () => { navigator.clipboard.writeText(user.referralCode); showToast("Code copied!"); };
     document.getElementById("copyReferralModalBtn").onclick = () => { navigator.clipboard.writeText(user.referralCode); showToast("Referral code copied!"); };
     document.getElementById("closeReferralModal").onclick = () => document.getElementById("referralModal").style.display = "none";
+    document.getElementById("logoutBtn").onclick = logout;
     document.getElementById("qrModal").addEventListener("click", (e) => { if(e.target === document.getElementById("qrModal")) document.getElementById("qrModal").style.display = "none"; });
     document.getElementById("referralModal").addEventListener("click", (e) => { if(e.target === document.getElementById("referralModal")) document.getElementById("referralModal").style.display = "none"; });
 

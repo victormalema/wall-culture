@@ -1,5 +1,5 @@
 # app.py - Wall Culture Flask Backend
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from supabase import create_client, Client
 import uuid
@@ -117,6 +117,12 @@ def register():
             "created_at": int(datetime.now().timestamp() * 1000)
         }).execute()
 
+        # FIX: Award referral bonus to the referrer
+        if referral_code:
+            ref_result = supabase.table("users").select("id").eq("referral_code", referral_code).execute()
+            if ref_result.data:
+                add_points_to_user(ref_result.data[0]["id"], 50, "Referral bonus")
+
         token = jwt.encode(
             {"user_id": user_id, "exp": datetime.utcnow() + timedelta(days=7)},
             app.config["SECRET_KEY"]
@@ -136,6 +142,51 @@ def register():
     except Exception as e:
         print("REGISTER ERROR:", str(e))
         return jsonify({"error": "Server error"}), 500
+
+
+# FIX: Added missing login route
+@app.route("/api/auth/login", methods=["POST"])
+def login():
+    try:
+        data = request.get_json(silent=True) or {}
+
+        print("LOGIN DATA:", data)
+
+        email = data.get("email")
+        password = data.get("password")
+
+        if not email or not password:
+            return jsonify({"error": "Missing fields"}), 400
+
+        result = supabase.table("users").select("*").eq("email", email).execute()
+        if not result.data:
+            return jsonify({"error": "Invalid email or password"}), 401
+
+        user = result.data[0]
+
+        if not bcrypt.checkpw(password.encode(), user["password"].encode()):
+            return jsonify({"error": "Invalid email or password"}), 401
+
+        token = jwt.encode(
+            {"user_id": user["id"], "exp": datetime.utcnow() + timedelta(days=7)},
+            app.config["SECRET_KEY"]
+        )
+
+        return jsonify({
+            "token": token,
+            "user": {
+                "id": user["id"],
+                "name": user["name"],
+                "email": user["email"],
+                "points": user["points"],
+                "referralCode": user.get("referral_code", "")
+            }
+        })
+
+    except Exception as e:
+        print("LOGIN ERROR:", str(e))
+        return jsonify({"error": "Server error"}), 500
+
 
 # ==================== POINTS ROUTES ====================
 @app.route('/api/points/add', methods=['POST'])
@@ -327,6 +378,16 @@ def get_user_status():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# ==================== STATIC FILES ====================
+# FIX: Moved send_from_directory import to top of file and route before __main__
+@app.route('/')
+def serve_frontend():
+    return send_from_directory('.', 'index.html')
+
+@app.route('/dashboard.html')
+def serve_dashboard():
+    return send_from_directory('.', 'home.html')
+
 # ==================== HEALTH ====================
 @app.route('/api/health', methods=['GET'])
 def health_check():
@@ -340,9 +401,3 @@ if __name__ == '__main__':
     print(f"📡 Supabase: {SUPABASE_URL}")
     print("="*50 + "\n")
     app.run(debug=True, host='0.0.0.0', port=5000)
-from flask import send_from_directory
-
-@app.route('/')
-def serve_frontend():
-    return send_from_directory('.', 'index.html')
-
