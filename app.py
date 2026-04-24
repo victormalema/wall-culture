@@ -282,7 +282,32 @@ def get_posters():
         return jsonify(result.data)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    
+@app.route('/api/feed', methods=['GET'])
+@token_required
+def get_feed():
+    try:
+        posters = supabase.table('posters').select('*').execute()
 
+        feed = []
+
+        for poster in posters.data:
+            feed.append({
+                "type": "poster",
+                "id": poster["id"],
+                "name": poster["name"],
+                "image_url": poster["image_url"],
+                "price": poster["price"],
+                "points": poster["points"],
+                "category": poster["category"]
+            })
+
+        return jsonify({
+            "feed": feed
+        }), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 @app.route('/api/order/create', methods=['POST'])
 @token_required
 def create_order():
