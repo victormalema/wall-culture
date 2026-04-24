@@ -384,7 +384,7 @@ def get_user_status():
 def serve_frontend():
     return send_from_directory('.', 'index.html')
 
-@app.route('/dashboard.html')
+@app.route('/home.html')
 def serve_dashboard():
     return send_from_directory('.', 'home.html')
 
