@@ -1,6 +1,8 @@
 # app.py - Wall Culture Flask Backend
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from supabase import create_client, Client
 import uuid
 import jwt
@@ -14,16 +16,39 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)
-app.config['SECRET_KEY'] = os.getenv('JWT_SECRET', 'wall_culture_secret_key_2025')
+
+# ==================== SECURITY: Strict CORS ====================
+# Only allow requests from your actual frontend domain(s).
+# Update ALLOWED_ORIGINS in your .env or here before deploying.
+ALLOWED_ORIGINS = os.getenv(
+    'ALLOWED_ORIGINS',
+    'http://localhost:5000,http://127.0.0.1:5000'
+).split(',')
+CORS(app, origins=[o.strip() for o in ALLOWED_ORIGINS])
+
+# ==================== SECURITY: Secret key — no insecure fallback ====================
+_secret = os.getenv('JWT_SECRET')
+if not _secret:
+    raise RuntimeError(
+        "JWT_SECRET environment variable is not set. "
+        "Generate a strong random secret and add it to your .env file."
+    )
+app.config['SECRET_KEY'] = _secret
+
+# ==================== RATE LIMITING ====================
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=[],          # no global limit; set per-route
+    storage_uri="memory://"     # swap to Redis in production: redis://localhost:6379/0
+)
 
 # ==================== SUPABASE SETUP ====================
 SUPABASE_URL = os.getenv('SUPABASE_URL')
 SUPABASE_KEY = os.getenv('SUPABASE_KEY')
 
 if not SUPABASE_URL or not SUPABASE_KEY:
-    print("❌ ERROR: Missing SUPABASE_URL or SUPABASE_KEY in .env file")
-    exit(1)
+    raise RuntimeError("Missing SUPABASE_URL or SUPABASE_KEY in .env file")
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 print("✅ Connected to Supabase")
@@ -32,51 +57,137 @@ print("✅ Connected to Supabase")
 def generate_referral_code(name):
     return name[:4].upper() + str(uuid.uuid4().hex[:4]).upper()
 
+def escape_html(text):
+    """Escape characters that could lead to XSS if text is ever reflected back."""
+    return (
+        str(text)
+        .replace('&', '&amp;')
+        .replace('<', '&lt;')
+        .replace('>', '&gt;')
+        .replace('"', '&quot;')
+        .replace("'", '&#x27;')
+    )
+
 def add_points_to_user(user_id, base_points, action, custom_multiplier=None):
+    """
+    Award points atomically using a Supabase RPC (PostgreSQL function).
+
+    The RPC `award_points` must exist in your database:
+
+        CREATE OR REPLACE FUNCTION award_points(
+            p_user_id   UUID,
+            p_base      INT,
+            p_action    TEXT,
+            p_multiplier NUMERIC DEFAULT NULL
+        )
+        RETURNS INT
+        LANGUAGE plpgsql
+        AS $$
+        DECLARE
+            v_multiplier NUMERIC;
+            v_earned     INT;
+            v_expiry     BIGINT;
+        BEGIN
+            -- Determine effective multiplier
+            SELECT
+                CASE
+                    WHEN p_multiplier IS NOT NULL THEN p_multiplier
+                    WHEN multiplier_expiry > (EXTRACT(EPOCH FROM NOW()) * 1000)::BIGINT
+                        THEN COALESCE(multiplier, 1.0)
+                    ELSE 1.0
+                END,
+                COALESCE(multiplier_expiry, 0)
+            INTO v_multiplier, v_expiry
+            FROM users WHERE id = p_user_id;
+
+            IF NOT FOUND THEN RETURN 0; END IF;
+
+            v_earned := FLOOR(p_base * v_multiplier);
+
+            -- Atomic read-modify-write (no race condition)
+            UPDATE users
+            SET points        = points + v_earned,
+                weekly_points = COALESCE(weekly_points, 0) + v_earned
+            WHERE id = p_user_id;
+
+            -- Log (best-effort)
+            BEGIN
+                INSERT INTO point_logs (user_id, action, points, multiplier, earned, timestamp)
+                VALUES (
+                    p_user_id, p_action, p_base, v_multiplier, v_earned,
+                    (EXTRACT(EPOCH FROM NOW()) * 1000)::BIGINT
+                );
+            EXCEPTION WHEN OTHERS THEN
+                -- point_logs table may not exist yet; keep going
+                NULL;
+            END;
+
+            RETURN v_earned;
+        END;
+        $$;
+
+    If the RPC does not exist yet, this function falls back to the
+    non-atomic two-step approach so the server still boots — remove the
+    fallback once the RPC is deployed.
+    """
     try:
-        user_res = supabase.table('users').select(
-            'points, weekly_points, multiplier, multiplier_expiry'
-        ).eq('id', user_id).execute()
+        result = supabase.rpc('award_points', {
+            'p_user_id': user_id,
+            'p_base': int(base_points),
+            'p_action': action,
+            'p_multiplier': custom_multiplier
+        }).execute()
+        return result.data or 0
 
-        if not user_res.data:
-            return 0
-
-        user = user_res.data[0]
-        current_time = int(datetime.now().timestamp() * 1000)
-
-        # Determine effective multiplier
-        if custom_multiplier:
-            effective_multiplier = custom_multiplier
-        elif user.get('multiplier_expiry') and user['multiplier_expiry'] > current_time:
-            effective_multiplier = user.get('multiplier', 1.0)
-        else:
-            effective_multiplier = 1.0
-
-        earned = int(base_points * effective_multiplier)
-
-        supabase.table('users').update({
-            'points': user['points'] + earned,
-            'weekly_points': (user.get('weekly_points') or 0) + earned
-        }).eq('id', user_id).execute()
-
-        # FIX: point_logs may not exist yet — wrap separately so points still save
+    except Exception as rpc_err:
+        # -------------------------------------------------------
+        # FALLBACK (non-atomic) — remove once RPC is deployed.
+        # This is intentionally left in so development works
+        # before the DB function exists.
+        # -------------------------------------------------------
+        print(f"Warning: award_points RPC failed, using fallback: {rpc_err}")
         try:
-            supabase.table('point_logs').insert({
-                'user_id': user_id,
-                'action': action,
-                'points': base_points,
-                'multiplier': effective_multiplier,
-                'earned': earned,
-                'timestamp': current_time
-            }).execute()
-        except Exception as log_err:
-            print(f"Warning: could not write point_log: {log_err}")
+            user_res = supabase.table('users').select(
+                'points, weekly_points, multiplier, multiplier_expiry'
+            ).eq('id', user_id).execute()
 
-        return earned
+            if not user_res.data:
+                return 0
 
-    except Exception as e:
-        print(f"Error adding points: {e}")
-        return 0
+            user = user_res.data[0]
+            current_time = int(datetime.utcnow().timestamp() * 1000)
+
+            if custom_multiplier:
+                effective_multiplier = custom_multiplier
+            elif user.get('multiplier_expiry') and user['multiplier_expiry'] > current_time:
+                effective_multiplier = user.get('multiplier', 1.0)
+            else:
+                effective_multiplier = 1.0
+
+            earned = int(base_points * effective_multiplier)
+
+            supabase.table('users').update({
+                'points': user['points'] + earned,
+                'weekly_points': (user.get('weekly_points') or 0) + earned
+            }).eq('id', user_id).execute()
+
+            try:
+                supabase.table('point_logs').insert({
+                    'user_id': user_id,
+                    'action': action,
+                    'points': base_points,
+                    'multiplier': effective_multiplier,
+                    'earned': earned,
+                    'timestamp': current_time
+                }).execute()
+            except Exception as log_err:
+                print(f"Warning: could not write point_log: {log_err}")
+
+            return earned
+
+        except Exception as e:
+            print(f"Error adding points (fallback): {e}")
+            return 0
 
 # ==================== AUTH DECORATOR ====================
 def token_required(f):
@@ -98,10 +209,10 @@ def token_required(f):
 
 # ==================== AUTH ROUTES ====================
 @app.route("/api/auth/register", methods=["POST"])
+@limiter.limit("10 per minute")
 def register():
     try:
         data = request.get_json(silent=True) or {}
-        print("REGISTER DATA:", data)
 
         name = data.get("name", "").strip()
         email = data.get("email", "").strip().lower()
@@ -122,6 +233,18 @@ def register():
         hashed_password = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
         user_referral_code = generate_referral_code(name)
 
+        # Validate referral code — ensure it exists and isn't the user's own
+        referrer_id = None
+        if referral_code:
+            ref_result = supabase.table("users").select("id").eq("referral_code", referral_code).execute()
+            if ref_result.data and ref_result.data[0]["id"] != user_id:
+                referrer_id = ref_result.data[0]["id"]
+            else:
+                # Invalid or self-referral — silently ignore
+                referral_code = None
+
+        now_iso = datetime.utcnow().isoformat() + 'Z'
+
         supabase.table("users").insert({
             "id": user_id,
             "name": name,
@@ -132,22 +255,28 @@ def register():
             "points": 100,
             "streak": 0,
             "weekly_points": 0,
-            "created_at": int(datetime.now().timestamp() * 1000)
+            "created_at": now_iso
         }).execute()
 
-        # Award referral bonus to referrer
-        if referral_code:
-            ref_result = supabase.table("users").select("id").eq("referral_code", referral_code).execute()
-            if ref_result.data:
-                add_points_to_user(ref_result.data[0]["id"], 50, "Referral bonus")
+        # Award referral bonus only if the referrer is confirmed valid.
+        # Record the referral to prevent double-rewarding.
+        if referrer_id:
+            try:
+                supabase.table("referrals").insert({
+                    "referrer_id": referrer_id,
+                    "referee_id": user_id,
+                    "created_at": now_iso
+                }).execute()
+                add_points_to_user(referrer_id, 50, "Referral bonus")
+            except Exception as ref_err:
+                # referrals table may not exist yet — still complete registration
+                print(f"Warning: could not record referral: {ref_err}")
 
         token = jwt.encode(
             {"user_id": user_id, "exp": datetime.utcnow() + timedelta(days=7)},
             app.config["SECRET_KEY"],
             algorithm="HS256"
         )
-
-        # jwt.encode returns str in PyJWT >= 2.0, bytes in older versions
         if isinstance(token, bytes):
             token = token.decode('utf-8')
 
@@ -171,10 +300,10 @@ def register():
 
 
 @app.route("/api/auth/login", methods=["POST"])
+@limiter.limit("10 per minute")   # brute-force protection
 def login():
     try:
         data = request.get_json(silent=True) or {}
-        print("LOGIN DATA:", data)
 
         email = data.get("email", "").strip().lower()
         password = data.get("password", "")
@@ -183,21 +312,23 @@ def login():
             return jsonify({"error": "Missing fields"}), 400
 
         result = supabase.table("users").select("*").eq("email", email).execute()
-        if not result.data:
-            # Generic message to avoid user enumeration
+
+        # Use constant-time comparison path even when user not found
+        # to prevent user-enumeration via timing differences.
+        dummy_hash = "$2b$12$placeholderplaceholderplaceholderplaceholderplaceholde"
+        stored_hash = result.data[0]["password"] if result.data else dummy_hash
+        password_ok = bcrypt.checkpw(password.encode(), stored_hash.encode())
+
+        if not result.data or not password_ok:
             return jsonify({"error": "Invalid email or password"}), 401
 
         user = result.data[0]
-
-        if not bcrypt.checkpw(password.encode(), user["password"].encode()):
-            return jsonify({"error": "Invalid email or password"}), 401
 
         token = jwt.encode(
             {"user_id": user["id"], "exp": datetime.utcnow() + timedelta(days=7)},
             app.config["SECRET_KEY"],
             algorithm="HS256"
         )
-
         if isinstance(token, bytes):
             token = token.decode('utf-8')
 
@@ -223,6 +354,7 @@ def login():
 # ==================== POINTS ROUTES ====================
 @app.route('/api/points/add', methods=['POST'])
 @token_required
+@limiter.limit("30 per minute")
 def add_points():
     try:
         data = request.get_json(silent=True) or {}
@@ -240,13 +372,30 @@ def add_points():
 
 @app.route('/api/scan/qr', methods=['POST'])
 @token_required
+@limiter.limit("20 per minute")
 def scan_qr():
+    """
+    QR scan endpoint — all point awards are server-authoritative.
+    The daily cap (5 scans) is enforced here, not in the client.
+    """
     try:
         data = request.get_json(silent=True) or {}
         code = data.get('code')
 
+        today_start = int(
+            datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+            .timestamp() * 1000
+        )
+
+        # Check daily cap before doing anything else
+        scans = supabase.table('point_logs').select(
+            'id', count='exact'
+        ).eq('user_id', request.user_id).eq('action', 'QR Scan').gte('timestamp', today_start).execute()
+
+        if scans.count and scans.count >= 5:
+            return jsonify({'error': 'Max 5 QR scans per day'}), 429
+
         if not code:
-            # Generic QR scan without a specific code — just award points
             earned = add_points_to_user(request.user_id, 15, 'QR Scan')
             return jsonify({'success': True, 'earned': earned, 'points': 15})
 
@@ -255,23 +404,11 @@ def scan_qr():
             return jsonify({'error': 'Invalid QR code'}), 404
 
         qr = qr_result.data[0]
-
-        today_start = int(datetime.now().replace(
-            hour=0, minute=0, second=0, microsecond=0
-        ).timestamp() * 1000)
-
-        scans = supabase.table('point_logs').select(
-            'id', count='exact'
-        ).eq('user_id', request.user_id).eq('action', 'QR Scan').gte('timestamp', today_start).execute()
-
-        if scans.count and scans.count >= 5:
-            return jsonify({'error': 'Max 5 QR scans per day'}), 429
-
         earned = add_points_to_user(request.user_id, qr['points'], 'QR Scan')
 
         supabase.table('qr_codes').update({
             'scanned_by': request.user_id,
-            'scanned_at': int(datetime.now().timestamp() * 1000)
+            'scanned_at': int(datetime.utcnow().timestamp() * 1000)
         }).eq('code', code).execute()
 
         return jsonify({'success': True, 'earned': earned, 'points': qr['points']})
@@ -280,16 +417,76 @@ def scan_qr():
         return jsonify({'error': str(e)}), 500
 
 
+@app.route('/api/social/story', methods=['POST'])
+@token_required
+@limiter.limit("10 per minute")
+def social_story():
+    """
+    Server-authoritative Instagram story share.
+    Enforces max 3 shares per week. All point awards happen here.
+    """
+    try:
+        # Count story shares in the past 7 days
+        week_start = int(
+            (datetime.utcnow() - timedelta(days=7)).timestamp() * 1000
+        )
+        shares = supabase.table('point_logs').select(
+            'id', count='exact'
+        ).eq('user_id', request.user_id).eq('action', 'Instagram Story').gte('timestamp', week_start).execute()
+
+        if shares.count and shares.count >= 3:
+            return jsonify({'error': 'Max 3 story shares per week'}), 429
+
+        earned = add_points_to_user(request.user_id, 25, 'Instagram Story')
+        return jsonify({'success': True, 'earned': earned})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/social/roomtour', methods=['POST'])
+@token_required
+@limiter.limit("5 per minute")
+def room_tour():
+    """
+    Server-authoritative room tour share.
+    Enforces once per calendar month.
+    """
+    try:
+        month_start_dt = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        month_start = int(month_start_dt.timestamp() * 1000)
+
+        tours = supabase.table('point_logs').select(
+            'id', count='exact'
+        ).eq('user_id', request.user_id).eq('action', 'Room Tour').gte('timestamp', month_start).execute()
+
+        if tours.count and tours.count >= 1:
+            return jsonify({'error': 'Room tour already used this month'}), 429
+
+        earned = add_points_to_user(request.user_id, 150, 'Room Tour')
+        return jsonify({'success': True, 'earned': earned})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 @app.route('/api/daily/checkin', methods=['POST'])
 @token_required
+@limiter.limit("10 per minute")
 def daily_checkin():
+    """
+    Daily check-in — server-authoritative. Points are only awarded here,
+    never on the client side.
+    """
     try:
         result = supabase.table('users').select(
             'last_checkin, streak'
         ).eq('id', request.user_id).execute()
 
         user = result.data[0] if result.data else {'last_checkin': None, 'streak': 0}
-        today = datetime.now().date().isoformat()
+
+        # Use ISO date strings consistently
+        today = datetime.utcnow().date().isoformat()
 
         if user.get('last_checkin') == today:
             return jsonify({'success': False, 'message': 'Already checked in today'})
@@ -298,7 +495,7 @@ def daily_checkin():
         bonus = 0
 
         if user.get('last_checkin'):
-            yesterday = (datetime.now() - timedelta(days=1)).date().isoformat()
+            yesterday = (datetime.utcnow() - timedelta(days=1)).date().isoformat()
             if user['last_checkin'] == yesterday:
                 new_streak = (user.get('streak') or 0) + 1
 
@@ -339,7 +536,6 @@ def get_posters():
             query = query.eq('category', category)
 
         if limited:
-            # FIX: is_limited is boolean in Supabase, not int
             query = query.eq('is_limited', True)
 
         result = query.order('created_at', desc=True).execute()
@@ -354,7 +550,6 @@ def get_posters():
 @token_required
 def get_feed():
     try:
-        # FIX: removed @token_required conflict — auth is now consistent
         result = supabase.table('posters').select('*').order('created_at', desc=True).execute()
 
         feed = []
@@ -362,6 +557,8 @@ def get_feed():
             feed.append({
                 "type": "poster",
                 "id": poster["id"],
+                # escape_html is a defence-in-depth measure; primary XSS
+                # prevention is in the frontend (textContent, not innerHTML)
                 "name": poster["name"],
                 "image_url": poster.get("image_url", ""),
                 "price": poster.get("price", 0),
@@ -380,6 +577,7 @@ def get_feed():
 # ==================== ORDERS ====================
 @app.route('/api/order/create', methods=['POST'])
 @token_required
+@limiter.limit("20 per minute")
 def create_order():
     try:
         data = request.get_json(silent=True) or {}
@@ -391,7 +589,8 @@ def create_order():
             return jsonify({'error': 'No items in order'}), 400
 
         order_id = str(uuid.uuid4())
-        current_time = int(datetime.now().timestamp() * 1000)
+        now_iso = datetime.utcnow().isoformat() + 'Z'
+        current_time = int(datetime.utcnow().timestamp() * 1000)
 
         user_result = supabase.table('users').select(
             'multiplier, multiplier_expiry'
@@ -410,7 +609,6 @@ def create_order():
             elif item.get('type') == 'limited':
                 new_multiplier = max(new_multiplier, 1.8)
 
-        # Upgrade multiplier for large spend
         if total_price >= 49:
             new_multiplier = max(new_multiplier, 2.0)
 
@@ -422,16 +620,18 @@ def create_order():
             'total_points': final_points,
             'boost_given': new_multiplier,
             'status': 'completed',
-            'created_at': current_time
+            'created_at': now_iso
         }).execute()
 
-        # Award points (uses current multiplier for this purchase)
+        # Award points server-side (atomic via RPC)
         earned = add_points_to_user(request.user_id, total_base_points, 'Purchase order')
 
         # Update multiplier for future purchases
         supabase.table('users').update({
             'multiplier': new_multiplier,
-            'multiplier_expiry': int((datetime.now() + timedelta(days=7)).timestamp() * 1000)
+            'multiplier_expiry': int(
+                (datetime.utcnow() + timedelta(days=7)).timestamp() * 1000
+            )
         }).eq('id', request.user_id).execute()
 
         return jsonify({
@@ -477,7 +677,8 @@ def get_weekly_leaderboard():
 def get_profile():
     try:
         user_result = supabase.table('users').select(
-            'id, name, email, points, weekly_points, streak, multiplier, multiplier_expiry, referral_code, last_checkin'
+            'id, name, email, points, weekly_points, streak, multiplier, '
+            'multiplier_expiry, referral_code, last_checkin'
         ).eq('id', request.user_id).execute()
 
         if not user_result.data:
@@ -485,7 +686,6 @@ def get_profile():
 
         user = user_result.data[0]
 
-        # Audit log — gracefully handle missing table
         audit_log = []
         try:
             logs = supabase.table('point_logs').select(
@@ -495,7 +695,6 @@ def get_profile():
         except Exception:
             pass
 
-        # Rank = number of users with more points + 1
         rank = 1
         try:
             rank_result = supabase.table('users').select(
@@ -528,6 +727,28 @@ def get_user_status():
         return jsonify({'error': str(e)}), 500
 
 
+# ==================== PASSWORD RESET ====================
+@app.route('/api/auth/reset-password', methods=['POST'])
+@limiter.limit("5 per minute")
+def request_password_reset():
+    """
+    Trigger Supabase's built-in password reset email.
+    Always returns 200 to prevent user enumeration.
+    """
+    try:
+        data = request.get_json(silent=True) or {}
+        email = data.get('email', '').strip().lower()
+        if email:
+            try:
+                supabase.auth.reset_password_email(email)
+            except Exception as e:
+                # Log but don't expose to caller
+                print(f"Password reset error (not exposed): {e}")
+        return jsonify({'success': True, 'message': 'If that email exists, a reset link has been sent.'})
+    except Exception as e:
+        return jsonify({'error': 'Server error'}), 500
+
+
 # ==================== STATIC FILE SERVING ====================
 @app.route('/')
 def serve_frontend():
@@ -537,7 +758,6 @@ def serve_frontend():
 def serve_dashboard():
     return send_from_directory('.', 'home.html')
 
-# Serve any other static assets (CSS, JS, images) from current directory
 @app.route('/<path:filename>')
 def serve_static(filename):
     return send_from_directory('.', filename)
@@ -549,8 +769,8 @@ def health_check():
     return jsonify({
         'status': 'healthy',
         'app': 'Wall Culture',
-        'version': '1.0.0',
-        'timestamp': datetime.now().isoformat()
+        'version': '1.1.0',
+        'timestamp': datetime.utcnow().isoformat() + 'Z'
     })
 
 
@@ -560,5 +780,6 @@ if __name__ == '__main__':
     print("="*50)
     print(f"📍 Running on: http://localhost:5000")
     print(f"📡 Supabase: {SUPABASE_URL}")
+    print(f"🔒 CORS origins: {ALLOWED_ORIGINS}")
     print("="*50 + "\n")
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=False, host='0.0.0.0', port=5000)

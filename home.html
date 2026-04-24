@@ -11,252 +11,165 @@
         body {
             background: linear-gradient(145deg, #FFE8D4 0%, #FFD9B5 100%);
             font-family: 'Plus Jakarta Sans', sans-serif;
-            height: 100vh;
-            overflow: hidden;
+            height: 100vh; overflow: hidden;
         }
         .app-wrapper {
-            max-width: 450px;
-            margin: 0 auto;
-            height: 100vh;
+            max-width: 450px; margin: 0 auto; height: 100vh;
             background: linear-gradient(135deg, #FFF5E6 0%, #FFE0C8 100%);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            box-shadow: 0 0 40px rgba(0,0,0,0.15);
-            position: relative;
+            display: flex; flex-direction: column; overflow: hidden;
+            box-shadow: 0 0 40px rgba(0,0,0,0.15); position: relative;
         }
         .app-header {
-            padding: 16px 20px 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            border-bottom: 1px solid rgba(212, 107, 58, 0.2);
-            flex-shrink: 0;
+            padding: 16px 20px 12px; display: flex;
+            justify-content: space-between; align-items: baseline;
+            border-bottom: 1px solid rgba(212,107,58,0.2); flex-shrink: 0;
         }
         .logo-area h1 {
-            font-size: 1.6rem;
-            font-weight: 800;
+            font-size: 1.6rem; font-weight: 800;
             background: linear-gradient(135deg, #FF6B4A, #FF8E53, #FFB347);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
+            -webkit-background-clip: text; background-clip: text; color: transparent;
         }
         .quick-points {
-            background: #FFD5A4;
-            padding: 6px 14px;
-            border-radius: 40px;
-            color: #B45A2E;
-            font-weight: 700;
+            background: #FFD5A4; padding: 6px 14px; border-radius: 40px;
+            color: #B45A2E; font-weight: 700;
         }
         .quick-points span { font-weight: 800; color: #E85D2E; }
         .screen-container {
-            flex: 1;
-            overflow-y: auto;
-            overflow-x: hidden;
+            flex: 1; overflow-y: auto; overflow-x: hidden;
             padding: 16px 20px 20px;
             padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
         }
         .screen { display: none; animation: fadeIn 0.3s ease; }
         .screen.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
         .tab-bar {
-            background: #FFF0E0;
-            border-top: 1px solid rgba(255, 150, 80, 0.3);
-            display: flex;
-            padding: 8px 16px 12px;
-            gap: 6px;
+            background: #FFF0E0; border-top: 1px solid rgba(255,150,80,0.3);
+            display: flex; padding: 8px 16px 12px; gap: 6px;
             justify-content: space-around;
             padding-bottom: max(12px, env(safe-area-inset-bottom, 12px));
             flex-shrink: 0;
         }
         .tab-item {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            padding: 8px 0;
-            border-radius: 30px;
-            background: transparent;
-            border: none;
-            color: #CA834E;
-            font-weight: 600;
-            font-size: 0.7rem;
-            transition: 0.2s;
-            cursor: pointer;
+            flex: 1; display: flex; flex-direction: column; align-items: center;
+            gap: 4px; padding: 8px 0; border-radius: 30px; background: transparent;
+            border: none; color: #CA834E; font-weight: 600; font-size: 0.7rem;
+            transition: 0.2s; cursor: pointer;
         }
         .tab-item i { font-size: 1.4rem; }
         .tab-item.active { background: #FFD1A4; color: #E85D2E; }
+
         .card {
-            background: rgba(255, 245, 235, 0.9);
-            border-radius: 32px;
-            padding: 1.2rem;
-            margin-bottom: 1rem;
-            border: 1px solid rgba(255, 140, 80, 0.3);
+            background: rgba(255,245,235,0.9); border-radius: 32px; padding: 1.2rem;
+            margin-bottom: 1rem; border: 1px solid rgba(255,140,80,0.3);
             box-shadow: 0 8px 20px rgba(0,0,0,0.05);
         }
-        .btn {
-            border: none;
-            padding: 12px 20px;
-            border-radius: 60px;
-            font-weight: 700;
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: 0.15s;
-        }
+        .btn { border: none; padding: 12px 20px; border-radius: 60px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: 0.15s; }
         .btn-primary { background: linear-gradient(95deg, #FF6B4A, #FF8E53); color: white; box-shadow: 0 6px 14px #FF6B4A60; }
         .btn-secondary { background: #FFE0C0; border: 1px solid #FFA559; color: #D45A2C; }
         .btn-success { background: linear-gradient(95deg, #38B000, #70E000); color: white; }
 
-        /* ===== FEED (HOME) STYLES ===== */
-        #feedContainer {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
+        /* ===== FEED — GALLERY STYLE (per design brief) ===== */
+        #feedContainer { display: flex; flex-direction: column; gap: 28px; }
+
+        /* Each poster is a large, museum-style card */
         .poster-feed-card {
-            background: white;
-            border-radius: 28px;
-            overflow: hidden;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-            border: 1px solid rgba(255, 140, 80, 0.2);
-            transition: transform 0.2s ease;
-        }
-        .poster-feed-card:active { transform: scale(0.98); }
-        .poster-feed-image {
-            width: 100%;
-            height: 220px;
-            object-fit: cover;
-            display: block;
-            background: linear-gradient(135deg, #FFF0E5, #FFE2CE);
-        }
-        .poster-feed-image-placeholder {
-            width: 100%;
-            height: 220px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 5rem;
-            background: linear-gradient(135deg, #FFF0E5, #FFE2CE);
-        }
-        .poster-feed-body {
-            padding: 14px 16px;
-        }
-        .poster-feed-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 10px;
-        }
-        .poster-feed-name {
-            font-weight: 800;
-            font-size: 1rem;
-            color: #2A1A0A;
-            flex: 1;
-            margin-right: 8px;
-        }
-        .poster-feed-price {
-            font-weight: 800;
-            font-size: 1rem;
-            color: #FF6B4A;
-            white-space: nowrap;
-        }
-        .poster-feed-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-        }
-        .poster-feed-tags {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-            flex: 1;
-        }
-        .feed-tag {
-            background: #FFE8D8;
-            color: #B45A2E;
-            padding: 3px 10px;
-            border-radius: 30px;
-            font-size: 0.65rem;
-            font-weight: 600;
-        }
-        .feed-tag.limited {
-            background: #FF6B4A;
-            color: white;
-        }
-        .feed-pts-badge {
-            background: #FFF0D0;
-            color: #B45A2E;
-            padding: 3px 10px;
-            border-radius: 30px;
-            font-size: 0.65rem;
-            font-weight: 700;
-            white-space: nowrap;
-        }
-        .add-to-cart-feed-btn {
-            background: linear-gradient(95deg, #FF6B4A, #FF8E53);
-            color: white;
-            border: none;
-            border-radius: 30px;
-            padding: 10px 20px;
-            font-weight: 700;
-            font-size: 0.8rem;
+            background: white; border-radius: 24px; overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border: 1px solid rgba(255,140,80,0.12);
             cursor: pointer;
-            white-space: nowrap;
-            box-shadow: 0 4px 12px #FF6B4A40;
-            transition: transform 0.1s;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
-        .add-to-cart-feed-btn:active { transform: scale(0.95); }
-        .feed-loading {
-            text-align: center;
-            padding: 40px 20px;
-            color: #B45A2E;
-            font-size: 0.85rem;
+        .poster-feed-card:active { transform: scale(0.985); }
+
+        /* FIX: Large image — 80-90% viewport feel as per design brief */
+        .poster-feed-image {
+            width: 100%; height: 340px; object-fit: cover; display: block;
+            background: linear-gradient(135deg, #FFF0E5, #FFE2CE);
         }
-        .feed-empty {
-            text-align: center;
-            padding: 40px 20px;
-            color: #B45A2E;
-            font-size: 0.85rem;
+        .poster-feed-placeholder {
+            width: 100%; height: 340px; display: flex; align-items: center;
+            justify-content: center; font-size: 6rem;
+            background: linear-gradient(135deg, #FFF0E5, #FFE2CE);
         }
+
+        /* Minimal info below — name, price, points only */
+        .poster-feed-info {
+            padding: 14px 18px 16px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .poster-feed-name { font-weight: 700; font-size: 0.95rem; color: #2A1A0A; }
+        .poster-feed-price { font-weight: 800; font-size: 1rem; color: #FF6B4A; }
+        .poster-feed-pts { font-size: 0.7rem; color: #B45A2E; margin-top: 2px; }
+        .limited-dot {
+            width: 8px; height: 8px; border-radius: 50%; background: #FF6B4A;
+            display: inline-block; margin-right: 4px;
+        }
+
+        .feed-loading, .feed-empty {
+            text-align: center; padding: 40px 20px;
+            color: #B45A2E; font-size: 0.85rem;
+        }
+
+        /* ===== IMMERSIVE POSTER VIEW ===== */
+        /* FIX: Uses a tall in-flow faux-overlay (min-height covers screen)
+           instead of position:fixed which collapses the iframe. */
+        .poster-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(15,8,2,0.92); backdrop-filter: blur(12px);
+            z-index: 500; flex-direction: column;
+            align-items: center; justify-content: flex-end;
+            overflow-y: auto;
+        }
+        .poster-overlay.open { display: flex; }
+        .overlay-image-wrap {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            padding: 40px 20px 16px; width: 100%;
+        }
+        .overlay-image-wrap img, .overlay-image-wrap .overlay-emoji {
+            max-width: 90%; max-height: 60vh; border-radius: 16px;
+            object-fit: contain; display: block;
+        }
+        .overlay-emoji { font-size: 10rem; }
+        .overlay-close {
+            position: absolute; top: 16px; right: 20px;
+            background: rgba(255,255,255,0.15); border: none; color: white;
+            width: 36px; height: 36px; border-radius: 50%; font-size: 1rem;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+        .overlay-panel {
+            background: #FFF8F2; border-radius: 40px 40px 0 0;
+            padding: 24px 28px 32px; width: 100%;
+        }
+        .overlay-name { font-weight: 800; font-size: 1.15rem; color: #2A1A0A; margin-bottom: 4px; }
+        .overlay-sub { font-size: 0.8rem; color: #B45A2E; margin-bottom: 18px; }
+        .overlay-add-btn {
+            width: 100%; background: linear-gradient(95deg, #FF6B4A, #FF8E53);
+            color: white; border: none; border-radius: 60px; padding: 14px;
+            font-weight: 800; font-size: 1rem; cursor: pointer;
+            box-shadow: 0 6px 18px #FF6B4A50; transition: transform 0.15s;
+        }
+        .overlay-add-btn:active { transform: scale(0.97); }
+        .overlay-add-btn.added { background: linear-gradient(95deg, #38B000, #70E000); }
 
         /* ===== GALLERY ===== */
         .gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 8px; }
         .gallery-card {
-            background: white;
-            border-radius: 28px;
-            overflow: hidden;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-            transition: transform 0.2s ease;
-            cursor: pointer;
-            border: 1px solid rgba(255, 140, 80, 0.3);
+            background: white; border-radius: 28px; overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08); transition: transform 0.2s ease;
+            cursor: pointer; border: 1px solid rgba(255,140,80,0.3);
         }
         .gallery-card:active { transform: scale(0.97); }
         .gallery-media {
-            height: 140px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 4rem;
-            background: linear-gradient(135deg, #FFF0E5, #FFE2CE);
-            overflow: hidden;
+            height: 140px; display: flex; align-items: center;
+            justify-content: center; font-size: 4rem;
+            background: linear-gradient(135deg, #FFF0E5, #FFE2CE); overflow: hidden;
         }
-        .gallery-media img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
+        .gallery-media img { width: 100%; height: 100%; object-fit: cover; }
         .gallery-info { padding: 12px; }
         .gallery-title { font-weight: 800; font-size: 0.85rem; color: #4A2A1A; }
         .gallery-price { font-size: 0.7rem; color: #FF6B4A; font-weight: 700; margin-top: 4px; }
-        .gallery-loading {
-            grid-column: 1 / -1;
-            text-align: center;
-            padding: 30px;
-            color: #B45A2E;
-            font-size: 0.85rem;
-        }
+        .gallery-loading { grid-column: 1 / -1; text-align: center; padding: 30px; color: #B45A2E; font-size: 0.85rem; }
 
         /* ===== SHOP ===== */
         .cart-sidebar { background: #FFF0E5; border-radius: 28px; padding: 16px; margin-bottom: 16px; border: 1px solid #FFB47A; }
@@ -266,7 +179,7 @@
         .custom-thumb { width: 70px; height: 70px; background: #FFE8DC; border-radius: 20px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
         .custom-thumb img { width: 100%; height: 100%; object-fit: cover; }
         .file-input-label { background: #FFE8DC; border: 1.5px dashed #FFA559; border-radius: 60px; padding: 12px; text-align: center; cursor: pointer; display: block; margin: 8px 0; color: #D45A2C; font-weight: 600; }
-        .custom-input { background: white; border: 1.5px solid #FFD1A4; border-radius: 60px; padding: 12px; width: 100%; color: #4A2A1A; margin: 8px 0; }
+        .custom-input { background: white; border: 1.5px solid #FFD1A4; border-radius: 60px; padding: 12px; width: 100%; color: #4A2A1A; margin: 8px 0; font-family: inherit; }
         .badge { background: #FFD5A4; color: #B45A2E; padding: 4px 12px; border-radius: 50px; font-size: 0.7rem; font-weight: 600; display: inline-block; margin: 2px; }
         .info-box { background: #FFE8DC; border-radius: 20px; padding: 12px; margin-top: 12px; font-size: 0.7rem; color: #B45A2E; }
         .audit-item { font-size: 0.7rem; padding: 6px 0; border-bottom: 1px solid #FFD9B5; display: flex; justify-content: space-between; }
@@ -274,23 +187,21 @@
         .earn-header { font-weight: 800; color: #E85D2E; margin-bottom: 6px; font-size: 0.8rem; }
         .earn-list { display: flex; flex-wrap: wrap; gap: 6px; }
         .earn-item { background: #FFE0C8; padding: 4px 10px; border-radius: 30px; font-size: 0.65rem; color: #B45A2E; }
-        .modal {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(8px);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        .modal-content { background: #FFF5EE; border-radius: 48px; padding: 1.5rem; max-width: 320px; width: 90%; text-align: center; max-height: 70vh; overflow-y: auto; }
+
         .streak-badge { background: #FF8E53; color: white; padding: 4px 12px; border-radius: 50px; font-size: 0.7rem; font-weight: bold; display: inline-block; }
         .theme-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 12px; margin-bottom: 8px; }
         .theme-tab { background: #FFE8D8; padding: 8px 20px; border-radius: 40px; font-size: 0.8rem; font-weight: 600; white-space: nowrap; cursor: pointer; flex-shrink: 0; }
         .theme-tab.active { background: #FF8E53; color: white; }
         .logout-btn { background: none; border: 1px solid #FFB47A; color: #B45A2E; padding: 8px 20px; border-radius: 60px; font-size: 0.75rem; font-weight: 600; cursor: pointer; margin-top: 12px; width: 100%; }
         .logout-btn:hover { background: #FFE8DC; }
+
+        /* Modal (referral / QR) — uses fixed positioning correctly since this is the real DOM */
+        .modal {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
+            display: none; justify-content: center; align-items: center; z-index: 1000;
+        }
+        .modal-content { background: #FFF5EE; border-radius: 48px; padding: 1.5rem; max-width: 320px; width: 90%; text-align: center; max-height: 70vh; overflow-y: auto; }
     </style>
 </head>
 <body>
@@ -302,20 +213,18 @@
 
     <div class="screen-container">
 
-        <!-- ===== HOME SCREEN (FEED = STORE) ===== -->
+        <!-- ===== HOME SCREEN ===== -->
         <div id="homeScreen" class="screen active">
-            <!-- Welcome card -->
             <div class="card" style="background: linear-gradient(135deg, #FFD1A4, #FFB87A); margin-bottom: 12px;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div><span style="font-size: 0.7rem;">🔥 <span id="homeStreak">0</span> day streak</span></div>
+                    <span style="font-size: 0.7rem;">🔥 Streak</span>
                     <div class="streak-badge"><i class="fas fa-fire"></i> <span id="homeStreakDisplay">0</span> day streak!</div>
                 </div>
                 <h2 style="margin: 12px 0 4px;">Hey, <span id="homeUserName">there</span>!</h2>
-                <p style="font-size: 0.8rem;">Scroll to discover posters · tap to add to cart 🛒</p>
+                <p style="font-size: 0.8rem;">Scroll to discover posters · tap to view &amp; add to cart</p>
                 <p style="font-size: 0.7rem; margin-top: 6px; opacity: 0.8;">This week: <strong><span id="homeWeekly">0</span> pts</strong></p>
             </div>
 
-            <!-- Quick actions strip -->
             <div class="card" style="margin-bottom: 12px;">
                 <h3 style="margin-bottom: 10px;"><i class="fas fa-bolt"></i> Quick Actions</h3>
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
@@ -326,49 +235,40 @@
                 </div>
             </div>
 
-            <!-- Milestone progress -->
             <div class="card" style="margin-bottom: 12px;">
                 <div style="display: flex; justify-content: space-between; font-size:0.7rem;"><span>🏆 Next: <span id="nextMilestoneText">Sticker pack</span></span><span id="nextPointsNeeded">250 pts</span></div>
                 <div style="background:#FFD9B5; border-radius:30px; height:8px; margin:8px 0;"><div id="homeProgressFill" style="width:0%; height:100%; background:linear-gradient(90deg,#FF8E53,#FF6B4A); border-radius:30px; transition: width 0.6s ease;"></div></div>
             </div>
 
-            <!-- FEED SECTION: this is the store -->
             <div style="margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
-                <h3 style="color: #4A2A1A; font-size: 0.9rem;"><i class="fas fa-fire" style="color:#FF6B4A;"></i> Discover Posters</h3>
-                <span style="font-size: 0.65rem; color: #B45A2E;">tap to add to cart</span>
+                <h3 style="color:#4A2A1A; font-size:0.9rem;"><i class="fas fa-images" style="color:#FF6B4A;"></i> Discover Posters</h3>
+                <span style="font-size:0.65rem; color:#B45A2E;">tap to view &amp; add</span>
             </div>
             <div id="feedContainer">
-                <div class="feed-loading"><i class="fas fa-spinner fa-spin"></i> Loading posters...</div>
+                <div class="feed-loading"><i class="fas fa-spinner fa-spin"></i> Loading posters…</div>
             </div>
 
-            <!-- Points audit -->
             <div class="card" style="margin-top: 16px;">
                 <h3><i class="fas fa-history"></i> Points Audit Log</h3>
                 <div id="auditLogContainer" style="max-height: 200px; overflow-y: auto;"></div>
             </div>
 
-            <!-- Ways to earn (collapsed by default) -->
             <div class="card">
                 <h3 style="margin-bottom: 10px;"><i class="fas fa-book-open"></i> Ways to Earn Points</h3>
                 <div class="earn-category">
                     <div class="earn-header"><i class="fas fa-mobile-alt"></i> Social</div>
                     <div class="earn-list">
-                        <span class="earn-item">Follow IG +10</span>
-                        <span class="earn-item">Story +25</span>
-                        <span class="earn-item">Tag friends +5</span>
-                        <span class="earn-item">Refer +50</span>
-                        <span class="earn-item">Friend Buys +100</span>
-                        <span class="earn-item">Room Tour +150</span>
+                        <span class="earn-item">Follow IG +10</span><span class="earn-item">Story +25</span>
+                        <span class="earn-item">Tag friends +5</span><span class="earn-item">Refer +50</span>
+                        <span class="earn-item">Friend Buys +100</span><span class="earn-item">Room Tour +150</span>
                         <span class="earn-item">Repost +300</span>
                     </div>
                 </div>
                 <div class="earn-category">
                     <div class="earn-header"><i class="fas fa-shopping-cart"></i> Purchase</div>
                     <div class="earn-list">
-                        <span class="earn-item">Buy Poster +100</span>
-                        <span class="earn-item">Mystery Pack +150</span>
-                        <span class="earn-item">Limited Ed. +200</span>
-                        <span class="earn-item">Custom +80</span>
+                        <span class="earn-item">Buy Poster +100</span><span class="earn-item">Mystery Pack +150</span>
+                        <span class="earn-item">Limited Ed. +200</span><span class="earn-item">Custom +80</span>
                         <span class="earn-item">Spend $50+ +250</span>
                     </div>
                 </div>
@@ -388,7 +288,7 @@
         <div id="galleryScreen" class="screen">
             <div class="card" style="background:#FFE8DC;">
                 <h3><i class="fas fa-images"></i> Poster Collections</h3>
-                <p style="font-size:0.75rem;">Browse by theme — tap any to add to cart</p>
+                <p style="font-size:0.75rem;">Browse by theme — tap any to view &amp; add to cart</p>
             </div>
             <div class="theme-tabs" id="galleryThemeTabs">
                 <div class="theme-tab active" data-theme="aesthetic">🎨 Aesthetic</div>
@@ -398,7 +298,7 @@
                 <div class="theme-tab" data-theme="theater">🎭 Theater</div>
             </div>
             <div id="galleryCollectionsContainer" class="gallery-grid">
-                <div class="gallery-loading"><i class="fas fa-spinner fa-spin"></i> Loading...</div>
+                <div class="gallery-loading"><i class="fas fa-spinner fa-spin"></i> Loading…</div>
             </div>
         </div>
 
@@ -414,27 +314,23 @@
             <div class="info-box">
                 <i class="fas fa-info-circle"></i> <strong>How Multiplier Works:</strong> Every purchase activates boost (1.2x–2x) for 7 days on ALL future points!
             </div>
-
             <div class="cart-sidebar">
                 <h4><i class="fas fa-shopping-cart"></i> Your Cart <span id="cartItemCount">(0)</span></h4>
                 <div id="cartItemsList"></div>
                 <div style="display: flex; justify-content: space-between; margin-top: 12px; font-weight: bold;">
                     <span>Total: $<span id="cartTotalAmount">0</span></span>
-                    <button id="checkoutBtnShop" class="btn btn-success" style="padding: 8px 20px;">Pay & Earn</button>
+                    <button id="checkoutBtnShop" class="btn btn-success" style="padding: 8px 20px;">Pay &amp; Earn</button>
                 </div>
             </div>
-
             <div class="card">
                 <h3><i class="fas fa-gift"></i> Mystery Package</h3>
                 <p style="font-size:0.75rem;">Surprise poster! +150pts, 1.5x boost</p>
                 <button id="addMysteryBtn" class="btn btn-primary" style="width:100%; margin-top: 10px;"><i class="fas fa-question-circle"></i> Add Mystery Pack ($30)</button>
             </div>
-
             <div class="card">
                 <h3><i class="fas fa-clock"></i> Limited Edition</h3>
                 <div class="gallery-grid" id="limitedGrid" style="margin-top: 12px;"></div>
             </div>
-
             <div class="card">
                 <h3><i class="fas fa-palette"></i> Custom Poster</h3>
                 <label class="file-input-label" for="customImageUpload"><i class="fas fa-cloud-upload-alt"></i> Upload your design</label>
@@ -459,9 +355,7 @@
                 <div style="display:flex;justify-content:space-between;margin:8px 0;"><span>🏅 Global Rank:</span><strong>#<span id="profileRankNum">—</span></strong></div>
                 <div style="display:flex;justify-content:space-between;margin:8px 0;"><span>⚡ Active Boost:</span><strong id="profileBoost">1.0x</strong></div>
                 <div style="height:6px; background:#FFD9B5; border-radius:4px; margin:12px 0;"><div id="rankProgressBar" style="width:0%; height:100%; background:#FF8E53; border-radius:4px; transition: width 0.6s ease;"></div></div>
-                <div class="info-box">
-                    <i class="fas fa-trophy"></i> <strong>Milestones:</strong> 250pts → Sticker pack | 500pts → 15% off | 1000pts → Free Mini Poster | 2500pts → Wall of Honor | 5000pts → Bronze Card
-                </div>
+                <div class="info-box"><i class="fas fa-trophy"></i> <strong>Milestones:</strong> 250pts → Sticker pack | 500pts → 15% off | 1000pts → Free Mini Poster | 2500pts → Wall of Honor | 5000pts → Bronze Card</div>
             </div>
             <div class="card">
                 <h4>🔗 Referral Code</h4>
@@ -483,18 +377,29 @@
     </div>
 </div>
 
+<!-- Immersive Poster Overlay -->
+<div id="posterOverlay" class="poster-overlay" role="dialog" aria-modal="true">
+    <button class="overlay-close" id="overlayClose" aria-label="Close"><i class="fas fa-times"></i></button>
+    <div class="overlay-image-wrap" id="overlayImageWrap"></div>
+    <div class="overlay-panel">
+        <div class="overlay-name" id="overlayName">—</div>
+        <div class="overlay-sub" id="overlaySub">—</div>
+        <button class="overlay-add-btn" id="overlayAddBtn"><i class="fas fa-cart-plus"></i> Add to Cart</button>
+    </div>
+</div>
+
 <!-- QR Modal -->
-<div id="qrModal" class="modal">
+<div id="qrModal" class="modal" role="dialog" aria-modal="true">
     <div class="modal-content">
         <i class="fas fa-qrcode" style="font-size:3rem; color:#FF8E53;"></i>
         <h3>Scan QR Code</h3>
-        <p>+15 points earned!</p>
-        <button id="closeModal" class="btn btn-primary" style="margin-top: 12px;">Got it</button>
+        <p id="qrModalMsg">Earning points…</p>
+        <button id="closeQrModal" class="btn btn-primary" style="margin-top: 12px;">Got it</button>
     </div>
 </div>
 
 <!-- Referral Modal -->
-<div id="referralModal" class="modal">
+<div id="referralModal" class="modal" role="dialog" aria-modal="true">
     <div class="modal-content">
         <h3><i class="fas fa-user-friends"></i> Refer a Friend</h3>
         <p>Your code: <strong id="modalReferralCode">—</strong></p>
@@ -508,8 +413,7 @@
 
     // ==================== AUTH GUARD ====================
     (function authGuard() {
-        const token = localStorage.getItem('wall_culture_token');
-        if (!token) window.location.href = 'index.html';
+        if (!localStorage.getItem('wall_culture_token')) window.location.href = 'index.html';
     })();
 
     function apiRequest(endpoint, options = {}) {
@@ -524,41 +428,43 @@
         });
     }
 
+    // ==================== XSS HELPERS ====================
+    // FIX: All dynamic data from the API is set via textContent (never innerHTML)
+    // or through these helpers for elements that need attributes set too.
+    function setText(el, text) {
+        if (typeof el === 'string') el = document.getElementById(el);
+        if (el) el.textContent = text;
+    }
+    function setAttr(el, attr, value) {
+        if (typeof el === 'string') el = document.getElementById(el);
+        if (el) el.setAttribute(attr, value);
+    }
+
     // ==================== STATE ====================
     let cart = [];
     let auditLog = [];
     let user = {
-        name: "Guest",
-        email: "",
-        points: 0,
-        streak: 0,
-        weeklyPoints: 0,
-        weekly_points: 0,
-        referralCode: "—",
-        referral_code: "—",
-        multiplier: 1,
-        multiplierExpiry: null,
-        multiplier_expiry: null
+        name: 'Guest', email: '', points: 0, streak: 0,
+        weeklyPoints: 0, weekly_points: 0,
+        referralCode: '—', referral_code: '—',
+        multiplier: 1, multiplierExpiry: null, multiplier_expiry: null
     };
     let globalRanking = [];
     let currentCustomImage = null;
-    let currentGalleryTheme = "aesthetic";
-
-    // Cache gallery results to avoid re-fetching on tab switch
+    let currentGalleryTheme = 'aesthetic';
     const galleryCache = {};
 
     // ==================== UTILITY ====================
     function showToast(msg) {
-        let d = document.createElement("div");
-        d.innerText = msg;
-        d.style.cssText = "position:fixed;bottom:90px;left:20px;right:20px;background:#FFE0B5;color:#4A2A1A;padding:12px;border-radius:60px;text-align:center;font-weight:bold;z-index:2000;box-shadow:0 4px 16px rgba(0,0,0,0.15);";
+        const d = document.createElement('div');
+        // textContent prevents XSS in toast messages
+        d.textContent = msg;
+        d.style.cssText = 'position:fixed;bottom:90px;left:20px;right:20px;background:#FFE0B5;color:#4A2A1A;padding:12px;border-radius:60px;text-align:center;font-weight:bold;z-index:2000;box-shadow:0 4px 16px rgba(0,0,0,0.15);';
         document.body.appendChild(d);
         setTimeout(() => d.remove(), 2000);
     }
 
-    function saveUser() {
-        localStorage.setItem('wall_culture_user', JSON.stringify(user));
-    }
+    function saveUser() { localStorage.setItem('wall_culture_user', JSON.stringify(user)); }
 
     function getBoost() {
         const expiry = user.multiplierExpiry || user.multiplier_expiry || 0;
@@ -566,7 +472,7 @@
     }
 
     function getRank() {
-        if (!globalRanking.length) return "—";
+        if (!globalRanking.length) return '—';
         const sorted = [...globalRanking].sort((a, b) => b.points - a.points);
         const idx = sorted.findIndex(u => u.name === user.name);
         return idx >= 0 ? idx + 1 : sorted.length + 1;
@@ -579,108 +485,192 @@
     }
 
     function renderAudit() {
-        const container = document.getElementById("auditLogContainer");
+        const container = document.getElementById('auditLogContainer');
         if (!container) return;
-        if (auditLog.length === 0) {
+        if (!auditLog.length) {
             container.innerHTML = "<div style='padding:8px;text-align:center;font-size:0.75rem;color:#B45A2E;'>No activity yet</div>";
             return;
         }
-        container.innerHTML = auditLog.map(a =>
-            `<div class="audit-item"><span>${a.action}</span><span style="color:#FF6B4A;font-weight:700;">${a.points > 0 ? '+' : ''}${a.points} pts</span><span style="font-size:0.6rem;color:#B45A2E;">${a.timestamp}</span></div>`
-        ).join("");
+        container.innerHTML = '';
+        auditLog.forEach(a => {
+            const row = document.createElement('div');
+            row.className = 'audit-item';
+            const action = document.createElement('span');
+            action.textContent = a.action;
+            const pts = document.createElement('span');
+            pts.style.cssText = 'color:#FF6B4A;font-weight:700;';
+            pts.textContent = (a.points > 0 ? '+' : '') + a.points + ' pts';
+            const ts = document.createElement('span');
+            ts.style.cssText = 'font-size:0.6rem;color:#B45A2E;';
+            ts.textContent = a.timestamp;
+            row.append(action, pts, ts);
+            container.appendChild(row);
+        });
     }
 
-    function addPoints(amount, action) {
-        let boost = getBoost();
-        let final = Math.floor(amount * boost);
-        user.points += final;
-        user.weeklyPoints = (user.weeklyPoints || 0) + final;
-        user.weekly_points = user.weeklyPoints;
-        addAudit(action, final);
-        saveUser();
-        refreshAllUI();
+    // ==================== SERVER-AUTHORITATIVE POINTS ====================
+    // FIX: All point awards go through the backend. The client only updates
+    // its local state AFTER a successful API response to avoid double-counting
+    // and to prevent client-side cheating via DevTools.
+
+    async function serverAddPoints(endpoint, method = 'POST', body = null) {
+        try {
+            const res = await apiRequest(endpoint, {
+                method,
+                body: body ? JSON.stringify(body) : undefined
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                // Sync from backend to get authoritative totals
+                await fetchUserProfile();
+                if (data.earned) addAudit(body?.action || 'Points earned', data.earned);
+                return data;
+            } else {
+                showToast(data.error || 'Action failed. Please try again.');
+                return null;
+            }
+        } catch {
+            showToast('Network error — please check your connection.');
+            return null;
+        }
+    }
+
+    async function scanQR() {
+        const result = await serverAddPoints('/scan/qr');
+        if (result) showToast(`✅ QR scanned! +${result.earned} pts`);
+    }
+
+    async function dailyCheck() {
+        const result = await serverAddPoints('/daily/checkin');
+        if (result) {
+            if (!result.success) { showToast(result.message || 'Already checked in today!'); return; }
+            showToast(`☀️ Checked in! +${result.earned} pts · ${result.streak} day streak`);
+        }
+    }
+
+    async function shareStory() {
+        if (!confirm('Did you post Wall Culture on your Instagram story?')) return;
+        const result = await serverAddPoints('/social/story');
+        if (result) showToast(`📸 Story shared! +${result.earned} pts`);
+    }
+
+    async function roomTour() {
+        if (!confirm('Did you post a room tour featuring Wall Culture?')) return;
+        const result = await serverAddPoints('/social/roomtour');
+        if (result) showToast(`🏠 Room tour! +${result.earned} pts`);
+    }
+
+    function referFriend() { document.getElementById('referralModal').style.display = 'flex'; }
+
+    function logout() {
+        localStorage.removeItem('wall_culture_token');
+        localStorage.removeItem('wall_culture_user');
+        window.location.href = 'index.html';
     }
 
     // ==================== REFRESH UI ====================
     function refreshAllUI() {
-        const refCode = user.referralCode || user.referral_code || "—";
-        const pts = user.points || 0;
-        const streak = user.streak || 0;
-        const weekly = user.weeklyPoints || user.weekly_points || 0;
-        const firstName = (user.name || "there").split(" ")[0];
+        const refCode  = user.referralCode || user.referral_code || '—';
+        const pts      = user.points || 0;
+        const streak   = user.streak || 0;
+        const weekly   = user.weeklyPoints || user.weekly_points || 0;
+        const firstName = (user.name || 'there').split(' ')[0];
 
-        document.getElementById("globalPoints").innerText = pts;
-        document.getElementById("profilePoints").innerText = pts;
-        document.getElementById("homeStreak").innerText = streak;
-        document.getElementById("homeStreakDisplay").innerText = streak;
-        document.getElementById("homeWeekly").innerText = weekly;
-        document.getElementById("homeUserName").innerText = firstName;
-        document.getElementById("profileName").innerText = user.name || "—";
-        document.getElementById("profileEmail").innerText = user.email || "—";
-        document.getElementById("profileCode").innerText = refCode;
-        document.getElementById("modalReferralCode").innerText = refCode;
+        setText('globalPoints', pts);
+        setText('profilePoints', pts);
+        setText('homeStreakDisplay', streak);
+        setText('homeWeekly', weekly);
+        setText('homeUserName', firstName);
+        setText('profileName', user.name || '—');
+        setText('profileEmail', user.email || '—');
+        setText('profileCode', refCode);
+        setText('modalReferralCode', refCode);
 
         const boost = getBoost();
-        document.getElementById("boostValue").innerText = boost.toFixed(1) + "x";
-        document.getElementById("profileBoost").innerText = boost.toFixed(1) + "x";
+        setText('boostValue', boost.toFixed(1) + 'x');
+        setText('profileBoost', boost.toFixed(1) + 'x');
         const expiry = user.multiplierExpiry || user.multiplier_expiry || 0;
         const days = expiry ? Math.max(0, Math.ceil((expiry - Date.now()) / 86400000)) : 0;
-        document.getElementById("boostDays").innerText = days;
+        setText('boostDays', days);
 
         const rank = getRank();
-        document.getElementById("userRank").innerText = rank;
-        document.getElementById("profileRankNum").innerText = rank;
+        setText('userRank', rank);
+        setText('profileRankNum', rank);
 
-        // Milestone progress
-        const milestones = [250, 500, 1000, 2500, 5000];
+        const milestones  = [250, 500, 1000, 2500, 5000];
         const next = milestones.find(m => pts < m) || 5000;
         const prev = milestones.filter(m => m <= pts).pop() || 0;
         const percent = next === prev ? 100 : ((pts - prev) / (next - prev)) * 100;
-        document.getElementById("homeProgressFill").style.width = Math.min(100, percent) + "%";
-        const rewardMap = { 250: "Sticker pack", 500: "15% off", 1000: "Free mini poster", 2500: "Wall of Honor", 5000: "Legend" };
-        document.getElementById("nextMilestoneText").innerText = rewardMap[next] || "Legend";
-        document.getElementById("nextPointsNeeded").innerText = next + " pts";
-        const tierPercent = (pts % 1000) / 1000 * 100;
-        document.getElementById("rankProgressBar").style.width = Math.min(100, tierPercent) + "%";
+        document.getElementById('homeProgressFill').style.width = Math.min(100, percent) + '%';
+        const rewardMap = { 250: 'Sticker pack', 500: '15% off', 1000: 'Free mini poster', 2500: 'Wall of Honor', 5000: 'Legend' };
+        setText('nextMilestoneText', rewardMap[next] || 'Legend');
+        setText('nextPointsNeeded', next + ' pts');
+        document.getElementById('rankProgressBar').style.width = Math.min(100, (pts % 1000) / 1000 * 100) + '%';
 
         renderCartUI();
     }
 
     // ==================== CART ====================
     function renderCartUI() {
-        const container = document.getElementById("cartItemsList");
+        const container = document.getElementById('cartItemsList');
         const count = cart.reduce((s, i) => s + i.qty, 0);
-        document.getElementById("cartItemCount").innerText = `(${count})`;
-        if (cart.length === 0) {
+        setText('cartItemCount', `(${count})`);
+
+        if (!cart.length) {
             container.innerHTML = "<div style='font-size:0.7rem; padding:8px; color:#B45A2E;'>Your cart is empty</div>";
-            document.getElementById("cartTotalAmount").innerText = "0";
+            setText('cartTotalAmount', '0');
             return;
         }
-        let html = "";
+
+        container.innerHTML = '';
         let total = 0;
         cart.forEach((item, idx) => {
             const subtotal = item.price * item.qty;
             total += subtotal;
-            const preview = item.image
-                ? `<img src="${item.image}" style="width:28px;height:28px;border-radius:12px;object-fit:cover;">`
-                : `<span style="font-size:1.2rem;">${item.emoji || "🖼️"}</span>`;
-            html += `<div class="cart-item-row">
-                <div style="display:flex;gap:10px;align-items:center;">${preview}<span><strong>${item.name}</strong> ×${item.qty}</span></div>
-                <div style="display:flex;align-items:center;gap:8px;">$${subtotal} <button class="remove-cart-btn" data-idx="${idx}"><i class="fas fa-trash-alt"></i></button></div>
-            </div>`;
-        });
-        container.innerHTML = html;
-        document.getElementById("cartTotalAmount").innerText = total;
-        document.querySelectorAll(".remove-cart-btn").forEach(btn => {
-            btn.addEventListener("click", () => {
-                const idx = parseInt(btn.dataset.idx);
-                if (!isNaN(idx) && cart[idx]) {
-                    if (cart[idx].qty > 1) cart[idx].qty--;
-                    else cart.splice(idx, 1);
-                    renderCartUI();
-                }
+
+            const row = document.createElement('div');
+            row.className = 'cart-item-row';
+
+            const left = document.createElement('div');
+            left.style.cssText = 'display:flex;gap:10px;align-items:center;';
+
+            if (item.image) {
+                const img = document.createElement('img');
+                img.src = item.image;  // data URL from FileReader — safe
+                img.style.cssText = 'width:28px;height:28px;border-radius:12px;object-fit:cover;';
+                left.appendChild(img);
+            } else {
+                const em = document.createElement('span');
+                em.style.fontSize = '1.2rem';
+                em.textContent = item.emoji || '🖼️';
+                left.appendChild(em);
+            }
+
+            const label = document.createElement('span');
+            const strong = document.createElement('strong');
+            strong.textContent = item.name;   // textContent — XSS safe
+            label.appendChild(strong);
+            label.append(` ×${item.qty}`);
+            left.appendChild(label);
+
+            const right = document.createElement('div');
+            right.style.cssText = 'display:flex;align-items:center;gap:8px;';
+            right.append(`$${subtotal} `);
+
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'remove-cart-btn';
+            removeBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+            removeBtn.addEventListener('click', () => {
+                if (cart[idx].qty > 1) cart[idx].qty--;
+                else cart.splice(idx, 1);
+                renderCartUI();
             });
+            right.appendChild(removeBtn);
+
+            row.append(left, right);
+            container.appendChild(row);
         });
+        setText('cartTotalAmount', total);
     }
 
     function addToCart(item) {
@@ -691,338 +681,335 @@
         showToast(`✓ ${item.name} added to cart`);
     }
 
-    // ==================== FEED (HOME STORE) ====================
+    // ==================== FEED — GALLERY STYLE ====================
     async function loadFeed() {
         const container = document.getElementById('feedContainer');
-        container.innerHTML = '<div class="feed-loading"><i class="fas fa-spinner fa-spin"></i> Loading posters...</div>';
-
+        container.innerHTML = '<div class="feed-loading"><i class="fas fa-spinner fa-spin"></i> Loading posters…</div>';
         try {
-            const res = await apiRequest('/feed');
+            const res  = await apiRequest('/feed');
             const data = await res.json();
-
-            if (!res.ok) {
-                container.innerHTML = '<div class="feed-empty">Could not load posters. Please try again.</div>';
-                return;
-            }
-
+            if (!res.ok) { container.innerHTML = '<div class="feed-empty">Could not load posters. Please try again.</div>'; return; }
             renderFeed(data.feed || []);
-        } catch (err) {
-            console.error('Feed error:', err);
+        } catch {
             container.innerHTML = '<div class="feed-empty">Network error loading feed.</div>';
         }
     }
 
     function renderFeed(feed) {
         const container = document.getElementById('feedContainer');
-
-        if (!feed || feed.length === 0) {
+        if (!feed || !feed.length) {
             container.innerHTML = '<div class="feed-empty">No posters available yet. Check back soon! 🎨</div>';
             return;
         }
-
         container.innerHTML = '';
         feed.forEach(item => {
             const card = document.createElement('div');
             card.className = 'poster-feed-card';
 
-            const imageHTML = item.image_url
-                ? `<img class="poster-feed-image" src="${item.image_url}" alt="${item.name}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                   <div class="poster-feed-image-placeholder" style="display:none;">🖼️</div>`
-                : `<div class="poster-feed-image-placeholder">🖼️</div>`;
+            // FIX: Use DOM construction (not innerHTML) for all user-sourced strings
+            // to eliminate XSS risk entirely.
+            if (item.image_url) {
+                const img = document.createElement('img');
+                img.className = 'poster-feed-image';
+                img.loading = 'lazy';
+                img.alt = '';               // decorative; name is in text below
+                img.src = item.image_url;
+                img.onerror = () => {
+                    img.replaceWith(makePlaceholder());
+                };
+                card.appendChild(img);
+            } else {
+                card.appendChild(makePlaceholder());
+            }
 
-            const limitedBadge = item.is_limited ? `<span class="feed-tag limited">⚡ Limited</span>` : '';
+            // Minimal info row
+            const info = document.createElement('div');
+            info.className = 'poster-feed-info';
 
-            card.innerHTML = `
-                ${imageHTML}
-                <div class="poster-feed-body">
-                    <div class="poster-feed-meta">
-                        <span class="poster-feed-name">${item.name}</span>
-                        <span class="poster-feed-price">$${item.price}</span>
-                    </div>
-                    <div class="poster-feed-footer">
-                        <div class="poster-feed-tags">
-                            <span class="feed-tag">${item.category || 'poster'}</span>
-                            ${limitedBadge}
-                            <span class="feed-pts-badge">+${item.points} pts</span>
-                        </div>
-                        <button class="add-to-cart-feed-btn" data-id="${item.id}" data-name="${item.name}" data-price="${item.price}" data-points="${item.points}">
-                            <i class="fas fa-cart-plus"></i> Add
-                        </button>
-                    </div>
-                </div>
-            `;
+            const left = document.createElement('div');
+            const name = document.createElement('div');
+            name.className = 'poster-feed-name';
+            name.textContent = item.name;         // textContent — safe
+            const pts = document.createElement('div');
+            pts.className = 'poster-feed-pts';
+            if (item.is_limited) {
+                const dot = document.createElement('span');
+                dot.className = 'limited-dot';
+                pts.appendChild(dot);
+                pts.append('Limited · ');
+            }
+            pts.append(`+${item.points} pts`);
+            left.append(name, pts);
 
+            const price = document.createElement('div');
+            price.className = 'poster-feed-price';
+            price.textContent = `$${item.price}`;
+
+            info.append(left, price);
+            card.appendChild(info);
+
+            // Tap anywhere on card → open immersive view
+            card.addEventListener('click', () => openOverlay(item));
             container.appendChild(card);
-        });
-
-        // Wire up add-to-cart buttons
-        container.querySelectorAll('.add-to-cart-feed-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                addToCart({
-                    type: 'poster',
-                    id: btn.dataset.id,
-                    name: btn.dataset.name,
-                    price: parseFloat(btn.dataset.price),
-                    points: parseInt(btn.dataset.points),
-                    emoji: '🖼️'
-                });
-                // Visual feedback
-                btn.innerText = '✓ Added';
-                btn.style.background = 'linear-gradient(95deg, #38B000, #70E000)';
-                setTimeout(() => {
-                    btn.innerHTML = '<i class="fas fa-cart-plus"></i> Add';
-                    btn.style.background = '';
-                }, 1200);
-            });
         });
     }
 
-    // ==================== GALLERY (BACKEND-DRIVEN) ====================
-    async function renderGalleryCollections(theme) {
-        const container = document.getElementById("galleryCollectionsContainer");
-        container.innerHTML = '<div class="gallery-loading"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+    function makePlaceholder() {
+        const ph = document.createElement('div');
+        ph.className = 'poster-feed-placeholder';
+        ph.textContent = '🖼️';
+        return ph;
+    }
 
-        // Use cache if available
-        if (galleryCache[theme]) {
-            buildGalleryGrid(galleryCache[theme], container);
-            return;
+    // ==================== IMMERSIVE POSTER OVERLAY ====================
+    // FIX: Implements the full-screen gallery view required by the design brief.
+    // tap poster → image expands → bottom panel with name, price, add-to-cart.
+
+    let overlayItem = null;
+
+    function openOverlay(item) {
+        overlayItem = item;
+        const overlay = document.getElementById('posterOverlay');
+        const imgWrap = document.getElementById('overlayImageWrap');
+        imgWrap.innerHTML = '';
+
+        if (item.image_url) {
+            const img = document.createElement('img');
+            img.alt = '';
+            img.src = item.image_url;
+            img.style.cssText = 'max-width:90%; max-height:60vh; border-radius:16px; object-fit:contain;';
+            img.onerror = () => { img.replaceWith(makeOverlayEmoji()); };
+            imgWrap.appendChild(img);
+        } else {
+            imgWrap.appendChild(makeOverlayEmoji());
         }
 
+        setText('overlayName', item.name);
+        const sub = `$${item.price}` + (item.is_limited ? ' · ⚡ Limited Edition' : '') + ` · +${item.points} pts`;
+        setText('overlaySub', sub);
+
+        const addBtn = document.getElementById('overlayAddBtn');
+        addBtn.textContent = '🛒 Add to Cart';
+        addBtn.className = 'overlay-add-btn';
+
+        overlay.classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function makeOverlayEmoji() {
+        const d = document.createElement('div');
+        d.className = 'overlay-emoji';
+        d.textContent = '🖼️';
+        return d;
+    }
+
+    function closeOverlay() {
+        document.getElementById('posterOverlay').classList.remove('open');
+        document.body.style.overflow = '';
+        overlayItem = null;
+    }
+
+    document.getElementById('overlayClose').addEventListener('click', closeOverlay);
+    document.getElementById('posterOverlay').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('posterOverlay')) closeOverlay();
+    });
+
+    document.getElementById('overlayAddBtn').addEventListener('click', () => {
+        if (!overlayItem) return;
+        addToCart({
+            type: overlayItem.is_limited ? 'limited' : 'poster',
+            id: overlayItem.id,
+            name: overlayItem.name,
+            price: overlayItem.price,
+            points: overlayItem.points,
+            emoji: '🖼️'
+        });
+        const btn = document.getElementById('overlayAddBtn');
+        btn.textContent = '✓ Added to Cart';
+        btn.className = 'overlay-add-btn added';
+        setTimeout(closeOverlay, 800);
+    });
+
+    // ==================== GALLERY ====================
+    async function renderGalleryCollections(theme) {
+        const container = document.getElementById('galleryCollectionsContainer');
+        container.innerHTML = '<div class="gallery-loading"><i class="fas fa-spinner fa-spin"></i> Loading…</div>';
+
+        if (galleryCache[theme]) { buildGalleryGrid(galleryCache[theme], container); return; }
+
         try {
-            const res = await apiRequest(`/posters?category=${theme}`);
+            const res  = await apiRequest(`/posters?category=${encodeURIComponent(theme)}`);
             const data = await res.json();
-
-            if (!res.ok || !Array.isArray(data)) {
-                container.innerHTML = '<div class="gallery-loading">Could not load posters.</div>';
-                return;
-            }
-
+            if (!res.ok || !Array.isArray(data)) { container.innerHTML = '<div class="gallery-loading">Could not load posters.</div>'; return; }
             galleryCache[theme] = data;
             buildGalleryGrid(data, container);
-        } catch (err) {
-            console.error('Gallery error:', err);
+        } catch {
             container.innerHTML = '<div class="gallery-loading">Network error. Please try again.</div>';
         }
     }
 
     function buildGalleryGrid(posters, container) {
-        if (!posters || posters.length === 0) {
+        if (!posters || !posters.length) {
             container.innerHTML = '<div class="gallery-loading" style="color:#B45A2E;">No posters in this category yet.</div>';
             return;
         }
+        container.innerHTML = '';
+        posters.forEach(p => {
+            const card = document.createElement('div');
+            card.className = 'gallery-card';
 
-        container.innerHTML = posters.map(p => {
-            const mediaHTML = p.image_url
-                ? `<div class="gallery-media"><img src="${p.image_url}" alt="${p.name}" loading="lazy"></div>`
-                : `<div class="gallery-media">🖼️</div>`;
+            const media = document.createElement('div');
+            media.className = 'gallery-media';
+            if (p.image_url) {
+                const img = document.createElement('img');
+                img.loading = 'lazy';
+                img.alt = '';
+                img.src = p.image_url;
+                img.onerror = () => { img.replaceWith(document.createTextNode('🖼️')); };
+                media.appendChild(img);
+            } else {
+                media.textContent = '🖼️';
+            }
 
-            return `<div class="gallery-card"
-                data-id="${p.id}"
-                data-name="${p.name}"
-                data-price="${p.price}"
-                data-points="${p.points}"
-                data-limited="${p.is_limited ? '1' : '0'}">
-                ${mediaHTML}
-                <div class="gallery-info">
-                    <div class="gallery-title">${p.name}</div>
-                    <div class="gallery-price">$${p.price} · +${p.points} pts${p.is_limited ? ' ⚡' : ''}</div>
-                </div>
-            </div>`;
-        }).join("");
+            const info = document.createElement('div');
+            info.className = 'gallery-info';
+            const title = document.createElement('div');
+            title.className = 'gallery-title';
+            title.textContent = p.name;           // textContent — safe
+            const gPrice = document.createElement('div');
+            gPrice.className = 'gallery-price';
+            gPrice.textContent = `$${p.price} · +${p.points} pts${p.is_limited ? ' ⚡' : ''}`;
+            info.append(title, gPrice);
+            card.append(media, info);
 
-        container.querySelectorAll(".gallery-card").forEach(el => {
-            el.addEventListener("click", () => {
-                addToCart({
-                    type: el.dataset.limited === '1' ? 'limited' : 'poster',
-                    id: el.dataset.id,
-                    name: el.dataset.name,
-                    price: parseFloat(el.dataset.price),
-                    points: parseInt(el.dataset.points),
-                    emoji: '🖼️'
-                });
-            });
+            card.addEventListener('click', () => openOverlay(p));
+            container.appendChild(card);
         });
     }
 
     // ==================== LIMITED EDITION (SHOP) ====================
-    // Falls back to static data since limited posters may be a curated set
     const limitedPostersStatic = [
-        { id: "lim1", name: "Neon Dreams (Limited)", emoji: "🌈", price: 25, points: 200 },
-        { id: "lim2", name: "Golden Hour (Limited)", emoji: "🌇", price: 25, points: 200 }
+        { id: 'lim1', name: 'Neon Dreams (Limited)', emoji: '🌈', price: 25, points: 200, is_limited: true },
+        { id: 'lim2', name: 'Golden Hour (Limited)', emoji: '🌇', price: 25, points: 200, is_limited: true }
     ];
 
     async function renderLimited() {
-        const container = document.getElementById("limitedGrid");
-
-        // Try backend first: posters with is_limited=true
+        const container = document.getElementById('limitedGrid');
         try {
-            const res = await apiRequest('/posters?limited=true');
+            const res  = await apiRequest('/posters?limited=true');
             const data = await res.json();
+            if (res.ok && Array.isArray(data) && data.length) { buildGalleryGrid(data, container); return; }
+        } catch { /* fall through */ }
 
-            if (res.ok && Array.isArray(data) && data.length > 0) {
-                buildGalleryGrid(data, container);
-                return;
-            }
-        } catch (e) {
-            // Fall through to static
-        }
-
-        // Fallback to static limited list
-        container.innerHTML = limitedPostersStatic.map(p =>
-            `<div class="gallery-card" data-id="${p.id}" data-name="${p.name}" data-price="${p.price}" data-points="${p.points}" data-limited="1">
-                <div class="gallery-media">${p.emoji}</div>
-                <div class="gallery-info">
-                    <div class="gallery-title">${p.name}</div>
-                    <div class="gallery-price">$${p.price} · +${p.points} pts ⚡</div>
-                </div>
-            </div>`
-        ).join("");
-
-        container.querySelectorAll(".gallery-card").forEach(el => {
-            el.addEventListener("click", () => {
-                addToCart({
-                    type: 'limited',
-                    id: el.dataset.id,
-                    name: el.dataset.name,
-                    price: parseFloat(el.dataset.price),
-                    points: parseInt(el.dataset.points),
-                    emoji: '⚡'
-                });
-            });
+        // Fallback static
+        container.innerHTML = '';
+        limitedPostersStatic.forEach(p => {
+            const card = document.createElement('div');
+            card.className = 'gallery-card';
+            const media = document.createElement('div');
+            media.className = 'gallery-media';
+            media.textContent = p.emoji;
+            const info = document.createElement('div');
+            info.className = 'gallery-info';
+            const t = document.createElement('div');
+            t.className = 'gallery-title';
+            t.textContent = p.name;
+            const pr = document.createElement('div');
+            pr.className = 'gallery-price';
+            pr.textContent = `$${p.price} · +${p.points} pts ⚡`;
+            info.append(t, pr);
+            card.append(media, info);
+            card.addEventListener('click', () => openOverlay(p));
+            container.appendChild(card);
         });
     }
 
     // ==================== CHECKOUT ====================
-    function processCheckout() {
-        if (cart.length === 0) { showToast("Cart is empty!"); return; }
-        const totalPrice = cart.reduce((s, i) => s + (i.price * i.qty), 0);
+    // FIX: Local state is only updated from the server response, not doubled.
+    // The optimistic local increment has been removed; we call fetchUserProfile()
+    // after the API confirms success so the UI reflects the true server value.
+    async function processCheckout() {
+        if (!cart.length) { showToast('Cart is empty!'); return; }
+        const totalPrice      = cart.reduce((s, i) => s + (i.price * i.qty), 0);
         const totalBasePoints = cart.reduce((s, i) => s + (i.points * i.qty), 0);
-        const boost = getBoost();
-        const finalPoints = Math.floor(totalBasePoints * boost);
+        const boost           = getBoost();
+        const previewPoints   = Math.floor(totalBasePoints * boost);
 
-        if (confirm(`💰 Total: $${totalPrice}\n⭐ You'll earn ${finalPoints} points (${totalBasePoints} base × ${boost}x boost)\n\nProceed with payment?`)) {
-            // Try to create order via backend
-            apiRequest('/order/create', {
+        if (!confirm(`💰 Total: $${totalPrice}\n⭐ You'll earn ~${previewPoints} points (${totalBasePoints} base × ${boost.toFixed(1)}x boost)\n\nProceed with payment?`)) return;
+
+        try {
+            const res  = await apiRequest('/order/create', {
                 method: 'POST',
-                body: JSON.stringify({
-                    items: cart,
-                    totalPrice,
-                    totalBasePoints
-                })
-            }).then(res => res.json()).then(data => {
-                if (data.success) {
-                    // Backend handled points — refresh profile to sync
-                    fetchUserProfile();
-                } else {
-                    // Fallback: add locally
-                    user.points += finalPoints;
-                    saveUser();
-                    refreshAllUI();
-                }
-            }).catch(() => {
-                user.points += finalPoints;
-                saveUser();
-                refreshAllUI();
+                body: JSON.stringify({ items: cart, totalPrice, totalBasePoints })
             });
+            const data = await res.json();
 
-            // Apply multiplier locally for immediate UX
-            let newMult = 1.2;
-            if (cart.some(i => i.type === "mystery")) newMult = 1.5;
-            if (cart.some(i => i.type === "limited")) newMult = 1.8;
-            if (boost < newMult) {
-                user.multiplier = newMult;
-                user.multiplierExpiry = Date.now() + (7 * 86400000);
+            if (data.success) {
+                // Sync profile from backend — this is the authoritative source of truth.
+                // Do NOT add points locally; fetchUserProfile() will update user.points.
+                await fetchUserProfile();
+                addAudit('Purchase order', data.pointsEarned || previewPoints);
+                cart = [];
+                refreshAllUI();
+                showToast(`✅ Payment successful! +${data.pointsEarned} points earned!`);
+            } else {
+                showToast(data.error || 'Checkout failed. Please try again.');
             }
-
-            addAudit("Purchase order", finalPoints);
-            cart = [];
-            saveUser();
-            refreshAllUI();
-            showToast(`✅ Payment successful! +${finalPoints} points earned!`);
+        } catch {
+            showToast('Network error — please try again.');
         }
-    }
-
-    // ==================== ACTIONS ====================
-    function dailyCheck() {
-        const today = new Date().toDateString();
-        if (user.lastCheckin === today) { showToast("Already checked in today!"); return; }
-        const prev = user.lastCheckin ? new Date(user.lastCheckin) : null;
-        const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
-        if (prev && prev.toDateString() === yesterday.toDateString()) user.streak = (user.streak || 0) + 1;
-        else user.streak = 1;
-        const bonus = user.streak >= 7 ? 100 : 0;
-        user.lastCheckin = today;
-        addPoints(5 + bonus, "Daily check-in" + (bonus ? " (streak bonus!)" : ""));
-        saveUser();
-
-        // Sync with backend
-        apiRequest('/daily/checkin', { method: 'POST' }).catch(() => {});
-    }
-
-    function scanQR() { addPoints(15, "QR Scan"); }
-    function shareStory() {
-        if ((user.storySharesThisWeek || 0) >= 3) { showToast("Max 3 story shares per week"); return; }
-        user.storySharesThisWeek = (user.storySharesThisWeek || 0) + 1;
-        addPoints(25, "Instagram Story");
-        saveUser();
-    }
-    function roomTour() {
-        if (user.usedRoomTour) { showToast("Room tour already used this month"); return; }
-        user.usedRoomTour = true;
-        addPoints(150, "Room Tour");
-        saveUser();
-    }
-    function referFriend() {
-        document.getElementById("referralModal").style.display = "flex";
-    }
-    function logout() {
-        localStorage.removeItem('wall_culture_token');
-        localStorage.removeItem('wall_culture_user');
-        window.location.href = 'index.html';
     }
 
     // ==================== CUSTOM POSTER ====================
-    document.getElementById("customImageUpload").addEventListener("change", (e) => {
+    document.getElementById('customImageUpload').addEventListener('change', (e) => {
         const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(ev) {
-                currentCustomImage = ev.target.result;
-                document.getElementById("imagePreviewArea").innerHTML =
-                    `<div class="custom-thumb"><img src="${currentCustomImage}" alt="preview"></div><span style="font-size:0.7rem;color:#38B000;">Image ready ✓</span>`;
-            };
-            reader.readAsDataURL(file);
-        }
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            currentCustomImage = ev.target.result;
+            const area = document.getElementById('imagePreviewArea');
+            area.innerHTML = '';
+            const thumb = document.createElement('div');
+            thumb.className = 'custom-thumb';
+            const img = document.createElement('img');
+            img.src = currentCustomImage;  // data URL — safe
+            img.alt = 'Preview';
+            thumb.appendChild(img);
+            const label = document.createElement('span');
+            label.style.fontSize = '0.7rem';
+            label.style.color = '#38B000';
+            label.textContent = 'Image ready ✓';
+            area.append(thumb, label);
+        };
+        reader.readAsDataURL(file);
     });
 
     function addCustomToCart() {
-        if (!currentCustomImage) { showToast("Please upload an image first!"); return; }
-        const title = document.getElementById("customTitle").value.trim();
+        if (!currentCustomImage) { showToast('Please upload an image first!'); return; }
+        const title = document.getElementById('customTitle').value.trim();
         addToCart({
             type: 'custom',
             id: 'cstm_' + Date.now(),
-            name: title ? `Custom: ${title}` : "Custom Poster",
-            price: 19,
-            points: 80,
+            name: title ? `Custom: ${title}` : 'Custom Poster',
+            price: 19, points: 80,
             image: currentCustomImage
         });
-        document.getElementById("customTitle").value = "";
+        document.getElementById('customTitle').value = '';
         currentCustomImage = null;
-        document.getElementById("imagePreviewArea").innerHTML = "";
-        document.getElementById("customImageUpload").value = "";
+        document.getElementById('imagePreviewArea').innerHTML = '';
+        document.getElementById('customImageUpload').value = '';
     }
 
     function addMysteryToCart() {
-        addToCart({ type: 'mystery', id: 'mystery_' + Date.now(), name: "Mystery Pack", price: 30, points: 150, emoji: '🎁' });
+        addToCart({ type: 'mystery', id: 'mystery_' + Date.now(), name: 'Mystery Pack', price: 30, points: 150, emoji: '🎁' });
     }
 
     // ==================== FETCH PROFILE ====================
     async function fetchUserProfile() {
         try {
-            const res = await apiRequest('/user/profile');
+            const res  = await apiRequest('/user/profile');
             const data = await res.json();
             if (res.ok) {
-                // Merge backend data into user object
                 const u = data.user || {};
                 user = {
                     ...user,
@@ -1038,7 +1025,6 @@
                     multiplier_expiry: u.multiplier_expiry ?? user.multiplier_expiry,
                     multiplierExpiry: u.multiplier_expiry ?? user.multiplierExpiry
                 };
-                // Load audit log from backend
                 if (data.auditLog && data.auditLog.length) {
                     auditLog = data.auditLog.map(l => ({
                         action: l.action,
@@ -1052,70 +1038,66 @@
             } else {
                 logout();
             }
-        } catch (err) {
-            console.error('Profile fetch error:', err);
-            // Use cached data from localStorage if network fails
+        } catch {
             const cached = JSON.parse(localStorage.getItem('wall_culture_user') || '{}');
-            if (cached.name) {
-                user = { ...user, ...cached };
-                refreshAllUI();
-            }
+            if (cached.name) { user = { ...user, ...cached }; refreshAllUI(); }
         }
     }
 
     // ==================== NAVIGATION ====================
-    const screens = {
-        home: "homeScreen",
-        gallery: "galleryScreen",
-        shop: "shopScreen",
-        profile: "profileScreen"
-    };
+    const screens = { home: 'homeScreen', gallery: 'galleryScreen', shop: 'shopScreen', profile: 'profileScreen' };
 
     function showScreen(s) {
-        Object.values(screens).forEach(sc => document.getElementById(sc).classList.remove("active"));
-        document.getElementById(screens[s]).classList.add("active");
-        document.querySelectorAll(".tab-item").forEach(t => t.classList.remove("active"));
-        document.querySelector(`.tab-item[data-tab="${s}"]`).classList.add("active");
-
-        if (s === "gallery") renderGalleryCollections(currentGalleryTheme);
-        if (s === "shop") { renderLimited(); renderCartUI(); }
-        if (s === "profile") refreshAllUI();
+        Object.values(screens).forEach(sc => document.getElementById(sc).classList.remove('active'));
+        document.getElementById(screens[s]).classList.add('active');
+        document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+        document.querySelector(`.tab-item[data-tab="${s}"]`).classList.add('active');
+        if (s === 'gallery') renderGalleryCollections(currentGalleryTheme);
+        if (s === 'shop')    { renderLimited(); renderCartUI(); }
+        if (s === 'profile') refreshAllUI();
     }
 
     // ==================== EVENT LISTENERS ====================
-    document.querySelectorAll(".tab-item").forEach(tab =>
-        tab.addEventListener("click", () => showScreen(tab.dataset.tab))
+    document.querySelectorAll('.tab-item').forEach(tab =>
+        tab.addEventListener('click', () => showScreen(tab.dataset.tab))
     );
 
-    document.getElementById("homeScanBtn").onclick = () => document.getElementById("qrModal").style.display = "flex";
-    document.getElementById("closeModal").onclick = () => { document.getElementById("qrModal").style.display = "none"; scanQR(); };
-    document.getElementById("homeDailyBtn").onclick = dailyCheck;
-    document.getElementById("homeStoryBtn").onclick = shareStory;
-    document.getElementById("homeReferBtn").onclick = referFriend;
-    document.getElementById("addCustomToCartBtn").onclick = addCustomToCart;
-    document.getElementById("addMysteryBtn").onclick = addMysteryToCart;
-    document.getElementById("checkoutBtnShop").onclick = processCheckout;
-    document.getElementById("copyCodeBtn").onclick = () => {
-        navigator.clipboard.writeText(user.referralCode || user.referral_code || "").then(() => showToast("Code copied!")).catch(() => showToast("Copy failed"));
+    document.getElementById('homeScanBtn').onclick = () => {
+        document.getElementById('qrModal').style.display = 'flex';
+        document.getElementById('qrModalMsg').textContent = 'Earning points…';
+        scanQR().then(result => {
+            if (result) setText('qrModalMsg', `+${result.earned} pts earned!`);
+        });
     };
-    document.getElementById("copyReferralModalBtn").onclick = () => {
-        navigator.clipboard.writeText(user.referralCode || user.referral_code || "").then(() => showToast("Referral code copied!")).catch(() => {});
-    };
-    document.getElementById("closeReferralModal").onclick = () => document.getElementById("referralModal").style.display = "none";
-    document.getElementById("logoutBtn").onclick = logout;
+    document.getElementById('closeQrModal').onclick  = () => document.getElementById('qrModal').style.display = 'none';
+    document.getElementById('homeDailyBtn').onclick  = dailyCheck;
+    document.getElementById('homeStoryBtn').onclick  = shareStory;
+    document.getElementById('homeReferBtn').onclick  = referFriend;
+    document.getElementById('addCustomToCartBtn').onclick = addCustomToCart;
+    document.getElementById('addMysteryBtn').onclick     = addMysteryToCart;
+    document.getElementById('checkoutBtnShop').onclick   = processCheckout;
 
-    // Close modals on backdrop click
-    ["qrModal", "referralModal"].forEach(id => {
-        document.getElementById(id).addEventListener("click", (e) => {
-            if (e.target === document.getElementById(id)) document.getElementById(id).style.display = "none";
+    document.getElementById('copyCodeBtn').onclick = () => {
+        navigator.clipboard.writeText(user.referralCode || user.referral_code || '')
+            .then(() => showToast('Code copied!')).catch(() => showToast('Copy failed'));
+    };
+    document.getElementById('copyReferralModalBtn').onclick = () => {
+        navigator.clipboard.writeText(user.referralCode || user.referral_code || '')
+            .then(() => showToast('Referral code copied!')).catch(() => {});
+    };
+    document.getElementById('closeReferralModal').onclick = () => document.getElementById('referralModal').style.display = 'none';
+    document.getElementById('logoutBtn').onclick = logout;
+
+    ['qrModal', 'referralModal'].forEach(id => {
+        document.getElementById(id).addEventListener('click', (e) => {
+            if (e.target === document.getElementById(id)) document.getElementById(id).style.display = 'none';
         });
     });
 
-    // Gallery theme tabs
-    document.querySelectorAll("#galleryThemeTabs .theme-tab").forEach(tab => {
-        tab.addEventListener("click", () => {
-            document.querySelectorAll("#galleryThemeTabs .theme-tab").forEach(t => t.classList.remove("active"));
-            tab.classList.add("active");
+    document.querySelectorAll('#galleryThemeTabs .theme-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('#galleryThemeTabs .theme-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
             currentGalleryTheme = tab.dataset.theme;
             renderGalleryCollections(currentGalleryTheme);
         });
