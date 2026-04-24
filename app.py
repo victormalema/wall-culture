@@ -82,85 +82,53 @@ def token_required(f):
     return decorated
 
 # ==================== AUTH ROUTES ====================
-@app.route('/api/auth/register', methods=['POST'])
+@app.route("/api/auth/register", methods=["POST"])
 def register():
     try:
-        data = request.json
-        name = data.get('name')
-        email = data.get('email')
-        password = data.get('password')
-        referral_code = data.get('referralCode')
-        
+        data = request.get_json() or {}
+
+        name = data.get("name")
+        email = data.get("email")
+        password = data.get("password")
+
+        if not name or not email or not password:
+            return jsonify({"error": "Missing fields"}), 400
+
         user_id = str(uuid.uuid4())
         hashed_password = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
-        user_referral_code = generate_referral_code(name)
-        
-        existing = supabase.table('users').select('email').eq('email', email).execute()
-        if existing.data:
-            return jsonify({'error': 'Email already exists'}), 400
-        
-        supabase.table('users').insert({
-            'id': user_id,
-            'name': name,
-            'email': email,
-            'password': hashed_password,
-            'referral_code': user_referral_code,
-            'referred_by': referral_code,
-            'points': 100,
-            'created_at': int(datetime.now().timestamp() * 1000)
-        }).execute()
-        
-        if referral_code:
-            referrer = supabase.table('users').select('id').eq('referral_code', referral_code).execute()
-            if referrer.data:
-                add_points_to_user(referrer.data[0]['id'], 50, 'Referral bonus', 1.0)
-                add_points_to_user(user_id, 50, 'Welcome referral bonus', 1.0)
-        
-        token = jwt.encode({'user_id': user_id, 'exp': datetime.utcnow() + timedelta(days=7)}, app.config['SECRET_KEY'])
-        return jsonify({
-            'token': token,
-            'user': {
-                'id': user_id,
-                'name': name,
-                'email': email,
-                'points': 100,
-                'referralCode': user_referral_code
-            }
-        })
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
 
-@app.route('/api/auth/login', methods=['POST'])
-def login():
-    try:
-        data = request.json
-        email = data.get('email')
-        password = data.get('password')
-        
-        result = supabase.table('users').select('*').eq('email', email).execute()
-        
-        if not result.data:
-            return jsonify({'error': 'Invalid credentials'}), 401
-        
-        user = result.data[0]
-        
-        if not bcrypt.checkpw(password.encode(), user['password'].encode()):
-            return jsonify({'error': 'Invalid credentials'}), 401
-        
-        token = jwt.encode({'user_id': user['id'], 'exp': datetime.utcnow() + timedelta(days=7)}, app.config['SECRET_KEY'])
+        existing = supabase.table("users").select("email").eq("email", email).execute()
+        if existing.data:
+            return jsonify({"error": "Email already exists"}), 400
+
+        supabase.table("users").insert({
+            "id": user_id,
+            "name": name,
+            "email": email,
+            "password": hashed_password,
+            "points": 100,
+            "created_at": int(datetime.now().timestamp() * 1000)
+        }).execute()
+
+        token = jwt.encode(
+            {"user_id": user_id, "exp": datetime.utcnow() + timedelta(days=7)},
+            app.config['SECRET_KEY'],
+            algorithm="HS256"
+        )
+
         return jsonify({
-            'token': token,
-            'user': {
-                'id': user['id'],
-                'name': user['name'],
-                'email': user['email'],
-                'points': user['points'],
-                'streak': user.get('streak', 0),
-                'referralCode': user['referral_code']
+            "token": token,
+            "user": {
+                "id": user_id,
+                "name": name,
+                "email": email,
+                "points": 100
             }
         })
+
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        print("REGISTER ERROR:", str(e))
+        return jsonify({"error": str(e)}), 500
 
 # ==================== POINTS ROUTES ====================
 @app.route('/api/points/add', methods=['POST'])
