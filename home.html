@@ -367,6 +367,19 @@
 <div id="referralModal" class="modal"><div class="modal-content"><h3><i class="fas fa-user-friends"></i> Refer a Friend</h3><p>Your code: <strong id="modalReferralCode">—</strong></p><button id="copyReferralModalBtn" class="btn btn-primary">Copy Code</button><button id="closeReferralModal" class="btn btn-secondary" style="margin-top:8px;">Close</button></div></div>
 
 <script>
+    const API_URL = 'https://wall-culture-3.onrender.com/api';
+
+function apiRequest(endpoint, options = {}) {
+    const token = localStorage.getItem('wall_culture_token');
+
+    return fetch(`${API_URL}${endpoint}`, {
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+        }
+    });
+}
     (function authGuard() {
         const token = localStorage.getItem('wall_culture_token');
         if (!token) {
@@ -391,43 +404,76 @@
     let cart = [];
     let auditLog = [];
     let user = {
-        points: storedUser.points || 100,
-        multiplier: 1.0,
-        multiplierExpiry: 0,
-        referralCode: storedUser.referralCode || "—",
-        name: storedUser.name || "User",
-        email: storedUser.email || "",
-        weeklyPoints: 0,
-        streak: 0,
-        lastCheckin: null,
-        usedRoomTour: false,
-        storySharesThisWeek: 0
-    };
+    name: "Guest",
+    email: "",
+    points: 0,
+    streak: 0,
+    weeklyPoints: 0,
+    referralCode: "—",
+    multiplier: 1,
+    multiplierExpiry: null
+};
+  
+    
     let globalRanking = [
-        { name: "Alex Chen", points: 3120 },
-        { name: "Maya R.", points: 2780 },
-        { name: user.name, points: user.points },
-        { name: "Sam Kim", points: 1950 }
-    ];
+    { name: "Alex Chen", points: 3120 },
+    { name: "Maya R.", points: 2780 },
+    { name: "Sam Kim", points: 1950 }
+];
     let currentCustomImage = null;
 
     function addAudit(action, points) { auditLog.unshift({ action, points, timestamp: new Date().toLocaleTimeString() }); if(auditLog.length > 20) auditLog.pop(); renderAudit(); }
     function renderAudit() { let container = document.getElementById("auditLogContainer"); if(!container) return; container.innerHTML = auditLog.map(a => `<div class="audit-item"><span>${a.action}</span><span>${a.points > 0 ? '+' : ''}${a.points} pts</span><span style="font-size:0.6rem;">${a.timestamp}</span></div>`).join(""); if(auditLog.length === 0) container.innerHTML = "<div style='padding:8px;text-align:center;'>No activity yet</div>"; }
+    function saveUser() {
+    localStorage.setItem('wall_culture_user', JSON.stringify(user));
+}
+    
 
-    function saveUser() { localStorage.setItem("wallrank_user", JSON.stringify(user)); localStorage.setItem("wallrank_audit", JSON.stringify(auditLog)); updateGlobal(); refreshAllUI(); }
-    function loadUser() {
-        let s = localStorage.getItem("wallrank_user");
-        if(s) { try { user = { ...user, ...JSON.parse(s) }; } catch(e){} }
-        if(storedUser.name) user.name = storedUser.name;
-        if(storedUser.email) user.email = storedUser.email;
-        if(storedUser.referralCode) user.referralCode = storedUser.referralCode;
-        let a = localStorage.getItem("wallrank_audit"); if(a) { try { auditLog = JSON.parse(a); } catch(e){} }
-        updateGlobal(); refreshAllUI(); renderAudit();
+    
+    async function fetchUserProfile() {
+    try {
+        const token = localStorage.getItem('wall_culture_token');
+
+        const res = await fetch(`${API_URL}/user/profile`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+            user = {
+                ...user,
+                ...data.user
+            };
+
+            saveUser();
+            refreshAllUI();
+        } else {
+            logout();
+        }
+    } catch (err) {
+        console.error('Failed to fetch profile:', err);
+        
     }
+}
+   
     function updateGlobal() { let idx = globalRanking.findIndex(u => u.name === user.name); if(idx !== -1) globalRanking[idx].points = user.points; else globalRanking.push({ name: user.name, points: user.points }); globalRanking.sort((a,b)=>b.points - a.points); }
     function getBoost() { return (user.multiplierExpiry && user.multiplierExpiry > Date.now()) ? user.multiplier : 1.0; }
     function getRank() { updateGlobal(); return globalRanking.findIndex(u => u.name === user.name) + 1; }
-    function addPoints(base, action, showMsg = true) { let gain = Math.floor(base * getBoost()); user.points += gain; user.weeklyPoints += gain; addAudit(action, gain); saveUser(); if(showMsg) showToast(`+${gain} pts (${action})`); }
+    function addPoints(amount, action) {
+    let boost = getBoost();
+    let final = Math.floor(amount * boost);
+
+    user.points += final;
+    user.weeklyPoints += final;
+
+    addAudit(action, final);
+    saveUser();
+    refreshAllUI();
+}
+    
 
     function showToast(msg) { let d = document.createElement("div"); d.innerText = msg; d.style.cssText = "position:fixed;bottom:80px;left:20px;right:20px;background:#FFE0B5;color:#4A2A1A;padding:12px;border-radius:60px;text-align:center;font-weight:bold;z-index:2000;"; document.body.appendChild(d); setTimeout(() => d.remove(), 2000); }
 
@@ -556,7 +602,7 @@
     let currentGalleryTheme = "aesthetic";
     document.querySelectorAll("#galleryThemeTabs .theme-tab").forEach(tab => { tab.addEventListener("click", () => { document.querySelectorAll("#galleryThemeTabs .theme-tab").forEach(t=>t.classList.remove("active")); tab.classList.add("active"); currentGalleryTheme = tab.dataset.theme; renderGalleryCollections(currentGalleryTheme); }); });
 
-    loadUser();
+    fetchUserProfile();
     renderGalleryCollections("aesthetic");
     renderLimited();
     renderCartUI();
