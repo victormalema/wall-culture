@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>Wall Rank · Poster Studio</title>
+    <title>Wall Culture · Studio</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
@@ -25,12 +25,39 @@
             box-shadow: 0 0 40px rgba(0,0,0,0.15);
             position: relative;
         }
-        .status-bar { padding: 12px 20px 8px; display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 600; color: #D46B3A; }
-        .app-header { padding: 8px 20px 12px; display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid rgba(212, 107, 58, 0.2); }
-        .logo-area h1 { font-size: 1.6rem; font-weight: 800; background: linear-gradient(135deg, #FF6B4A, #FF8E53, #FFB347); -webkit-background-clip: text; background-clip: text; color: transparent; }
-        .quick-points { background: #FFD5A4; padding: 6px 14px; border-radius: 40px; backdrop-filter: blur(10px); color: #B45A2E; font-weight: 700; }
+        /* Status bar completely removed - no padding, no extra space */
+        .app-header {
+            padding: 16px 20px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            border-bottom: 1px solid rgba(212, 107, 58, 0.2);
+        }
+        .logo-area h1 {
+            font-size: 1.6rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #FF6B4A, #FF8E53, #FFB347);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .quick-points {
+            background: #FFD5A4;
+            padding: 6px 14px;
+            border-radius: 40px;
+            backdrop-filter: blur(10px);
+            color: #B45A2E;
+            font-weight: 700;
+        }
         .quick-points span { font-weight: 800; color: #E85D2E; }
-        .screen-container { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 20px; }
+        .screen-container {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 16px 20px 20px;
+            /* Extra bottom padding for safe area on phones with gesture bar */
+            padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+        }
         .screen { display: none; animation: fadeIn 0.3s ease; }
         .screen.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -39,9 +66,11 @@
             backdrop-filter: blur(20px);
             border-top: 1px solid rgba(255, 150, 80, 0.3);
             display: flex;
-            padding: 8px 20px 20px;
-            gap: 8px;
+            padding: 8px 16px 12px;
+            gap: 6px;
             justify-content: space-around;
+            /* Safe area for bottom gesture bar */
+            padding-bottom: max(12px, env(safe-area-inset-bottom, 12px));
         }
         .tab-item {
             flex: 1;
@@ -127,17 +156,15 @@
         .theme-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 12px; margin-bottom: 8px; }
         .theme-tab { background: #FFE8D8; padding: 8px 20px; border-radius: 40px; font-size: 0.8rem; font-weight: 600; white-space: nowrap; cursor: pointer; }
         .theme-tab.active { background: #FF8E53; color: white; }
-
-        /* Logout button */
         .logout-btn { background: none; border: 1px solid #FFB47A; color: #B45A2E; padding: 8px 20px; border-radius: 60px; font-size: 0.75rem; font-weight: 600; cursor: pointer; margin-top: 12px; width: 100%; }
         .logout-btn:hover { background: #FFE8DC; }
     </style>
 </head>
 <body>
 <div class="app-wrapper">
-    <div class="status-bar"><span>9:41</span><span><i class="fas fa-signal"></i> <i class="fas fa-battery-full"></i></span></div>
+    <!-- Status bar completely removed -->
     <div class="app-header">
-        <div class="logo-area"><h1>WALL RANK</h1></div>
+        <div class="logo-area"><h1>WALL CULTURE</h1></div>
         <div class="quick-points"><i class="fas fa-gem"></i> <span id="globalPoints">0</span> pts</div>
     </div>
 
@@ -151,7 +178,6 @@
                 </div>
                 <h2 style="margin: 12px 0 4px;">Hey, <span id="homeUserName">there</span>!</h2>
                 <p style="font-size: 0.8rem;">Earn points, unlock posters, decorate your wall 🎨</p>
-                <!-- FIX: Added missing homeWeekly element -->
                 <p style="font-size: 0.7rem; margin-top: 6px; opacity: 0.8;">This week: <strong><span id="homeWeekly">0</span> pts</strong></p>
             </div>
             <div class="card">
@@ -303,7 +329,6 @@
         <div id="profileScreen" class="screen">
             <div class="card" style="text-align:center;">
                 <div style="width:70px;height:70px;background:#FFB87A;border-radius:50%;margin:0 auto;display:flex;align-items:center;justify-content:center;"><i class="fas fa-user-astronaut" style="font-size:2rem; color:#4A2A1A;"></i></div>
-                <!-- FIX: Name pulled from stored user data, not hardcoded -->
                 <h3 id="profileName">—</h3>
                 <p id="profileEmail" style="font-size:0.8rem; color:#B45A2E;">—</p>
             </div>
@@ -322,7 +347,6 @@
                 <div style="background:#FFE8DC; border-radius:40px; padding:12px; text-align:center; font-weight:bold;"><strong id="profileCode">—</strong></div>
                 <button id="copyCodeBtn" class="btn btn-secondary" style="margin-top:8px; width:100%;"><i class="fas fa-copy"></i> Copy Code</button>
             </div>
-            <!-- FIX: Added logout button -->
             <div class="card">
                 <button class="logout-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
             </div>
@@ -343,7 +367,6 @@
 <div id="referralModal" class="modal"><div class="modal-content"><h3><i class="fas fa-user-friends"></i> Refer a Friend</h3><p>Your code: <strong id="modalReferralCode">—</strong></p><button id="copyReferralModalBtn" class="btn btn-primary">Copy Code</button><button id="closeReferralModal" class="btn btn-secondary" style="margin-top:8px;">Close</button></div></div>
 
 <script>
-    // FIX: Auth guard — redirect to login if no token
     (function authGuard() {
         const token = localStorage.getItem('wall_culture_token');
         if (!token) {
@@ -351,7 +374,6 @@
         }
     })();
 
-    // Load stored user info from auth
     const storedUser = JSON.parse(localStorage.getItem('wall_culture_user') || '{}');
 
     const postersDB = {
@@ -396,7 +418,6 @@
     function loadUser() {
         let s = localStorage.getItem("wallrank_user");
         if(s) { try { user = { ...user, ...JSON.parse(s) }; } catch(e){} }
-        // Always sync name/email/referralCode from auth token data
         if(storedUser.name) user.name = storedUser.name;
         if(storedUser.email) user.email = storedUser.email;
         if(storedUser.referralCode) user.referralCode = storedUser.referralCode;
@@ -415,9 +436,7 @@
         document.getElementById("profilePoints").innerText = user.points;
         document.getElementById("homeStreak").innerText = user.streak;
         document.getElementById("homeStreakDisplay").innerText = user.streak;
-        // FIX: homeWeekly now exists in DOM
         document.getElementById("homeWeekly").innerText = user.weeklyPoints;
-        // FIX: Profile name and email from real user data
         document.getElementById("homeUserName").innerText = user.name.split(" ")[0];
         document.getElementById("profileName").innerText = user.name;
         document.getElementById("profileEmail").innerText = user.email;
@@ -512,13 +531,7 @@
     function shareStory() { if(user.storySharesThisWeek >= 3) { showToast("Max 3 story shares per week"); return; } user.storySharesThisWeek++; addPoints(25, "Instagram Story"); saveUser(); }
     function roomTour() { if(user.usedRoomTour) { showToast("Room tour already used this month"); return; } user.usedRoomTour = true; addPoints(150, "Room Tour"); saveUser(); }
     function referFriend() { document.getElementById("modalReferralCode").innerText = user.referralCode; document.getElementById("referralModal").style.display = "flex"; }
-
-    // FIX: Logout function
-    function logout() {
-        localStorage.removeItem('wall_culture_token');
-        localStorage.removeItem('wall_culture_user');
-        window.location.href = 'index.html';
-    }
+    function logout() { localStorage.removeItem('wall_culture_token'); localStorage.removeItem('wall_culture_user'); window.location.href = 'index.html'; }
 
     let screens = { home:"homeScreen", gallery:"galleryScreen", shop:"shopScreen", profile:"profileScreen" };
     function showScreen(s) { Object.values(screens).forEach(sc => document.getElementById(sc).classList.remove("active")); document.getElementById(screens[s]).classList.add("active"); document.querySelectorAll(".tab-item").forEach(t=>t.classList.remove("active")); document.querySelector(`.tab-item[data-tab="${s}"]`).classList.add("active"); if(s === "gallery") renderGalleryCollections(currentGalleryTheme); if(s === "shop") { renderLimited(); renderCartUI(); } if(s === "profile") refreshAllUI(); }
