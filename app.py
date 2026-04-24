@@ -92,27 +92,50 @@ def register():
         name = data.get("name")
         email = data.get("email")
         password = data.get("password")
+        referral_code = data.get("referralCode")
 
         if not name or not email or not password:
             return jsonify({"error": "Missing fields"}), 400
 
+        existing = supabase.table("users").select("email").eq("email", email).execute()
+        if existing.data:
+            return jsonify({"error": "Email already exists"}), 400
+
         user_id = str(uuid.uuid4())
         hashed_password = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+
+        user_referral_code = generate_referral_code(name)
 
         supabase.table("users").insert({
             "id": user_id,
             "name": name,
             "email": email,
             "password": hashed_password,
+            "referral_code": user_referral_code,
+            "referred_by": referral_code,
             "points": 100,
             "created_at": int(datetime.now().timestamp() * 1000)
         }).execute()
 
-        return jsonify({"success": True})
+        token = jwt.encode(
+            {"user_id": user_id, "exp": datetime.utcnow() + timedelta(days=7)},
+            app.config["SECRET_KEY"]
+        )
+
+        return jsonify({
+            "token": token,
+            "user": {
+                "id": user_id,
+                "name": name,
+                "email": email,
+                "points": 100,
+                "referralCode": user_referral_code
+            }
+        })
 
     except Exception as e:
         print("REGISTER ERROR:", str(e))
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Server error"}), 500
 
 # ==================== POINTS ROUTES ====================
 @app.route('/api/points/add', methods=['POST'])
