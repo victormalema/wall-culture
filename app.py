@@ -822,7 +822,151 @@ def get_user_status():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# ==================== QR CODE GENERATION ====================
 
+@app.route('/api/qr/generate', methods=['POST'])
+@token_required
+def generate_qr():
+    """
+    Generate QR codes for posters or campus stickers.
+    
+    For posters:
+        POST {"type": "poster", "poster_id": "aes1", "points": 15}
+    
+    For campus stickers:
+        POST {"type": "sticker", "location": "Library 3rd floor", "points": 15, "is_golden": false}
+    """
+    try:
+        data = request.get_json(silent=True) or {}
+        qr_type = data.get('type', 'sticker')
+        
+        # Generate unique QR code
+        import hashlib
+        timestamp = int(datetime.utcnow().timestamp() * 1000)
+        unique_string = f"{qr_type}_{data.get('poster_id', data.get('location', ''))}_{timestamp}_{secrets.token_hex(4)}"
+        code = hashlib.md5(unique_string.encode()).hexdigest()[:16].upper()
+        
+        # Check if this is a duplicate
+        existing = supabase.table('qr_codes').select('code').eq('code', code).execute()
+        if existing.data:
+            code = hashlib.md5((unique_string + secrets.token_hex(4)).encode()).hexdigest()[:16].upper()
+        
+        qr_data = {
+            'code': code,
+            'points': data.get('points', 15),
+            'is_golden': 1 if data.get('is_golden', False) else 0,
+            'created_by': request.user_id,
+            'created_at': timestamp,
+            'expires_at': timestamp + (24 * 60 * 60 * 1000) if data.get('is_golden', False) else None
+        }
+        
+        if qr_type == 'poster':
+            # Verify poster exists
+            poster = supabase.table('posters').select('id').eq('id', data.get('poster_id')).execute()
+            if not poster.data:
+                return jsonify({'error': 'Poster not found'}), 404
+            qr_data['poster_id'] = data.get('poster_id')
+            qr_data['location'] = f"Poster: {poster.data[0]['id']}"
+        else:
+            qr_data['location'] = data.get('location', 'Campus Location')
+        
+        supabase.table('qr_codes').insert(qr_data).execute()
+        
+        # Generate QR code image using a free API (or local library)
+        qr_api_url = f"https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={code}"
+        
+        return jsonify({
+            'success': True,
+            'qr_code': code,
+            'qr_image_url': qr_api_url,
+            'points': qr_data['points'],
+            'is_golden': qr_data['is_golden'] == 1,
+            'location': qr_data['location']
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/qr/list', methods=['GET'])
+@token_required
+def get_qr_codes():
+    """Get all active QR codes (for admin/staff to print)"""
+    try:
+        result = supabase.table('qr_codes').select('*').is_('scanned_by', 'null').execute()
+        return jsonify(result.data or [])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/qr/scan', methods=['POST'])
+@token_required
+def scan_qr_code():
+    """
+    Scan QR code - returns points if valid.
+    Expects: {"code": "ABCD1234"}
+    """
+    try:
+        data = request.get_json(silent=True) or {}
+        code = data.get('code', '').strip().upper()
+        
+        if not code:
+            return jsonify({'error': 'QR code missing'}), 400
+        
+        # Get QR code
+        qr_result = supabase.table('qr_codes').select('*').eq('code', code).execute()
+        
+        if not qr_result.data:
+            return jsonify({'error': 'Invalid QR code'}), 404
+        
+        qr = qr_result.data[0]
+        current_time = int(datetime.utcnow().timestamp() * 1000)
+        
+        # Check if expired
+        if qr.get('expires_at') and qr['expires_at'] < current_time:
+            return jsonify({'error': 'QR code expired'}), 410
+        
+        # Check if already scanned
+        if qr.get('scanned_by'):
+            return jsonify({'error': 'QR code already used'}), 409
+        
+        # Check daily limit (5 per day)
+        today_start = int(datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0).timestamp() * 1000)
+        scans = supabase.table('point_logs').select('id', count='exact').eq('user_id', request.user_id).eq('action', 'QR Scan').gte('timestamp', today_start).execute()
+        
+        if scans.count and scans.count >= 5:
+            return jsonify({'error': 'Max 5 QR scans per day'}), 429
+        
+        # Award points
+        earned = add_points_to_user(request.user_id, qr['points'], 'QR Scan')
+        
+        # Mark as scanned
+        supabase.table('qr_codes').update({
+            'scanned_by': request.user_id,
+            'scanned_at': current_time
+        }).eq('code', code).execute()
+        
+        # If this QR was for a poster, maybe add to user's collection (optional)
+        if qr.get('poster_id'):
+            try:
+                supabase.table('user_collections').insert({
+                    'user_id': request.user_id,
+                    'poster_id': qr['poster_id'],
+                    'scanned_at': current_time
+                }).execute()
+            except:
+                pass  # Table might not exist yet
+        
+        return jsonify({
+            'success': True,
+            'earned': earned,
+            'points': qr['points'],
+            'is_golden': qr['is_golden'] == 1,
+            'message': f"You earned {earned} points from {'✨ GOLDEN ✨ ' if qr['is_golden'] else ''}QR code!"
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 # ==================== PASSWORD RESET ====================
 
 @app.route('/api/auth/reset-password', methods=['POST'])
