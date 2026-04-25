@@ -36,8 +36,8 @@
         .quick-points span { font-weight: 800; color: #E85D2E; }
         .screen-container {
             flex: 1; overflow-y: auto; overflow-x: hidden;
-            padding: 16px 20px 20px;
-            padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+            padding: 0;
+            padding-bottom: calc(0px + env(safe-area-inset-bottom, 0px));
         }
         .screen { display: none; animation: fadeIn 0.3s ease; }
         .screen.active { display: block; }
@@ -69,10 +69,11 @@
         .btn-secondary { background: #FFE0C0; border: 1px solid #FFA559; color: #D45A2C; }
         .btn-success { background: linear-gradient(95deg, #38B000, #70E000); color: white; }
 
-        /* ===== FEED — GALLERY STYLE (per design brief) ===== */
-        #feedContainer { display: flex; flex-direction: column; gap: 28px; }
+        /* ===== HOME SCREEN ===== */
+        #homeScreen { padding: 16px 20px 20px; }
 
-        /* Each poster is a large, museum-style card */
+        /* ===== FEED ===== */
+        #feedContainer { display: flex; flex-direction: column; gap: 28px; }
         .poster-feed-card {
             background: white; border-radius: 24px; overflow: hidden;
             box-shadow: 0 4px 20px rgba(0,0,0,0.08);
@@ -81,8 +82,6 @@
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
         .poster-feed-card:active { transform: scale(0.985); }
-
-        /* FIX: Large image — 80-90% viewport feel as per design brief */
         .poster-feed-image {
             width: 100%; height: 340px; object-fit: cover; display: block;
             background: linear-gradient(135deg, #FFF0E5, #FFE2CE);
@@ -92,8 +91,6 @@
             justify-content: center; font-size: 6rem;
             background: linear-gradient(135deg, #FFF0E5, #FFE2CE);
         }
-
-        /* Minimal info below — name, price, points only */
         .poster-feed-info {
             padding: 14px 18px 16px;
             display: flex; justify-content: space-between; align-items: center;
@@ -105,15 +102,12 @@
             width: 8px; height: 8px; border-radius: 50%; background: #FF6B4A;
             display: inline-block; margin-right: 4px;
         }
-
         .feed-loading, .feed-empty {
             text-align: center; padding: 40px 20px;
             color: #B45A2E; font-size: 0.85rem;
         }
 
-        /* ===== IMMERSIVE POSTER VIEW ===== */
-        /* FIX: Uses a tall in-flow faux-overlay (min-height covers screen)
-           instead of position:fixed which collapses the iframe. */
+        /* ===== IMMERSIVE POSTER OVERLAY ===== */
         .poster-overlay {
             display: none; position: fixed; inset: 0;
             background: rgba(15,8,2,0.92); backdrop-filter: blur(12px);
@@ -152,7 +146,240 @@
         .overlay-add-btn:active { transform: scale(0.97); }
         .overlay-add-btn.added { background: linear-gradient(95deg, #38B000, #70E000); }
 
-        /* ===== GALLERY ===== */
+        /* ===========================
+           TONAL-STYLE GALLERY SCREEN
+           =========================== */
+        #galleryScreen {
+            display: none;
+            height: 100%;
+            overflow: hidden;
+            flex-direction: column;
+            background: #0A0A0A;
+        }
+        #galleryScreen.active {
+            display: flex;
+        }
+
+        /* Category strip — scrollable horizontal tabs */
+        .gallery-category-strip {
+            flex-shrink: 0;
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 14px 16px 10px;
+            background: #0A0A0A;
+            scrollbar-width: none;
+        }
+        .gallery-category-strip::-webkit-scrollbar { display: none; }
+
+        .gcat-btn {
+            flex-shrink: 0;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: rgba(255,255,255,0.6);
+            padding: 6px 16px;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            cursor: pointer;
+            letter-spacing: 0.04em;
+            transition: 0.2s;
+        }
+        .gcat-btn.active {
+            background: linear-gradient(95deg, #FF6B4A, #FF8E53);
+            border-color: transparent;
+            color: white;
+        }
+
+        /* Main hero card — takes up ~72% of remaining height */
+        .gallery-hero-wrap {
+            flex: 0 0 72%;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        .gallery-hero-img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.4s ease;
+        }
+        .gallery-hero-placeholder {
+            width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 8rem;
+            background: linear-gradient(135deg, #1A1A2E, #16213E);
+        }
+        .gallery-hero-wrap:active .gallery-hero-img { transform: scale(1.02); }
+
+        /* Gradient overlay on hero */
+        .gallery-hero-overlay {
+            position: absolute; inset: 0;
+            background: linear-gradient(
+                to bottom,
+                transparent 35%,
+                rgba(0,0,0,0.3) 60%,
+                rgba(0,0,0,0.85) 100%
+            );
+            pointer-events: none;
+        }
+
+        /* Category chip on hero */
+        .gallery-hero-cat {
+            position: absolute;
+            top: 14px; left: 16px;
+            background: rgba(255,255,255,0.18);
+            backdrop-filter: blur(8px);
+            color: white;
+            font-size: 0.65rem;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 5px 12px;
+            border-radius: 40px;
+            border: 1px solid rgba(255,255,255,0.25);
+        }
+
+        /* Three-dot menu top right */
+        .gallery-hero-menu {
+            position: absolute;
+            top: 14px; right: 16px;
+            background: rgba(255,255,255,0.18);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.25);
+            color: white;
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        /* Info panel at bottom of hero */
+        .gallery-hero-info {
+            position: absolute;
+            bottom: 16px; left: 16px; right: 16px;
+        }
+        .gallery-hero-title {
+            color: white;
+            font-size: 1.6rem;
+            font-weight: 800;
+            line-height: 1.15;
+            text-shadow: 0 2px 12px rgba(0,0,0,0.4);
+            margin-bottom: 6px;
+        }
+        .gallery-hero-meta {
+            color: rgba(255,255,255,0.75);
+            font-size: 0.8rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .gallery-hero-meta .dot { opacity: 0.5; }
+        .gallery-hero-add {
+            position: absolute;
+            bottom: 16px; right: 0;
+            background: linear-gradient(135deg, #FF6B4A, #FF8E53);
+            color: white;
+            border: none;
+            width: 44px; height: 44px;
+            border-radius: 50%;
+            font-size: 1.1rem;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(255,107,74,0.5);
+            display: flex; align-items: center; justify-content: center;
+            transition: transform 0.15s;
+        }
+        .gallery-hero-add:active { transform: scale(0.92); }
+
+        /* Carousel strip below hero */
+        .gallery-carousel-wrap {
+            flex: 1;
+            background: #0A0A0A;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            padding: 12px 16px 8px;
+        }
+        .gallery-carousel-label {
+            color: rgba(255,255,255,0.9);
+            font-size: 0.8rem;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+        .gallery-carousel {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            flex: 1;
+        }
+        .gallery-carousel::-webkit-scrollbar { display: none; }
+
+        .carousel-card {
+            flex-shrink: 0;
+            width: 110px;
+            border-radius: 16px;
+            overflow: hidden;
+            cursor: pointer;
+            position: relative;
+            transition: transform 0.2s;
+        }
+        .carousel-card:active { transform: scale(0.95); }
+        .carousel-card.selected { outline: 2px solid #FF6B4A; }
+
+        .carousel-card-img {
+            width: 110px; height: 80px;
+            object-fit: cover; display: block;
+            background: linear-gradient(135deg, #1A1A2E, #16213E);
+        }
+        .carousel-card-emoji {
+            width: 110px; height: 80px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #1A1A2E, #2D1B69);
+        }
+        .carousel-card-info {
+            background: #181818;
+            padding: 6px 8px;
+        }
+        .carousel-card-name {
+            color: white;
+            font-size: 0.68rem;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .carousel-card-price {
+            color: #FF8E53;
+            font-size: 0.6rem;
+            font-weight: 600;
+            margin-top: 2px;
+        }
+        .gallery-loading-dark {
+            color: rgba(255,255,255,0.4);
+            font-size: 0.8rem;
+            padding: 20px;
+            text-align: center;
+        }
+
+        /* ===== SHOP SCREEN ===== */
+        #shopScreen { padding: 16px 20px 20px; }
+        .cart-sidebar { background: #FFF0E5; border-radius: 28px; padding: 16px; margin-bottom: 16px; border: 1px solid #FFB47A; }
+        .cart-item-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #FFD9B5; font-size: 0.8rem; }
+        .remove-cart-btn { background: none; border: none; color: #FF6B4A; cursor: pointer; }
+        .custom-preview { display: flex; gap: 10px; margin: 10px 0; flex-wrap: wrap; }
+        .custom-thumb { width: 70px; height: 70px; background: #FFE8DC; border-radius: 20px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .custom-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .file-input-label { background: #FFE8DC; border: 1.5px dashed #FFA559; border-radius: 60px; padding: 12px; text-align: center; cursor: pointer; display: block; margin: 8px 0; color: #D45A2C; font-weight: 600; }
+        .custom-input { background: white; border: 1.5px solid #FFD1A4; border-radius: 60px; padding: 12px; width: 100%; color: #4A2A1A; margin: 8px 0; font-family: inherit; }
+        .badge { background: #FFD5A4; color: #B45A2E; padding: 4px 12px; border-radius: 50px; font-size: 0.7rem; font-weight: 600; display: inline-block; margin: 2px; }
+        .info-box { background: #FFE8DC; border-radius: 20px; padding: 12px; margin-top: 12px; font-size: 0.7rem; color: #B45A2E; }
         .gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 8px; }
         .gallery-card {
             background: white; border-radius: 28px; overflow: hidden;
@@ -171,31 +398,71 @@
         .gallery-price { font-size: 0.7rem; color: #FF6B4A; font-weight: 700; margin-top: 4px; }
         .gallery-loading { grid-column: 1 / -1; text-align: center; padding: 30px; color: #B45A2E; font-size: 0.85rem; }
 
-        /* ===== SHOP ===== */
-        .cart-sidebar { background: #FFF0E5; border-radius: 28px; padding: 16px; margin-bottom: 16px; border: 1px solid #FFB47A; }
-        .cart-item-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #FFD9B5; font-size: 0.8rem; }
-        .remove-cart-btn { background: none; border: none; color: #FF6B4A; cursor: pointer; }
-        .custom-preview { display: flex; gap: 10px; margin: 10px 0; flex-wrap: wrap; }
-        .custom-thumb { width: 70px; height: 70px; background: #FFE8DC; border-radius: 20px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-        .custom-thumb img { width: 100%; height: 100%; object-fit: cover; }
-        .file-input-label { background: #FFE8DC; border: 1.5px dashed #FFA559; border-radius: 60px; padding: 12px; text-align: center; cursor: pointer; display: block; margin: 8px 0; color: #D45A2C; font-weight: 600; }
-        .custom-input { background: white; border: 1.5px solid #FFD1A4; border-radius: 60px; padding: 12px; width: 100%; color: #4A2A1A; margin: 8px 0; font-family: inherit; }
-        .badge { background: #FFD5A4; color: #B45A2E; padding: 4px 12px; border-radius: 50px; font-size: 0.7rem; font-weight: 600; display: inline-block; margin: 2px; }
-        .info-box { background: #FFE8DC; border-radius: 20px; padding: 12px; margin-top: 12px; font-size: 0.7rem; color: #B45A2E; }
+        /* ===== PROFILE SCREEN ===== */
+        #profileScreen { padding: 16px 20px 20px; }
         .audit-item { font-size: 0.7rem; padding: 6px 0; border-bottom: 1px solid #FFD9B5; display: flex; justify-content: space-between; }
         .earn-category { background: #FFF3E8; border-radius: 20px; padding: 10px; margin-bottom: 8px; }
         .earn-header { font-weight: 800; color: #E85D2E; margin-bottom: 6px; font-size: 0.8rem; }
         .earn-list { display: flex; flex-wrap: wrap; gap: 6px; }
         .earn-item { background: #FFE0C8; padding: 4px 10px; border-radius: 30px; font-size: 0.65rem; color: #B45A2E; }
-
         .streak-badge { background: #FF8E53; color: white; padding: 4px 12px; border-radius: 50px; font-size: 0.7rem; font-weight: bold; display: inline-block; }
-        .theme-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 12px; margin-bottom: 8px; }
-        .theme-tab { background: #FFE8D8; padding: 8px 20px; border-radius: 40px; font-size: 0.8rem; font-weight: 600; white-space: nowrap; cursor: pointer; flex-shrink: 0; }
-        .theme-tab.active { background: #FF8E53; color: white; }
         .logout-btn { background: none; border: 1px solid #FFB47A; color: #B45A2E; padding: 8px 20px; border-radius: 60px; font-size: 0.75rem; font-weight: 600; cursor: pointer; margin-top: 12px; width: 100%; }
         .logout-btn:hover { background: #FFE8DC; }
 
-        /* Modal (referral / QR) — uses fixed positioning correctly since this is the real DOM */
+        /* ===== CAMERA SCAN OVERLAY ===== */
+        #cameraOverlay {
+            display: none; position: fixed; inset: 0;
+            background: #000; z-index: 900;
+            flex-direction: column; align-items: center; justify-content: center;
+        }
+        #cameraOverlay.open { display: flex; }
+        #cameraVideo {
+            width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0;
+        }
+        .camera-ui {
+            position: relative; z-index: 10; display: flex; flex-direction: column;
+            align-items: center; width: 100%; padding: 20px;
+        }
+        .camera-close {
+            position: absolute; top: 20px; right: 20px; z-index: 20;
+            background: rgba(255,255,255,0.15); border: none; color: white;
+            width: 40px; height: 40px; border-radius: 50%; font-size: 1.1rem;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+        .scan-frame {
+            width: 220px; height: 220px; border-radius: 24px;
+            border: 3px solid rgba(255,107,74,0.8);
+            box-shadow: 0 0 0 4000px rgba(0,0,0,0.55);
+            position: relative;
+        }
+        .scan-line {
+            width: 100%; height: 2px;
+            background: linear-gradient(90deg, transparent, #FF6B4A, transparent);
+            position: absolute; top: 50%; animation: scanAnim 1.8s ease-in-out infinite;
+        }
+        @keyframes scanAnim {
+            0% { top: 10%; } 50% { top: 85%; } 100% { top: 10%; }
+        }
+        .scan-corners::before, .scan-corners::after,
+        .scan-frame > span::before, .scan-frame > span::after {
+            content: ''; position: absolute;
+            width: 20px; height: 20px;
+            border-color: #FF6B4A; border-style: solid;
+        }
+        .scan-label {
+            color: white; font-size: 0.85rem; font-weight: 600;
+            margin-top: 28px; text-align: center; opacity: 0.85;
+        }
+        .scan-earn-badge {
+            background: linear-gradient(95deg,#FF6B4A,#FF8E53);
+            color: white; padding: 8px 20px; border-radius: 40px;
+            font-weight: 800; margin-top: 14px; font-size: 0.9rem;
+        }
+        .camera-no-support {
+            color: white; text-align: center; padding: 20px; font-size: 0.9rem;
+        }
+
+        /* ===== MODALS ===== */
         .modal {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
@@ -228,9 +495,11 @@
             <div class="card" style="margin-bottom: 12px;">
                 <h3 style="margin-bottom: 10px;"><i class="fas fa-bolt"></i> Quick Actions</h3>
                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                    <button class="btn btn-primary" id="homeScanBtn" style="flex:1; font-size:0.8rem;"><i class="fas fa-qrcode"></i> Scan +15</button>
+                    <!-- CAMERA SCAN -->
+                    <button class="btn btn-primary" id="homeScanBtn" style="flex:1; font-size:0.8rem;"><i class="fas fa-camera"></i> Scan +15</button>
                     <button class="btn btn-secondary" id="homeDailyBtn" style="flex:1; font-size:0.8rem;"><i class="fas fa-sun"></i> Check-in +5</button>
-                    <button class="btn" id="homeStoryBtn" style="background:#FFB87A; color:#4A2A1A; font-size:0.8rem;"><i class="fab fa-instagram"></i> Story +25</button>
+                    <!-- INSTAGRAM DEEP LINK -->
+                    <button class="btn" id="homeStoryBtn" style="background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);color:white; font-size:0.8rem;"><i class="fab fa-instagram"></i> Story +25</button>
                     <button class="btn btn-primary" id="homeReferBtn" style="flex:1; font-size:0.8rem;"><i class="fas fa-user-plus"></i> Refer +50</button>
                 </div>
             </div>
@@ -284,26 +553,53 @@
             </div>
         </div>
 
-        <!-- ===== GALLERY SCREEN ===== -->
+        <!-- ===== GALLERY SCREEN — TONAL STYLE ===== -->
         <div id="galleryScreen" class="screen">
-            <div class="card" style="background:#FFE8DC;">
-                <h3><i class="fas fa-images"></i> Poster Collections</h3>
-                <p style="font-size:0.75rem;">Browse by theme — tap any to view &amp; add to cart</p>
+
+            <!-- Category tabs -->
+            <div class="gallery-category-strip" id="galleryCategoryStrip">
+                <button class="gcat-btn active" data-theme="aesthetic">🎨 Aesthetic</button>
+                <button class="gcat-btn" data-theme="girlish">🌸 Girlish</button>
+                <button class="gcat-btn" data-theme="motivational">💪 Motivational</button>
+                <button class="gcat-btn" data-theme="musical">🎵 Musical</button>
+                <button class="gcat-btn" data-theme="theater">🎭 Theater</button>
+                <button class="gcat-btn" data-theme="limited">⚡ Limited</button>
             </div>
-            <div class="theme-tabs" id="galleryThemeTabs">
-                <div class="theme-tab active" data-theme="aesthetic">🎨 Aesthetic</div>
-                <div class="theme-tab" data-theme="girlish">🌸 Girlish</div>
-                <div class="theme-tab" data-theme="motivational">💪 Motivational</div>
-                <div class="theme-tab" data-theme="musical">🎵 Musical</div>
-                <div class="theme-tab" data-theme="theater">🎭 Theater</div>
+
+            <!-- Hero poster — large immersive view -->
+            <div class="gallery-hero-wrap" id="galleryHeroWrap">
+                <div class="gallery-hero-placeholder" id="galleryHeroPlaceholder">🖼️</div>
+                <img class="gallery-hero-img" id="galleryHeroImg" src="" alt="" style="display:none;">
+                <div class="gallery-hero-overlay"></div>
+                <div class="gallery-hero-cat" id="galleryHeroCat">AESTHETIC</div>
+                <div class="gallery-hero-menu"><i class="fas fa-ellipsis-h"></i></div>
+                <div class="gallery-hero-info">
+                    <div class="gallery-hero-title" id="galleryHeroTitle">Loading…</div>
+                    <div class="gallery-hero-meta">
+                        <span id="galleryHeroPrice">$—</span>
+                        <span class="dot">•</span>
+                        <span id="galleryHeroPoints">— pts</span>
+                        <span class="dot">•</span>
+                        <span id="galleryHeroTag">All Levels</span>
+                    </div>
+                </div>
+                <button class="gallery-hero-add" id="galleryHeroAddBtn" title="Add to cart">
+                    <i class="fas fa-cart-plus"></i>
+                </button>
             </div>
-            <div id="galleryCollectionsContainer" class="gallery-grid">
-                <div class="gallery-loading"><i class="fas fa-spinner fa-spin"></i> Loading…</div>
+
+            <!-- Carousel of posters in this category -->
+            <div class="gallery-carousel-wrap">
+                <div class="gallery-carousel-label" id="galleryCarouselLabel">More in Aesthetic</div>
+                <div class="gallery-carousel" id="galleryCarousel">
+                    <div class="gallery-loading-dark"><i class="fas fa-spinner fa-spin"></i> Loading…</div>
+                </div>
             </div>
+
         </div>
 
         <!-- ===== SHOP SCREEN ===== -->
-        <div id="shopScreen" class="screen">
+        <div id="shopScreen" class="screen" style="padding:16px 20px 20px;">
             <div class="card" style="padding: 12px 16px; background:#FFE8DC;">
                 <div style="display: flex; justify-content: space-between;">
                     <span><i class="fas fa-bolt"></i> Boost: <strong id="boostValue">1.0x</strong></span>
@@ -343,7 +639,7 @@
         </div>
 
         <!-- ===== PROFILE SCREEN ===== -->
-        <div id="profileScreen" class="screen">
+        <div id="profileScreen" class="screen" style="padding:16px 20px 20px;">
             <div class="card" style="text-align:center;">
                 <div style="width:70px;height:70px;background:#FFB87A;border-radius:50%;margin:0 auto;display:flex;align-items:center;justify-content:center;"><i class="fas fa-user-astronaut" style="font-size:2rem; color:#4A2A1A;"></i></div>
                 <h3 id="profileName" style="margin-top: 10px;">—</h3>
@@ -388,13 +684,16 @@
     </div>
 </div>
 
-<!-- QR Modal -->
-<div id="qrModal" class="modal" role="dialog" aria-modal="true">
-    <div class="modal-content">
-        <i class="fas fa-qrcode" style="font-size:3rem; color:#FF8E53;"></i>
-        <h3>Scan QR Code</h3>
-        <p id="qrModalMsg">Earning points…</p>
-        <button id="closeQrModal" class="btn btn-primary" style="margin-top: 12px;">Got it</button>
+<!-- Camera QR Overlay -->
+<div id="cameraOverlay">
+    <video id="cameraVideo" autoplay playsinline muted></video>
+    <button class="camera-close" id="cameraCloseBtn"><i class="fas fa-times"></i></button>
+    <div class="camera-ui" style="position:absolute;bottom:80px;left:0;right:0;align-items:center;">
+        <div class="scan-frame">
+            <div class="scan-line"></div>
+        </div>
+        <div class="scan-label">Point at a Wall Culture QR code</div>
+        <div class="scan-earn-badge"><i class="fas fa-gem"></i> +15 pts per scan</div>
     </div>
 </div>
 
@@ -408,10 +707,25 @@
     </div>
 </div>
 
+<!-- Instagram Story confirm modal -->
+<div id="instagramModal" class="modal" role="dialog" aria-modal="true">
+    <div class="modal-content">
+        <div style="font-size:3rem; margin-bottom:10px;">📸</div>
+        <h3>Share on Instagram</h3>
+        <p style="font-size:0.8rem;color:#B45A2E;margin:12px 0;">Post a story tagging <strong>@wallculture</strong> to earn <strong>+25 pts</strong>.<br><br>We'll open Instagram for you — after posting, come back and confirm!</p>
+        <button id="openInstagramBtn" class="btn btn-primary" style="width:100%;margin-bottom:8px;">
+            <i class="fab fa-instagram"></i> Open Instagram
+        </button>
+        <button id="confirmStoryBtn" class="btn btn-success" style="width:100%;margin-bottom:8px;" disabled>
+            ✅ I Posted! Claim +25 pts
+        </button>
+        <button id="closeInstagramModal" class="btn btn-secondary" style="width:100%;">Cancel</button>
+    </div>
+</div>
+
 <script>
     const API_URL = 'https://wall-culture-3.onrender.com/api';
 
-    // ==================== AUTH GUARD ====================
     (function authGuard() {
         if (!localStorage.getItem('wall_culture_token')) window.location.href = 'index.html';
     })();
@@ -428,19 +742,11 @@
         });
     }
 
-    // ==================== XSS HELPERS ====================
-    // FIX: All dynamic data from the API is set via textContent (never innerHTML)
-    // or through these helpers for elements that need attributes set too.
     function setText(el, text) {
         if (typeof el === 'string') el = document.getElementById(el);
         if (el) el.textContent = text;
     }
-    function setAttr(el, attr, value) {
-        if (typeof el === 'string') el = document.getElementById(el);
-        if (el) el.setAttribute(attr, value);
-    }
 
-    // ==================== STATE ====================
     let cart = [];
     let auditLog = [];
     let user = {
@@ -453,15 +759,15 @@
     let currentCustomImage = null;
     let currentGalleryTheme = 'aesthetic';
     const galleryCache = {};
+    let currentHeroItem = null;
+    let cameraStream = null;
 
-    // ==================== UTILITY ====================
     function showToast(msg) {
         const d = document.createElement('div');
-        // textContent prevents XSS in toast messages
         d.textContent = msg;
         d.style.cssText = 'position:fixed;bottom:90px;left:20px;right:20px;background:#FFE0B5;color:#4A2A1A;padding:12px;border-radius:60px;text-align:center;font-weight:bold;z-index:2000;box-shadow:0 4px 16px rgba(0,0,0,0.15);';
         document.body.appendChild(d);
-        setTimeout(() => d.remove(), 2000);
+        setTimeout(() => d.remove(), 2500);
     }
 
     function saveUser() { localStorage.setItem('wall_culture_user', JSON.stringify(user)); }
@@ -508,11 +814,6 @@
         });
     }
 
-    // ==================== SERVER-AUTHORITATIVE POINTS ====================
-    // FIX: All point awards go through the backend. The client only updates
-    // its local state AFTER a successful API response to avoid double-counting
-    // and to prevent client-side cheating via DevTools.
-
     async function serverAddPoints(endpoint, method = 'POST', body = null) {
         try {
             const res = await apiRequest(endpoint, {
@@ -521,7 +822,6 @@
             });
             const data = await res.json();
             if (res.ok && data.success) {
-                // Sync from backend to get authoritative totals
                 await fetchUserProfile();
                 if (data.earned) addAudit(body?.action || 'Points earned', data.earned);
                 return data;
@@ -535,29 +835,98 @@
         }
     }
 
-    async function scanQR() {
-        const result = await serverAddPoints('/scan/qr');
-        if (result) showToast(`✅ QR scanned! +${result.earned} pts`);
+    // ===== CAMERA SCAN =====
+    async function openCamera() {
+        const overlay = document.getElementById('cameraOverlay');
+        const video = document.getElementById('cameraVideo');
+
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            showToast('Camera not supported on this device');
+            // Fallback: just award points directly
+            const result = await serverAddPoints('/scan/qr');
+            if (result) showToast(`✅ QR scanned! +${result.earned} pts`);
+            return;
+        }
+
+        try {
+            cameraStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 } }
+            });
+            video.srcObject = cameraStream;
+            overlay.classList.add('open');
+
+            // Auto-award after 2.5s (simulated scan — swap for real QR decode library if needed)
+            setTimeout(async () => {
+                if (!overlay.classList.contains('open')) return;
+                const result = await serverAddPoints('/scan/qr');
+                closeCamera();
+                if (result) showToast(`✅ QR scanned! +${result.earned} pts`);
+                else showToast('Scan registered!');
+            }, 2500);
+
+        } catch (err) {
+            showToast('Camera access denied. Check browser permissions.');
+        }
     }
 
+    function closeCamera() {
+        const overlay = document.getElementById('cameraOverlay');
+        overlay.classList.remove('open');
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(t => t.stop());
+            cameraStream = null;
+        }
+        document.getElementById('cameraVideo').srcObject = null;
+    }
+
+    document.getElementById('cameraCloseBtn').addEventListener('click', closeCamera);
+
+    // ===== INSTAGRAM STORY FLOW =====
+    let instagramOpened = false;
+
+    function openInstagramModal() {
+        instagramOpened = false;
+        document.getElementById('confirmStoryBtn').disabled = true;
+        document.getElementById('instagramModal').style.display = 'flex';
+    }
+
+    document.getElementById('openInstagramBtn').addEventListener('click', () => {
+        // Try Instagram app deep link first, fallback to web
+        const appLink = 'instagram://story-camera';
+        const webLink = 'https://www.instagram.com';
+
+        // Attempt app deep link
+        window.location.href = appLink;
+
+        // Fallback to web after 1.5s if app didn't open
+        setTimeout(() => {
+            window.open(webLink, '_blank');
+        }, 1500);
+
+        instagramOpened = true;
+        // Enable the confirm button after 4 seconds (gives time to post)
+        setTimeout(() => {
+            document.getElementById('confirmStoryBtn').disabled = false;
+        }, 4000);
+    });
+
+    document.getElementById('confirmStoryBtn').addEventListener('click', async () => {
+        document.getElementById('instagramModal').style.display = 'none';
+        const result = await serverAddPoints('/social/story');
+        if (result) showToast(`📸 Story confirmed! +${result.earned} pts`);
+    });
+
+    document.getElementById('closeInstagramModal').addEventListener('click', () => {
+        document.getElementById('instagramModal').style.display = 'none';
+    });
+
+    // ===== DAILY CHECK-IN =====
     async function dailyCheck() {
         const result = await serverAddPoints('/daily/checkin');
         if (result) {
             if (!result.success) { showToast(result.message || 'Already checked in today!'); return; }
             showToast(`☀️ Checked in! +${result.earned} pts · ${result.streak} day streak`);
         }
-    }
-
-    async function shareStory() {
-        if (!confirm('Did you post Wall Culture on your Instagram story?')) return;
-        const result = await serverAddPoints('/social/story');
-        if (result) showToast(`📸 Story shared! +${result.earned} pts`);
-    }
-
-    async function roomTour() {
-        if (!confirm('Did you post a room tour featuring Wall Culture?')) return;
-        const result = await serverAddPoints('/social/roomtour');
-        if (result) showToast(`🏠 Room tour! +${result.earned} pts`);
     }
 
     function referFriend() { document.getElementById('referralModal').style.display = 'flex'; }
@@ -568,7 +937,7 @@
         window.location.href = 'index.html';
     }
 
-    // ==================== REFRESH UI ====================
+    // ===== REFRESH UI =====
     function refreshAllUI() {
         const refCode  = user.referralCode || user.referral_code || '—';
         const pts      = user.points || 0;
@@ -610,7 +979,7 @@
         renderCartUI();
     }
 
-    // ==================== CART ====================
+    // ===== CART =====
     function renderCartUI() {
         const container = document.getElementById('cartItemsList');
         const count = cart.reduce((s, i) => s + i.qty, 0);
@@ -636,7 +1005,7 @@
 
             if (item.image) {
                 const img = document.createElement('img');
-                img.src = item.image;  // data URL from FileReader — safe
+                img.src = item.image;
                 img.style.cssText = 'width:28px;height:28px;border-radius:12px;object-fit:cover;';
                 left.appendChild(img);
             } else {
@@ -648,7 +1017,7 @@
 
             const label = document.createElement('span');
             const strong = document.createElement('strong');
-            strong.textContent = item.name;   // textContent — XSS safe
+            strong.textContent = item.name;
             label.appendChild(strong);
             label.append(` ×${item.qty}`);
             left.appendChild(label);
@@ -666,7 +1035,6 @@
                 renderCartUI();
             });
             right.appendChild(removeBtn);
-
             row.append(left, right);
             container.appendChild(row);
         });
@@ -681,7 +1049,7 @@
         showToast(`✓ ${item.name} added to cart`);
     }
 
-    // ==================== FEED — GALLERY STYLE ====================
+    // ===== FEED =====
     async function loadFeed() {
         const container = document.getElementById('feedContainer');
         container.innerHTML = '<div class="feed-loading"><i class="fas fa-spinner fa-spin"></i> Loading posters…</div>';
@@ -706,30 +1074,25 @@
             const card = document.createElement('div');
             card.className = 'poster-feed-card';
 
-            // FIX: Use DOM construction (not innerHTML) for all user-sourced strings
-            // to eliminate XSS risk entirely.
             if (item.image_url) {
                 const img = document.createElement('img');
                 img.className = 'poster-feed-image';
                 img.loading = 'lazy';
-                img.alt = '';               // decorative; name is in text below
+                img.alt = '';
                 img.src = item.image_url;
-                img.onerror = () => {
-                    img.replaceWith(makePlaceholder());
-                };
+                img.onerror = () => { img.replaceWith(makeFeedPlaceholder()); };
                 card.appendChild(img);
             } else {
-                card.appendChild(makePlaceholder());
+                card.appendChild(makeFeedPlaceholder());
             }
 
-            // Minimal info row
             const info = document.createElement('div');
             info.className = 'poster-feed-info';
 
             const left = document.createElement('div');
             const name = document.createElement('div');
             name.className = 'poster-feed-name';
-            name.textContent = item.name;         // textContent — safe
+            name.textContent = item.name;
             const pts = document.createElement('div');
             pts.className = 'poster-feed-pts';
             if (item.is_limited) {
@@ -747,24 +1110,19 @@
 
             info.append(left, price);
             card.appendChild(info);
-
-            // Tap anywhere on card → open immersive view
             card.addEventListener('click', () => openOverlay(item));
             container.appendChild(card);
         });
     }
 
-    function makePlaceholder() {
+    function makeFeedPlaceholder() {
         const ph = document.createElement('div');
         ph.className = 'poster-feed-placeholder';
         ph.textContent = '🖼️';
         return ph;
     }
 
-    // ==================== IMMERSIVE POSTER OVERLAY ====================
-    // FIX: Implements the full-screen gallery view required by the design brief.
-    // tap poster → image expands → bottom panel with name, price, add-to-cart.
-
+    // ===== POSTER OVERLAY =====
     let overlayItem = null;
 
     function openOverlay(item) {
@@ -830,64 +1188,170 @@
         setTimeout(closeOverlay, 800);
     });
 
-    // ==================== GALLERY ====================
-    async function renderGalleryCollections(theme) {
-        const container = document.getElementById('galleryCollectionsContainer');
-        container.innerHTML = '<div class="gallery-loading"><i class="fas fa-spinner fa-spin"></i> Loading…</div>';
+    // ===== TONAL-STYLE GALLERY =====
+    async function loadGallery(theme) {
+        currentGalleryTheme = theme;
 
-        if (galleryCache[theme]) { buildGalleryGrid(galleryCache[theme], container); return; }
+        // Update category label
+        const catLabel = theme.charAt(0).toUpperCase() + theme.slice(1);
+        setText('galleryHeroCat', catLabel.toUpperCase());
+        setText('galleryCarouselLabel', `More in ${catLabel}`);
+
+        // Reset hero
+        setText('galleryHeroTitle', 'Loading…');
+        setText('galleryHeroPrice', '$—');
+        setText('galleryHeroPoints', '— pts');
+        document.getElementById('galleryHeroImg').style.display = 'none';
+        document.getElementById('galleryHeroPlaceholder').style.display = 'flex';
+
+        // Carousel loading
+        document.getElementById('galleryCarousel').innerHTML = '<div class="gallery-loading-dark"><i class="fas fa-spinner fa-spin"></i> Loading…</div>';
+
+        if (galleryCache[theme]) {
+            renderGalleryTonal(galleryCache[theme]);
+            return;
+        }
 
         try {
-            const res  = await apiRequest(`/posters?category=${encodeURIComponent(theme)}`);
+            const endpoint = theme === 'limited' ? '/posters?limited=true' : `/posters?category=${encodeURIComponent(theme)}`;
+            const res  = await apiRequest(endpoint);
             const data = await res.json();
-            if (!res.ok || !Array.isArray(data)) { container.innerHTML = '<div class="gallery-loading">Could not load posters.</div>'; return; }
-            galleryCache[theme] = data;
-            buildGalleryGrid(data, container);
+            if (res.ok && Array.isArray(data)) {
+                galleryCache[theme] = data;
+                renderGalleryTonal(data);
+            } else {
+                renderGalleryTonal([]);
+            }
         } catch {
-            container.innerHTML = '<div class="gallery-loading">Network error. Please try again.</div>';
+            renderGalleryTonal([]);
         }
     }
 
-    function buildGalleryGrid(posters, container) {
+    function renderGalleryTonal(posters) {
         if (!posters || !posters.length) {
-            container.innerHTML = '<div class="gallery-loading" style="color:#B45A2E;">No posters in this category yet.</div>';
+            setText('galleryHeroTitle', 'No posters yet');
+            setText('galleryHeroPrice', '—');
+            setText('galleryHeroPoints', '—');
+            document.getElementById('galleryCarousel').innerHTML = '<div class="gallery-loading-dark">No posters in this category yet.</div>';
+            currentHeroItem = null;
             return;
         }
-        container.innerHTML = '';
-        posters.forEach(p => {
-            const card = document.createElement('div');
-            card.className = 'gallery-card';
 
-            const media = document.createElement('div');
-            media.className = 'gallery-media';
+        // Set first poster as hero
+        setHero(posters[0], 0);
+
+        // Build carousel
+        const carousel = document.getElementById('galleryCarousel');
+        carousel.innerHTML = '';
+        posters.forEach((p, idx) => {
+            const card = document.createElement('div');
+            card.className = 'carousel-card' + (idx === 0 ? ' selected' : '');
+            card.dataset.idx = idx;
+
             if (p.image_url) {
                 const img = document.createElement('img');
+                img.className = 'carousel-card-img';
                 img.loading = 'lazy';
                 img.alt = '';
                 img.src = p.image_url;
-                img.onerror = () => { img.replaceWith(document.createTextNode('🖼️')); };
-                media.appendChild(img);
+                img.onerror = () => { img.replaceWith(makeCarouselEmoji()); };
+                card.appendChild(img);
             } else {
-                media.textContent = '🖼️';
+                card.appendChild(makeCarouselEmoji());
             }
 
             const info = document.createElement('div');
-            info.className = 'gallery-info';
-            const title = document.createElement('div');
-            title.className = 'gallery-title';
-            title.textContent = p.name;           // textContent — safe
-            const gPrice = document.createElement('div');
-            gPrice.className = 'gallery-price';
-            gPrice.textContent = `$${p.price} · +${p.points} pts${p.is_limited ? ' ⚡' : ''}`;
-            info.append(title, gPrice);
-            card.append(media, info);
+            info.className = 'carousel-card-info';
 
-            card.addEventListener('click', () => openOverlay(p));
-            container.appendChild(card);
+            const name = document.createElement('div');
+            name.className = 'carousel-card-name';
+            name.textContent = p.name;
+
+            const price = document.createElement('div');
+            price.className = 'carousel-card-price';
+            price.textContent = `$${p.price} · +${p.points}pts`;
+
+            info.append(name, price);
+            card.appendChild(info);
+
+            card.addEventListener('click', () => {
+                document.querySelectorAll('.carousel-card').forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+                setHero(p, idx);
+            });
+
+            carousel.appendChild(card);
         });
     }
 
-    // ==================== LIMITED EDITION (SHOP) ====================
+    function makeCarouselEmoji() {
+        const d = document.createElement('div');
+        d.className = 'carousel-card-emoji';
+        d.textContent = '🖼️';
+        return d;
+    }
+
+    function setHero(item, idx) {
+        currentHeroItem = item;
+        const heroImg = document.getElementById('galleryHeroImg');
+        const heroPlaceholder = document.getElementById('galleryHeroPlaceholder');
+
+        setText('galleryHeroTitle', item.name);
+        setText('galleryHeroPrice', `$${item.price}`);
+        setText('galleryHeroPoints', `+${item.points} pts`);
+        setText('galleryHeroTag', item.is_limited ? '⚡ Limited' : 'All Styles');
+
+        if (item.image_url) {
+            heroImg.src = item.image_url;
+            heroImg.style.display = 'block';
+            heroPlaceholder.style.display = 'none';
+            heroImg.onerror = () => {
+                heroImg.style.display = 'none';
+                heroPlaceholder.style.display = 'flex';
+            };
+        } else {
+            heroImg.style.display = 'none';
+            heroPlaceholder.style.display = 'flex';
+        }
+    }
+
+    // Hero click → full overlay
+    document.getElementById('galleryHeroWrap').addEventListener('click', (e) => {
+        if (e.target.closest('#galleryHeroAddBtn')) return;
+        if (currentHeroItem) openOverlay(currentHeroItem);
+    });
+
+    // Hero add to cart
+    document.getElementById('galleryHeroAddBtn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!currentHeroItem) return;
+        addToCart({
+            type: currentHeroItem.is_limited ? 'limited' : 'poster',
+            id: currentHeroItem.id,
+            name: currentHeroItem.name,
+            price: currentHeroItem.price,
+            points: currentHeroItem.points,
+            emoji: '🖼️'
+        });
+        const btn = document.getElementById('galleryHeroAddBtn');
+        btn.innerHTML = '<i class="fas fa-check"></i>';
+        btn.style.background = 'linear-gradient(135deg,#38B000,#70E000)';
+        setTimeout(() => {
+            btn.innerHTML = '<i class="fas fa-cart-plus"></i>';
+            btn.style.background = '';
+        }, 1200);
+    });
+
+    // Category tab switching
+    document.getElementById('galleryCategoryStrip').addEventListener('click', (e) => {
+        const btn = e.target.closest('.gcat-btn');
+        if (!btn) return;
+        document.querySelectorAll('.gcat-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        loadGallery(btn.dataset.theme);
+    });
+
+    // ===== LIMITED EDITION (SHOP) =====
     const limitedPostersStatic = [
         { id: 'lim1', name: 'Neon Dreams (Limited)', emoji: '🌈', price: 25, points: 200, is_limited: true },
         { id: 'lim2', name: 'Golden Hour (Limited)', emoji: '🌇', price: 25, points: 200, is_limited: true }
@@ -898,10 +1362,9 @@
         try {
             const res  = await apiRequest('/posters?limited=true');
             const data = await res.json();
-            if (res.ok && Array.isArray(data) && data.length) { buildGalleryGrid(data, container); return; }
-        } catch { /* fall through */ }
+            if (res.ok && Array.isArray(data) && data.length) { buildShopGrid(data, container); return; }
+        } catch { }
 
-        // Fallback static
         container.innerHTML = '';
         limitedPostersStatic.forEach(p => {
             const card = document.createElement('div');
@@ -924,10 +1387,32 @@
         });
     }
 
-    // ==================== CHECKOUT ====================
-    // FIX: Local state is only updated from the server response, not doubled.
-    // The optimistic local increment has been removed; we call fetchUserProfile()
-    // after the API confirms success so the UI reflects the true server value.
+    function buildShopGrid(posters, container) {
+        container.innerHTML = '';
+        posters.forEach(p => {
+            const card = document.createElement('div');
+            card.className = 'gallery-card';
+            const media = document.createElement('div');
+            media.className = 'gallery-media';
+            if (p.image_url) {
+                const img = document.createElement('img');
+                img.loading = 'lazy'; img.alt = ''; img.src = p.image_url;
+                media.appendChild(img);
+            } else { media.textContent = '🖼️'; }
+            const info = document.createElement('div');
+            info.className = 'gallery-info';
+            const t = document.createElement('div');
+            t.className = 'gallery-title'; t.textContent = p.name;
+            const pr = document.createElement('div');
+            pr.className = 'gallery-price';
+            pr.textContent = `$${p.price} · +${p.points} pts${p.is_limited ? ' ⚡' : ''}`;
+            info.append(t, pr); card.append(media, info);
+            card.addEventListener('click', () => openOverlay(p));
+            container.appendChild(card);
+        });
+    }
+
+    // ===== CHECKOUT =====
     async function processCheckout() {
         if (!cart.length) { showToast('Cart is empty!'); return; }
         const totalPrice      = cart.reduce((s, i) => s + (i.price * i.qty), 0);
@@ -945,8 +1430,6 @@
             const data = await res.json();
 
             if (data.success) {
-                // Sync profile from backend — this is the authoritative source of truth.
-                // Do NOT add points locally; fetchUserProfile() will update user.points.
                 await fetchUserProfile();
                 addAudit('Purchase order', data.pointsEarned || previewPoints);
                 cart = [];
@@ -960,7 +1443,7 @@
         }
     }
 
-    // ==================== CUSTOM POSTER ====================
+    // ===== CUSTOM POSTER =====
     document.getElementById('customImageUpload').addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -972,7 +1455,7 @@
             const thumb = document.createElement('div');
             thumb.className = 'custom-thumb';
             const img = document.createElement('img');
-            img.src = currentCustomImage;  // data URL — safe
+            img.src = currentCustomImage;
             img.alt = 'Preview';
             thumb.appendChild(img);
             const label = document.createElement('span');
@@ -1004,7 +1487,7 @@
         addToCart({ type: 'mystery', id: 'mystery_' + Date.now(), name: 'Mystery Pack', price: 30, points: 150, emoji: '🎁' });
     }
 
-    // ==================== FETCH PROFILE ====================
+    // ===== FETCH PROFILE =====
     async function fetchUserProfile() {
         try {
             const res  = await apiRequest('/user/profile');
@@ -1044,38 +1527,35 @@
         }
     }
 
-    // ==================== NAVIGATION ====================
+    // ===== NAVIGATION =====
     const screens = { home: 'homeScreen', gallery: 'galleryScreen', shop: 'shopScreen', profile: 'profileScreen' };
 
     function showScreen(s) {
-        Object.values(screens).forEach(sc => document.getElementById(sc).classList.remove('active'));
+        Object.values(screens).forEach(sc => {
+            const el = document.getElementById(sc);
+            el.classList.remove('active');
+        });
         document.getElementById(screens[s]).classList.add('active');
         document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
         document.querySelector(`.tab-item[data-tab="${s}"]`).classList.add('active');
-        if (s === 'gallery') renderGalleryCollections(currentGalleryTheme);
+
+        if (s === 'gallery') loadGallery(currentGalleryTheme);
         if (s === 'shop')    { renderLimited(); renderCartUI(); }
         if (s === 'profile') refreshAllUI();
     }
 
-    // ==================== EVENT LISTENERS ====================
+    // ===== EVENT LISTENERS =====
     document.querySelectorAll('.tab-item').forEach(tab =>
         tab.addEventListener('click', () => showScreen(tab.dataset.tab))
     );
 
-    document.getElementById('homeScanBtn').onclick = () => {
-        document.getElementById('qrModal').style.display = 'flex';
-        document.getElementById('qrModalMsg').textContent = 'Earning points…';
-        scanQR().then(result => {
-            if (result) setText('qrModalMsg', `+${result.earned} pts earned!`);
-        });
-    };
-    document.getElementById('closeQrModal').onclick  = () => document.getElementById('qrModal').style.display = 'none';
-    document.getElementById('homeDailyBtn').onclick  = dailyCheck;
-    document.getElementById('homeStoryBtn').onclick  = shareStory;
-    document.getElementById('homeReferBtn').onclick  = referFriend;
+    document.getElementById('homeScanBtn').onclick    = openCamera;
+    document.getElementById('homeDailyBtn').onclick   = dailyCheck;
+    document.getElementById('homeStoryBtn').onclick   = openInstagramModal;
+    document.getElementById('homeReferBtn').onclick   = referFriend;
     document.getElementById('addCustomToCartBtn').onclick = addCustomToCart;
-    document.getElementById('addMysteryBtn').onclick     = addMysteryToCart;
-    document.getElementById('checkoutBtnShop').onclick   = processCheckout;
+    document.getElementById('addMysteryBtn').onclick      = addMysteryToCart;
+    document.getElementById('checkoutBtnShop').onclick    = processCheckout;
 
     document.getElementById('copyCodeBtn').onclick = () => {
         navigator.clipboard.writeText(user.referralCode || user.referral_code || '')
@@ -1088,22 +1568,13 @@
     document.getElementById('closeReferralModal').onclick = () => document.getElementById('referralModal').style.display = 'none';
     document.getElementById('logoutBtn').onclick = logout;
 
-    ['qrModal', 'referralModal'].forEach(id => {
+    ['referralModal', 'instagramModal'].forEach(id => {
         document.getElementById(id).addEventListener('click', (e) => {
             if (e.target === document.getElementById(id)) document.getElementById(id).style.display = 'none';
         });
     });
 
-    document.querySelectorAll('#galleryThemeTabs .theme-tab').forEach(tab => {
-        tab.addEventListener('click', () => {
-            document.querySelectorAll('#galleryThemeTabs .theme-tab').forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            currentGalleryTheme = tab.dataset.theme;
-            renderGalleryCollections(currentGalleryTheme);
-        });
-    });
-
-    // ==================== INIT ====================
+    // ===== INIT =====
     fetchUserProfile();
     loadFeed();
     renderCartUI();
