@@ -6,6 +6,9 @@
     <title>Wall Culture · Studio</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://unpkg.com/@capacitor/core"></script>
+    <script src="https://unpkg.com/@capacitor/camera"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -17,12 +20,12 @@
             max-width: 450px; margin: 0 auto; height: 100vh;
             background: linear-gradient(135deg, #FFF5E6 0%, #FFE0C8 100%);
             display: flex; flex-direction: column; overflow: hidden;
-            box-shadow: 0 0 40px rgba(0,0,0,0.15); position: relative;
+            box-shadow: 0 0 40px rgba(0,0,0,0.15);
         }
         .app-header {
             padding: 16px 20px 12px; display: flex;
             justify-content: space-between; align-items: baseline;
-            border-bottom: 1px solid rgba(212,107,58,0.2); flex-shrink: 0;
+            border-bottom: 1px solid rgba(212,107,58,0.2);
         }
         .logo-area h1 {
             font-size: 1.6rem; font-weight: 800;
@@ -36,8 +39,7 @@
         .quick-points span { font-weight: 800; color: #E85D2E; }
         .screen-container {
             flex: 1; overflow-y: auto; overflow-x: hidden;
-            padding: 0;
-            padding-bottom: calc(0px + env(safe-area-inset-bottom, 0px));
+            padding: 16px 20px 20px;
         }
         .screen { display: none; animation: fadeIn 0.3s ease; }
         .screen.active { display: block; }
@@ -45,16 +47,15 @@
 
         .tab-bar {
             background: #FFF0E0; border-top: 1px solid rgba(255,150,80,0.3);
-            display: flex; padding: 8px 16px 12px; gap: 6px;
+            display: flex; padding: 8px 16px 12px;
             justify-content: space-around;
             padding-bottom: max(12px, env(safe-area-inset-bottom, 12px));
-            flex-shrink: 0;
         }
         .tab-item {
             flex: 1; display: flex; flex-direction: column; align-items: center;
-            gap: 4px; padding: 8px 0; border-radius: 30px; background: transparent;
+            gap: 4px; padding: 8px 0; border-radius: 30px;
             border: none; color: #CA834E; font-weight: 600; font-size: 0.7rem;
-            transition: 0.2s; cursor: pointer;
+            transition: 0.2s; cursor: pointer; background: transparent;
         }
         .tab-item i { font-size: 1.4rem; }
         .tab-item.active { background: #FFD1A4; color: #E85D2E; }
@@ -62,275 +63,156 @@
         .card {
             background: rgba(255,245,235,0.9); border-radius: 32px; padding: 1.2rem;
             margin-bottom: 1rem; border: 1px solid rgba(255,140,80,0.3);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.05);
         }
-        .btn { border: none; padding: 12px 20px; border-radius: 60px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: 0.15s; }
-        .btn-primary { background: linear-gradient(95deg, #FF6B4A, #FF8E53); color: white; box-shadow: 0 6px 14px #FF6B4A60; }
+        .btn {
+            border: none; padding: 12px 20px; border-radius: 60px;
+            font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: 0.15s;
+        }
+        .btn-primary { background: linear-gradient(95deg, #FF6B4A, #FF8E53); color: white; }
         .btn-secondary { background: #FFE0C0; border: 1px solid #FFA559; color: #D45A2C; }
         .btn-success { background: linear-gradient(95deg, #38B000, #70E000); color: white; }
-        .btn-gold { background: linear-gradient(95deg, #FFD700, #FFA500); color: #4A2A1A; font-weight: 800; }
 
-        /* Daily Challenge Banner */
-        .challenge-banner {
-            background: linear-gradient(135deg, #FF6B4A, #FF8E53, #FFB347);
-            border-radius: 28px;
-            padding: 14px 18px;
-            margin-bottom: 16px;
-            color: white;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
+        /* Gallery Grid */
+        .poster-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-top: 12px;
         }
-        .challenge-banner::before {
-            content: "🎯";
-            position: absolute;
-            right: 10px;
-            bottom: 5px;
-            font-size: 55px;
-            opacity: 0.15;
-        }
-        .challenge-title { font-weight: 800; font-size: 1rem; margin-bottom: 4px; }
-        .challenge-points { font-size: 0.75rem; opacity: 0.9; display: flex; gap: 12px; margin-top: 6px; flex-wrap: wrap; }
-        .challenge-timer { background: rgba(0,0,0,0.3); border-radius: 40px; padding: 4px 10px; display: inline-block; font-size: 0.7rem; margin-top: 8px; }
-
-        /* Discover Section - Overlapping Scroll */
-        .discover-header {
-            display: flex; justify-content: space-between; align-items: baseline;
-            padding: 0 4px 12px 20px;
-        }
-        .discover-header h3 { font-size: 1rem; font-weight: 700; color: #4A2A1A; }
-        .discover-header span { font-size: 0.7rem; color: #FF6B4A; font-weight: 600; }
-        .discover-scroll-container {
-            position: relative; overflow-x: auto; overflow-y: visible;
-            scrollbar-width: thin; -webkit-overflow-scrolling: touch;
-            scroll-snap-type: x mandatory; padding: 20px 0 30px 0; margin: 0 -20px;
-        }
-        .discover-scroll-container::-webkit-scrollbar { height: 4px; }
-        .discover-scroll { display: flex; gap: 8px; padding: 0 calc(50% - 85px); }
-        .discover-card-h {
-            flex: 0 0 auto; width: 170px; background: white; border-radius: 28px;
-            overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.12);
-            cursor: pointer; transition: all 0.3s cubic-bezier(0.2,0.9,0.4,1.1);
-            scroll-snap-align: center; margin: 0 -6px; transform: scale(0.88); opacity: 0.7;
-        }
-        .discover-card-h.active { transform: scale(1.02); opacity: 1; z-index: 10; box-shadow: 0 20px 35px rgba(0,0,0,0.2); margin: 0 4px; }
-        .discover-image-h { width: 100%; height: 180px; object-fit: cover; background: linear-gradient(135deg, #FFF0E5, #FFE2CE); }
-        .discover-info-h { padding: 12px; background: white; }
-        .discover-category-h { font-size: 0.6rem; font-weight: 700; text-transform: uppercase; color: #FF6B4A; margin-bottom: 4px; }
-        .discover-name-h { font-weight: 800; font-size: 0.8rem; color: #2A1A0A; margin-bottom: 6px; }
-        .discover-price-h { font-size: 0.7rem; color: #B45A2E; }
-        .discover-price-h span { color: #FF6B4A; font-weight: 700; }
-        .discover-badge { position: absolute; top: 10px; right: 10px; background: #FF6B4A; color: white; font-size: 0.6rem; font-weight: 700; padding: 4px 10px; border-radius: 30px; z-index: 15; }
-
-        /* Referral Progress Card */
-        .referral-progress {
-            background: linear-gradient(135deg, #FFF3E8, #FFE8DC);
-            border-radius: 24px; padding: 12px; margin-bottom: 12px;
-        }
-        .referral-tier { display: flex; justify-content: space-between; font-size: 0.7rem; margin-bottom: 8px; }
-        .tier-progress { background: #FFD9B5; border-radius: 30px; height: 6px; overflow: hidden; }
-        .tier-fill { background: linear-gradient(90deg, #FF6B4A, #FF8E53); width: 0%; height: 100%; }
-
-        /* Audit Log */
-        .audit-item { font-size: 0.7rem; padding: 6px 0; border-bottom: 1px solid #FFD9B5; display: flex; justify-content: space-between; }
-
-        /* ===== GALLERY SCREEN - ORIGINAL STYLE ===== */
-        #galleryScreen {
-            display: none;
-            height: 100%;
-            overflow: hidden;
-            flex-direction: column;
-            background: #0A0A0A;
-        }
-        #galleryScreen.active { display: flex; }
-
-        .gallery-category-strip {
-            flex-shrink: 0;
-            display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            padding: 14px 16px 10px;
-            background: #0A0A0A;
-            scrollbar-width: none;
-        }
-        .gallery-category-strip::-webkit-scrollbar { display: none; }
-
-        .gcat-btn {
-            flex-shrink: 0;
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.15);
-            color: rgba(255,255,255,0.6);
-            padding: 6px 16px;
-            border-radius: 40px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .gcat-btn.active {
-            background: linear-gradient(95deg, #FF6B4A, #FF8E53);
-            border-color: transparent;
-            color: white;
-        }
-
-        .gallery-hero-wrap {
-            flex: 0 0 68%;
-            position: relative;
-            overflow: hidden;
-            cursor: pointer;
-        }
-        .gallery-hero-img { width: 100%; height: 100%; object-fit: cover; display: block; }
-        .gallery-hero-placeholder {
-            width: 100%; height: 100%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 8rem;
-            background: linear-gradient(135deg, #1A1A2E, #16213E);
-        }
-        .gallery-hero-overlay {
-            position: absolute; inset: 0;
-            background: linear-gradient(to bottom, transparent 35%, rgba(0,0,0,0.3) 60%, rgba(0,0,0,0.85) 100%);
-            pointer-events: none;
-        }
-        .gallery-hero-cat {
-            position: absolute; top: 14px; left: 16px;
-            background: rgba(255,255,255,0.18);
-            backdrop-filter: blur(8px);
-            color: white;
-            font-size: 0.65rem;
-            font-weight: 800;
-            padding: 5px 12px;
-            border-radius: 40px;
-        }
-        .gallery-hero-info {
-            position: absolute;
-            bottom: 16px; left: 16px; right: 60px;
-        }
-        .gallery-hero-title {
-            color: white;
-            font-size: 1.4rem;
-            font-weight: 800;
-            text-shadow: 0 2px 12px rgba(0,0,0,0.4);
-            line-height: 1.2;
-        }
-        .gallery-hero-meta {
-            color: rgba(255,255,255,0.75);
-            font-size: 0.75rem;
-            display: flex;
-            gap: 6px;
-            margin-top: 4px;
-        }
-        .gallery-hero-add {
-            position: absolute;
-            bottom: 16px; right: 0;
-            background: linear-gradient(135deg, #FF6B4A, #FF8E53);
-            color: white;
-            border: none;
-            width: 44px; height: 44px;
-            border-radius: 50%;
-            font-size: 1.1rem;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(255,107,74,0.5);
-        }
-
-        .gallery-carousel-wrap {
-            flex: 1;
-            background: #0A0A0A;
-            overflow: hidden;
-            padding: 12px 16px 8px;
-        }
-        .gallery-carousel-label {
-            color: rgba(255,255,255,0.9);
-            font-size: 0.75rem;
-            font-weight: 800;
-            margin-bottom: 8px;
-            letter-spacing: 0.05em;
-        }
-        .gallery-carousel {
-            display: flex;
-            gap: 10px;
-            overflow-x: auto;
-            padding-bottom: 8px;
-            scrollbar-width: thin;
-        }
-        .carousel-card {
-            flex-shrink: 0;
-            width: 100px;
-            border-radius: 16px;
+        .poster-card {
+            background: white;
+            border-radius: 24px;
             overflow: hidden;
             cursor: pointer;
             transition: transform 0.2s;
+            border: 1px solid rgba(255,140,80,0.2);
         }
-        .carousel-card.selected { outline: 2px solid #FF6B4A; }
-        .carousel-card-img { width: 100px; height: 70px; object-fit: cover; }
-        .carousel-card-emoji { width: 100px; height: 70px; display: flex; align-items: center; justify-content: center; font-size: 2rem; background: #1A1A2E; }
-        .carousel-card-info { background: #181818; padding: 6px 8px; }
-        .carousel-card-name { color: white; font-size: 0.65rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .carousel-card-price { color: #FF8E53; font-size: 0.55rem; margin-top: 2px; }
+        .poster-card:active { transform: scale(0.97); }
+        .poster-image {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            background: linear-gradient(135deg, #FFF0E5, #FFE2CE);
+        }
+        .poster-info {
+            padding: 12px;
+        }
+        .poster-name {
+            font-weight: 800;
+            font-size: 0.85rem;
+            color: #2A1A0A;
+        }
+        .poster-price {
+            font-size: 0.7rem;
+            color: #FF6B4A;
+            margin-top: 4px;
+        }
 
-        /* ===== SHOP SCREEN - ORIGINAL STYLE ===== */
-        #shopScreen { padding: 16px 20px 20px; }
-        .cart-sidebar { background: #FFF0E5; border-radius: 28px; padding: 16px; margin-bottom: 16px; border: 1px solid #FFB47A; }
-        .cart-item-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #FFD9B5; font-size: 0.8rem; }
-        .remove-cart-btn { background: none; border: none; color: #FF6B4A; cursor: pointer; }
-        .custom-preview { display: flex; gap: 10px; margin: 10px 0; flex-wrap: wrap; }
-        .custom-thumb { width: 70px; height: 70px; background: #FFE8DC; border-radius: 20px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-        .custom-thumb img { width: 100%; height: 100%; object-fit: cover; }
-        .file-input-label { background: #FFE8DC; border: 1.5px dashed #FFA559; border-radius: 60px; padding: 12px; text-align: center; cursor: pointer; display: block; margin: 8px 0; color: #D45A2C; font-weight: 600; }
-        .custom-input { background: white; border: 1.5px solid #FFD1A4; border-radius: 60px; padding: 12px; width: 100%; color: #4A2A1A; margin: 8px 0; }
-        .badge { background: #FFD5A4; color: #B45A2E; padding: 4px 12px; border-radius: 50px; font-size: 0.7rem; font-weight: 600; display: inline-block; margin: 2px; }
-        .info-box { background: #FFE8DC; border-radius: 20px; padding: 12px; margin-top: 12px; font-size: 0.7rem; color: #B45A2E; }
-        .gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 8px; }
-        .gallery-card {
-            background: white;
-            border-radius: 28px;
-            overflow: hidden;
-            cursor: pointer;
-            border: 1px solid rgba(255,140,80,0.3);
-            transition: transform 0.2s ease;
+        /* Loading state */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #B45A2E;
         }
-        .gallery-card:active { transform: scale(0.97); }
-        .gallery-media {
-            height: 140px;
-            display: flex;
+
+        /* Camera Overlay for QR scanning */
+        #cameraOverlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: #000;
+            z-index: 1000;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-size: 4rem;
-            background: linear-gradient(135deg, #FFF0E5, #FFE2CE);
-            overflow: hidden;
-        }
-        .gallery-media img { width: 100%; height: 100%; object-fit: cover; }
-        .gallery-info { padding: 12px; }
-        .gallery-title { font-weight: 800; font-size: 0.85rem; color: #4A2A1A; }
-        .gallery-price { font-size: 0.7rem; color: #FF6B4A; font-weight: 700; margin-top: 4px; }
-
-        /* ===== PROFILE SCREEN ===== */
-        #profileScreen { padding: 16px 20px 20px; }
-        .streak-badge { background: #FF8E53; color: white; padding: 4px 12px; border-radius: 50px; font-size: 0.7rem; font-weight: bold; display: inline-block; }
-        .logout-btn { background: none; border: 1px solid #FFB47A; color: #B45A2E; padding: 8px 20px; border-radius: 60px; font-size: 0.75rem; cursor: pointer; margin-top: 12px; width: 100%; }
-        .earn-category { background: #FFF3E8; border-radius: 20px; padding: 10px; margin-bottom: 8px; }
-        .earn-header { font-weight: 800; color: #E85D2E; margin-bottom: 6px; font-size: 0.8rem; }
-        .earn-list { display: flex; flex-wrap: wrap; gap: 6px; }
-        .earn-item { background: #FFE0C8; padding: 4px 10px; border-radius: 30px; font-size: 0.65rem; color: #B45A2E; }
-
-        /* Camera & Modals */
-        #cameraOverlay {
-            display: none; position: fixed; inset: 0; background: #000; z-index: 900;
-            flex-direction: column; align-items: center; justify-content: center;
         }
         #cameraOverlay.open { display: flex; }
-        #cameraVideo { width: 100%; height: 100%; object-fit: cover; position: absolute; }
-        .camera-close {
-            position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.2);
-            border: none; color: white; width: 44px; height: 44px; border-radius: 50%; font-size: 1.2rem; cursor: pointer; z-index: 20;
+        #cameraVideo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
         }
-        .scan-frame { width: 260px; height: 260px; border-radius: 32px; border: 3px solid #FF6B4A; box-shadow: 0 0 0 4000px rgba(0,0,0,0.65); position: relative; }
-        .scan-line { width: 90%; height: 2px; background: linear-gradient(90deg, transparent, #FF6B4A, #FF8E53, #FF6B4A, transparent); position: absolute; left: 5%; animation: scanAnim 2s infinite; }
-        @keyframes scanAnim { 0% { top: 5%; } 50% { top: 90%; } 100% { top: 5%; } }
-        .scan-label { color: white; font-size: 0.85rem; margin-top: 28px; background: rgba(0,0,0,0.5); padding: 6px 16px; border-radius: 40px; }
-        .scan-earn-badge { background: linear-gradient(95deg,#FF6B4A,#FF8E53); color: white; padding: 8px 24px; border-radius: 40px; font-weight: 800; margin-top: 14px; }
+        .camera-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            cursor: pointer;
+            z-index: 10;
+        }
+        .scan-frame {
+            position: relative;
+            z-index: 5;
+            width: 280px;
+            height: 280px;
+            border: 3px solid #FF6B4A;
+            border-radius: 32px;
+            box-shadow: 0 0 0 4000px rgba(0,0,0,0.7);
+        }
+        .scan-line {
+            position: absolute;
+            width: 90%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #FF6B4A, transparent);
+            top: 50%;
+            left: 5%;
+            animation: scan 2s infinite;
+        }
+        @keyframes scan {
+            0% { top: 10%; }
+            50% { top: 85%; }
+            100% { top: 10%; }
+        }
+        .scan-label {
+            position: relative;
+            z-index: 5;
+            color: white;
+            margin-top: 20px;
+            background: rgba(0,0,0,0.5);
+            padding: 8px 20px;
+            border-radius: 40px;
+        }
 
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 1000; }
-        .modal-content { background: #FFF5EE; border-radius: 48px; padding: 1.5rem; max-width: 320px; width: 90%; text-align: center; }
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1100;
+        }
+        .modal-content {
+            background: #FFF5EE;
+            border-radius: 48px;
+            padding: 1.5rem;
+            max-width: 320px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .audit-item {
+            font-size: 0.7rem;
+            padding: 6px 0;
+            border-bottom: 1px solid #FFD9B5;
+            display: flex;
+            justify-content: space-between;
+        }
+        .streak-badge {
+            background: #FF8E53;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 0.7rem;
+        }
     </style>
 </head>
 <body>
@@ -343,548 +225,454 @@
     <div class="screen-container">
         <!-- HOME SCREEN -->
         <div id="homeScreen" class="screen active">
-            <div class="card" style="background: linear-gradient(135deg, #FFD1A4, #FFB87A); margin-bottom: 12px;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-size: 0.7rem;">🔥 Streak</span>
-                    <div class="streak-badge"><i class="fas fa-fire"></i> <span id="homeStreakDisplay">0</span> day streak!</div>
+            <div class="card" style="background: linear-gradient(135deg, #FFD1A4, #FFB87A);">
+                <div style="display: flex; justify-content: space-between;">
+                    <span>🔥 Streak</span>
+                    <div class="streak-badge"><i class="fas fa-fire"></i> <span id="homeStreak">0</span> day streak!</div>
                 </div>
                 <h2 style="margin: 12px 0 4px;">Hey, <span id="homeUserName">there</span>!</h2>
-                <p style="font-size: 0.8rem;">Share · Scan · Shop · Stack — Become Campus Legend</p>
-                <p style="font-size: 0.7rem; margin-top: 6px;">This week: <strong><span id="homeWeekly">0</span> pts</strong></p>
+                <p>This week: <strong><span id="homeWeekly">0</span> pts</strong></p>
             </div>
 
-            <!-- Daily Challenge Banner -->
-            <div class="challenge-banner" id="challengeBanner">
-                <div class="challenge-title">🎯 Day 7: QR Hunt Challenge</div>
-                <div>Find hidden QR at Library • <strong>400 points</strong> + bonuses</div>
-                <div class="challenge-points">
-                    <span>⚡ First 10: +200</span>
-                    <span>📸 Share story: +100</span>
-                    <span>👥 Tag friend: +50</span>
-                </div>
-                <div class="challenge-timer">⏰ 3h 24m remaining</div>
-            </div>
-
-            <div class="card" style="margin-bottom: 12px;">
-                <h3 style="margin-bottom: 10px;"><i class="fas fa-bolt"></i> Quick Actions</h3>
-                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <div class="card">
+                <h3>Quick Actions</h3>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                     <button class="btn btn-primary" id="homeScanBtn" style="flex:1;"><i class="fas fa-camera"></i> Scan QR</button>
-                    <button class="btn btn-secondary" id="homeDailyBtn" style="flex:1;"><i class="fas fa-sun"></i> Check-in +10</button>
-                    <button class="btn btn-gold" id="homeStoryBtn" style="flex:1;"><i class="fab fa-instagram"></i> Story +150</button>
+                    <button class="btn btn-secondary" id="homeDailyBtn" style="flex:1;"><i class="fas fa-sun"></i> Check-in</button>
+                    <button class="btn btn-primary" id="homeReferBtn" style="flex:1;"><i class="fas fa-user-plus"></i> Refer</button>
                 </div>
-                <div style="display: flex; gap: 8px; margin-top: 8px;">
-                    <button class="btn" id="homeReferBtn" style="background:#FFB87A; flex:1;"><i class="fas fa-user-plus"></i> Refer +200</button>
-                    <button class="btn" id="homeRoomBtn" style="background:#FF9B5E; color:white; flex:1;"><i class="fas fa-camera"></i> Room Tour +250</button>
-                </div>
-            </div>
-
-            <!-- Discover Section -->
-            <div class="discover-header">
-                <h3><i class="fas fa-compass" style="color:#FF6B4A;"></i> Discover Collections</h3>
-                <span>scroll →</span>
-            </div>
-            <div class="discover-scroll-container" id="discoverScrollContainer">
-                <div id="discoverScroll" class="discover-scroll">
-                    <div class="feed-loading" style="padding:20px;">Loading...</div>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button class="btn" id="homeStoryBtn" style="background:#E1306C; color:white; flex:1;"><i class="fab fa-instagram"></i> Story</button>
+                    <button class="btn" id="homeRoomBtn" style="background:#FF9B5E; color:white; flex:1;"><i class="fas fa-camera"></i> Room Tour</button>
                 </div>
             </div>
 
-            <!-- Referral Progress -->
-            <div class="referral-progress">
-                <div class="referral-tier">
-                    <span>👥 Level 1 referrals</span>
-                    <span><span id="refCount">0</span> / 10 → +2000 pts</span>
-                </div>
-                <div class="tier-progress"><div class="tier-fill" id="refProgressFill" style="width:0%"></div></div>
-                <div style="font-size:0.65rem; margin-top: 6px;">Refer friends → 200 pts each + 300 on their first purchase</div>
+            <!-- REAL POSTERS FROM DATABASE -->
+            <h3 style="margin: 8px 0;"><i class="fas fa-images"></i> Discover Posters</h3>
+            <div id="postersGrid" class="poster-grid">
+                <div class="loading">Loading posters...</div>
             </div>
 
-            <div class="card">
-                <h3><i class="fas fa-history"></i> Points Audit Log</h3>
+            <div class="card" style="margin-top: 16px;">
+                <h3>Points Audit Log</h3>
                 <div id="auditLogContainer" style="max-height: 150px; overflow-y: auto;"></div>
-            </div>
-
-            <div class="card">
-                <h3><i class="fas fa-chart-line"></i> Milestone</h3>
-                <div style="display: flex; justify-content: space-between; font-size:0.7rem;">
-                    <span>Next: <span id="nextMilestoneText">Free poster (120 pts)</span></span>
-                    <span id="nextPointsNeeded">120 pts</span>
-                </div>
-                <div style="background:#FFD9B5; border-radius:30px; height:8px; margin:8px 0;">
-                    <div id="homeProgressFill" style="width:0%; height:100%; background:linear-gradient(90deg,#FF8E53,#FF6B4A); border-radius:30px;"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- GALLERY SCREEN - FULL ORIGINAL FORMAT -->
-        <div id="galleryScreen" class="screen">
-            <div class="gallery-category-strip" id="galleryCategoryStrip">
-                <button class="gcat-btn active" data-theme="aesthetic">🎨 Aesthetic</button>
-                <button class="gcat-btn" data-theme="girlish">🌸 Girlish</button>
-                <button class="gcat-btn" data-theme="motivational">💪 Motivational</button>
-                <button class="gcat-btn" data-theme="musical">🎵 Musical</button>
-                <button class="gcat-btn" data-theme="theater">🎭 Theater</button>
-                <button class="gcat-btn" data-theme="limited">⚡ Limited</button>
-            </div>
-            <div class="gallery-hero-wrap" id="galleryHeroWrap">
-                <div class="gallery-hero-placeholder" id="galleryHeroPlaceholder">🖼️</div>
-                <img class="gallery-hero-img" id="galleryHeroImg" src="" alt="" style="display:none;">
-                <div class="gallery-hero-overlay"></div>
-                <div class="gallery-hero-cat" id="galleryHeroCat">AESTHETIC</div>
-                <div class="gallery-hero-info">
-                    <div class="gallery-hero-title" id="galleryHeroTitle">Loading…</div>
-                    <div class="gallery-hero-meta"><span id="galleryHeroPrice">KSH —</span><span>•</span><span id="galleryHeroPoints">— pts</span></div>
-                </div>
-                <button class="gallery-hero-add" id="galleryHeroAddBtn"><i class="fas fa-cart-plus"></i></button>
-            </div>
-            <div class="gallery-carousel-wrap">
-                <div class="gallery-carousel-label" id="galleryCarouselLabel">More in Aesthetic</div>
-                <div class="gallery-carousel" id="galleryCarousel"></div>
-            </div>
-        </div>
-
-        <!-- SHOP SCREEN - FULL ORIGINAL FORMAT -->
-        <div id="shopScreen" class="screen" style="padding:16px 20px 20px;">
-            <div class="card" style="padding: 12px 16px; background:#FFE8DC;">
-                <div style="display: flex; justify-content: space-between;">
-                    <span><i class="fas fa-bolt"></i> Boost: <strong id="boostValue">1.0x</strong></span>
-                    <span><i class="fas fa-clock"></i> <span id="boostDays">0</span>d left</span>
-                    <span><i class="fas fa-trophy"></i> Rank #<span id="userRank">—</span></span>
-                </div>
-            </div>
-            <div class="info-box">
-                <i class="fas fa-info-circle"></i> <strong>How Multiplier Works:</strong> Every purchase activates boost (1.2x–2.0x) for 7 days on ALL future points!
-            </div>
-
-            <div class="cart-sidebar">
-                <h4><i class="fas fa-shopping-cart"></i> Your Cart <span id="cartItemCount">(0)</span></h4>
-                <div id="cartItemsList"></div>
-                <div style="display: flex; justify-content: space-between; margin-top: 12px; font-weight: bold;">
-                    <span>Total: KSH <span id="cartTotalAmount">0</span></span>
-                    <button id="checkoutBtnShop" class="btn btn-success" style="padding: 8px 20px;">Pay &amp; Earn</button>
-                </div>
-            </div>
-
-            <div class="card">
-                <h3><i class="fas fa-gift"></i> Mystery Package</h3>
-                <p style="font-size:0.75rem;">3 random posters! +350pts, 1.5x boost</p>
-                <button id="addMysteryBtn" class="btn btn-primary" style="width:100%; margin-top: 10px;"><i class="fas fa-question-circle"></i> Add Mystery Pack (KSH 100)</button>
-            </div>
-
-            <div class="card">
-                <h3><i class="fas fa-clock"></i> Limited Edition</h3>
-                <div class="gallery-grid" id="limitedGrid" style="margin-top: 12px;"></div>
-            </div>
-
-            <div class="card">
-                <h3><i class="fas fa-palette"></i> Custom Poster</h3>
-                <label class="file-input-label" for="customImageUpload"><i class="fas fa-cloud-upload-alt"></i> Upload your design</label>
-                <input type="file" id="customImageUpload" accept="image/*" style="display: none;">
-                <div id="imagePreviewArea" class="custom-preview"></div>
-                <input type="text" id="customTitle" class="custom-input" placeholder="Poster title (optional)">
-                <div style="display: flex; gap: 8px; margin: 8px 0;"><span class="badge">+150 pts after payment</span><span class="badge">KSH 50</span></div>
-                <button id="addCustomToCartBtn" class="btn btn-secondary"><i class="fas fa-plus-circle"></i> Add Custom to Cart</button>
             </div>
         </div>
 
         <!-- PROFILE SCREEN -->
-        <div id="profileScreen" class="screen" style="padding:16px 20px 20px;">
+        <div id="profileScreen" class="screen">
             <div class="card" style="text-align:center;">
-                <div style="width:70px;height:70px;background:#FFB87A;border-radius:50%;margin:0 auto;display:flex;align-items:center;justify-content:center;"><i class="fas fa-user-astronaut" style="font-size:2rem; color:#4A2A1A;"></i></div>
-                <h3 id="profileName" style="margin-top: 10px;">—</h3>
-                <p id="profileEmail" style="font-size:0.8rem; color:#B45A2E;">—</p>
+                <div style="width:70px;height:70px;background:#FFB87A;border-radius:50%;margin:0 auto;display:flex;align-items:center;justify-content:center;">
+                    <i class="fas fa-user-astronaut" style="font-size:2rem;"></i>
+                </div>
+                <h3 id="profileName">—</h3>
+                <p id="profileEmail">—</p>
             </div>
             <div class="card">
-                <h4>📊 Points Summary</h4>
-                <div style="display:flex;justify-content:space-between;margin:8px 0;"><span>💰 Total Points:</span><strong id="profilePoints">0</strong></div>
-                <div style="display:flex;justify-content:space-between;margin:8px 0;"><span>🏅 Global Rank:</span><strong>#<span id="profileRankNum">—</span></strong></div>
-                <div style="display:flex;justify-content:space-between;margin:8px 0;"><span>⚡ Active Boost:</span><strong id="profileBoost">1.0x</strong></div>
-                <div style="height:6px; background:#FFD9B5; border-radius:4px; margin:12px 0;"><div id="rankProgressBar" style="width:0%; height:100%; background:#FF8E53; border-radius:4px;"></div></div>
-                <div class="info-box"><i class="fas fa-trophy"></i> <strong>Milestones:</strong> 120pts → Free poster | 360pts → Free mystery pack | 1000pts → Free mini poster + 50 KSH | 5000pts → Bronze card + 200 KSH</div>
+                <h4>Points Summary</h4>
+                <div style="display:flex;justify-content:space-between;margin:8px 0;">
+                    <span>Total Points:</span><strong id="profilePoints">0</strong>
+                </div>
+                <div style="display:flex;justify-content:space-between;margin:8px 0;">
+                    <span>Global Rank:</span><strong>#<span id="profileRank">—</span></strong>
+                </div>
+                <div style="display:flex;justify-content:space-between;margin:8px 0;">
+                    <span>Active Boost:</span><strong id="profileBoost">1.0x</strong>
+                </div>
             </div>
             <div class="card">
-                <h4>🔗 Referral Code</h4>
-                <div style="background:#FFE8DC; border-radius:40px; padding:12px; text-align:center; font-weight:bold;"><strong id="profileCode">—</strong></div>
-                <button id="copyCodeBtn" class="btn btn-secondary" style="margin-top:8px; width:100%;"><i class="fas fa-copy"></i> Copy Code</button>
+                <h4>Referral Code</h4>
+                <div style="background:#FFE8DC; border-radius:40px; padding:12px; text-align:center;">
+                    <strong id="profileCode">—</strong>
+                </div>
+                <button id="copyCodeBtn" class="btn btn-secondary" style="margin-top:8px; width:100%;">Copy Code</button>
             </div>
             <div class="card">
-                <h3><i class="fas fa-book-open"></i> Ways to Earn Points</h3>
-                <div class="earn-category"><div class="earn-header"><i class="fab fa-instagram"></i> Social</div><div class="earn-list"><span class="earn-item">Story +150</span><span class="earn-item">Refer +200</span><span class="earn-item">Friend purchase +300</span><span class="earn-item">Room tour +250</span><span class="earn-item">Tag friend +50</span></div></div>
-                <div class="earn-category"><div class="earn-header"><i class="fas fa-qrcode"></i> Campus Hunt</div><div class="earn-list"><span class="earn-item">QR scan +25</span><span class="earn-item">Golden QR +150</span><span class="earn-item">First scan daily +20</span></div></div>
-                <div class="earn-category"><div class="earn-header"><i class="fas fa-shopping-cart"></i> Purchase</div><div class="earn-list"><span class="earn-item">Poster +120</span><span class="earn-item">Mystery pack +350</span><span class="earn-item">Limited +200</span><span class="earn-item">Custom +150</span><span class="earn-item">Bundle +600</span></div></div>
-                <div class="earn-category"><div class="earn-header"><i class="fas fa-calendar-alt"></i> Retention</div><div class="earn-list"><span class="earn-item">Check-in +10</span><span class="earn-item">7-day streak +100</span><span class="earn-item">14-day streak +300</span><span class="earn-item">30-day streak +1000</span></div></div>
-            </div>
-            <div class="card">
-                <button class="logout-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
+                <button class="btn btn-secondary" id="logoutBtn" style="width:100%;">Sign Out</button>
             </div>
         </div>
     </div>
 
     <div class="tab-bar">
         <button class="tab-item active" data-tab="home"><i class="fas fa-home"></i><span>Home</span></button>
-        <button class="tab-item" data-tab="gallery"><i class="fas fa-images"></i><span>Gallery</span></button>
-        <button class="tab-item" data-tab="shop"><i class="fas fa-store"></i><span>Shop</span></button>
         <button class="tab-item" data-tab="profile"><i class="fas fa-user"></i><span>Profile</span></button>
     </div>
 </div>
 
 <!-- Camera Overlay -->
-<div id="cameraOverlay"><video id="cameraVideo" autoplay playsinline muted></video><button class="camera-close" id="cameraCloseBtn"><i class="fas fa-times"></i></button><div style="position:absolute;bottom:80px;width:100%;text-align:center;"><div class="scan-frame"><div class="scan-line"></div></div><div class="scan-label">Point at Wall Culture QR code</div><div class="scan-earn-badge"><i class="fas fa-gem"></i> +25 to +150 pts</div></div></div>
-<div id="referralModal" class="modal"><div class="modal-content"><h3>Refer a Friend</h3><p>Your code: <strong id="modalReferralCode">—</strong></p><button id="copyReferralModalBtn" class="btn btn-primary">Copy</button><button id="closeReferralModal" class="btn btn-secondary">Close</button></div></div>
+<div id="cameraOverlay">
+    <video id="cameraVideo" autoplay playsinline muted></video>
+    <button class="camera-close" id="cameraCloseBtn"><i class="fas fa-times"></i></button>
+    <div style="position:absolute; bottom:100px; width:100%; text-align:center;">
+        <div class="scan-frame">
+            <div class="scan-line"></div>
+        </div>
+        <div class="scan-label">Point camera at QR code</div>
+    </div>
+</div>
+
+<!-- Referral Modal -->
+<div id="referralModal" class="modal">
+    <div class="modal-content">
+        <h3>Refer a Friend</h3>
+        <p>Your code: <strong id="modalReferralCode">—</strong></p>
+        <button id="copyReferralBtn" class="btn btn-primary">Copy Code</button>
+        <button id="closeReferralBtn" class="btn btn-secondary" style="margin-top:8px;">Close</button>
+    </div>
+</div>
+
+<!-- Instagram Story Modal -->
+<div id="instagramModal" class="modal">
+    <div class="modal-content">
+        <h3><i class="fab fa-instagram"></i> Share Instagram Story</h3>
+        <p style="margin:12px 0;">Post a story tagging <strong>@wallculture</strong> and paste your link below:</p>
+        <input type="text" id="storyLink" placeholder="https://www.instagram.com/stories/..." style="width:100%; padding:10px; border-radius:60px; border:1px solid #FFD1A4; margin:10px 0;">
+        <button id="submitStoryBtn" class="btn btn-primary">Submit & Earn +150 pts</button>
+        <button id="closeInstagramBtn" class="btn btn-secondary" style="margin-top:8px;">Cancel</button>
+    </div>
+</div>
+
+<!-- Room Tour Modal -->
+<div id="roomtourModal" class="modal">
+    <div class="modal-content">
+        <h3><i class="fas fa-camera"></i> Room Tour</h3>
+        <p style="margin:12px 0;">Upload a photo of your room with Wall Culture posters:</p>
+        <input type="file" id="roomTourImage" accept="image/*" style="margin:10px 0;">
+        <button id="submitRoomTourBtn" class="btn btn-primary">Upload & Earn +250 pts</button>
+        <button id="closeRoomTourBtn" class="btn btn-secondary" style="margin-top:8px;">Cancel</button>
+    </div>
+</div>
 
 <script>
     const API_URL = 'https://wall-culture-3.onrender.com/api';
-    if (!localStorage.getItem('wall_culture_token')) window.location.href = 'index.html';
     
-    function apiRequest(endpoint, options = {}) {
-        const token = localStorage.getItem('wall_culture_token');
-        return fetch(`${API_URL}${endpoint}`, {
+    // Auth check
+    const token = localStorage.getItem('wall_culture_token');
+    if (!token) {
+        window.location.href = 'index.html';
+    }
+
+    let currentUser = null;
+    let auditLog = [];
+    let videoStream = null;
+    let scanning = false;
+
+    // Helper functions
+    function showToast(msg) {
+        const toast = document.createElement('div');
+        toast.textContent = msg;
+        toast.style.cssText = 'position:fixed;bottom:100px;left:20px;right:20px;background:#FFE0B5;color:#4A2A1A;padding:12px;border-radius:60px;text-align:center;font-weight:bold;z-index:2000;';
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+
+    async function apiRequest(endpoint, options = {}) {
+        const response = await fetch(`${API_URL}${endpoint}`, {
             ...options,
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, ...(options.headers || {}) }
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+                ...(options.headers || {})
+            }
         });
+        return response.json();
     }
 
-    // Updated Points System Values
-    const POINTS = {
-        story_share: 150,
-        referral_signup: 200,
-        referral_purchase: 300,
-        referral_500: 500,
-        referral_1000: 800,
-        qr_standard: 25,
-        qr_golden: 150,
-        daily_checkin: 10,
-        daily_7_streak: 100,
-        daily_14_streak: 300,
-        daily_30_streak: 1000,
-        room_tour: 250,
-        tag_friend: 50,
-        dm_invite: 100,
-        whatsapp_share: 80,
-        challenge_entry: 400,
-        challenge_first10: 200,
-        challenge_share: 100
-    };
+    // Load REAL posters from database
+    async function loadPosters() {
+        const container = document.getElementById('postersGrid');
+        container.innerHTML = '<div class="loading">Loading posters...</div>';
+        
+        try {
+            const posters = await apiRequest('/posters');
+            if (posters.length === 0) {
+                container.innerHTML = '<div class="loading">No posters available</div>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            posters.forEach(poster => {
+                const card = document.createElement('div');
+                card.className = 'poster-card';
+                card.onclick = () => addToCart(poster);
+                
+                const img = document.createElement('img');
+                img.className = 'poster-image';
+                img.src = poster.image_url || `https://picsum.photos/seed/${poster.id}/200/200`;
+                img.alt = poster.name;
+                
+                const info = document.createElement('div');
+                info.className = 'poster-info';
+                info.innerHTML = `
+                    <div class="poster-name">${poster.emoji || '🖼️'} ${poster.name}</div>
+                    <div class="poster-price">KSH ${poster.price} · +${poster.points} pts</div>
+                `;
+                
+                card.appendChild(img);
+                card.appendChild(info);
+                container.appendChild(card);
+            });
+        } catch (error) {
+            console.error('Load posters error:', error);
+            container.innerHTML = '<div class="loading">Error loading posters</div>';
+        }
+    }
 
-    let cart = [], auditLog = [], user = { name: 'Guest', points: 0, streak: 0, weeklyPoints: 0, referralCode: '—', multiplier: 1, multiplierExpiry: 0 };
-    let currentGalleryTheme = 'aesthetic';
-    let galleryCache = {};
-    let currentHeroItem = null;
-    let discoverCards = [];
-    let cameraStream = null, qrScanning = false;
-    let currentCustomImage = null;
+    function addToCart(poster) {
+        showToast(`✓ ${poster.name} added to cart!`);
+        // In production, you'd add to cart here
+    }
 
-    function showToast(msg) { const d = document.createElement('div'); d.textContent = msg; d.style.cssText = 'position:fixed;bottom:90px;left:20px;right:20px;background:#FFE0B5;color:#4A2A1A;padding:12px;border-radius:60px;text-align:center;font-weight:bold;z-index:2000;'; document.body.appendChild(d); setTimeout(() => d.remove(), 2500); }
-    function setText(id, txt) { const el = document.getElementById(id); if (el) el.textContent = txt; }
-    function getBoost() { return (user.multiplierExpiry && user.multiplierExpiry > Date.now()) ? user.multiplier : 1.0; }
-    
-    async function fetchUserProfile() {
-        try { const res = await apiRequest('/user/profile'); const data = await res.json();
-            if (res.ok && data.user) { user = { ...user, ...data.user, points: data.user.points || 0, streak: data.user.streak || 0, weeklyPoints: data.user.weekly_points || 0, referralCode: data.user.referral_code }; refreshAllUI(); }
-            else if (res.status === 401) logout();
-        } catch(e) { console.log('Profile fetch error'); }
+    // Load user profile
+    async function loadProfile() {
+        try {
+            const data = await apiRequest('/user/profile');
+            if (data.user) {
+                currentUser = data.user;
+                document.getElementById('globalPoints').innerText = currentUser.points || 0;
+                document.getElementById('profilePoints').innerText = currentUser.points || 0;
+                document.getElementById('homeStreak').innerText = currentUser.streak || 0;
+                document.getElementById('homeWeekly').innerText = currentUser.weekly_points || 0;
+                document.getElementById('homeUserName').innerText = currentUser.name?.split(' ')[0] || 'there';
+                document.getElementById('profileName').innerText = currentUser.name || '—';
+                document.getElementById('profileEmail').innerText = currentUser.email || '—';
+                document.getElementById('profileCode').innerText = currentUser.referral_code || '—';
+                document.getElementById('modalReferralCode').innerText = currentUser.referral_code || '—';
+                document.getElementById('profileRank').innerText = data.rank || '—';
+                
+                if (data.auditLog) {
+                    auditLog = data.auditLog;
+                    renderAuditLog();
+                }
+            }
+        } catch (error) {
+            console.error('Load profile error:', error);
+        }
     }
-    
-    function addPointsLocally(basePoints, action) {
-        let gain = Math.floor(basePoints * getBoost());
-        user.points += gain;
-        user.weeklyPoints += gain;
-        auditLog.unshift({ action, points: gain, timestamp: new Date().toLocaleTimeString() });
-        if (auditLog.length > 20) auditLog.pop();
-        refreshAllUI();
-        showToast(`+${gain} points! ${action}`);
-        return gain;
-    }
-    
-    function refreshAllUI() {
-        setText('globalPoints', user.points); setText('profilePoints', user.points);
-        setText('homeStreakDisplay', user.streak); setText('homeWeekly', user.weeklyPoints);
-        setText('homeUserName', (user.name || 'there').split(' ')[0]);
-        setText('profileName', user.name); setText('profileEmail', user.email);
-        setText('profileCode', user.referralCode); setText('modalReferralCode', user.referralCode);
-        
-        let boost = getBoost();
-        setText('boostValue', boost.toFixed(1)+'x');
-        setText('profileBoost', boost.toFixed(1)+'x');
-        setText('userRank', '1'); setText('profileRankNum', '1');
-        
-        let pts = user.points || 0;
-        let milestones = [120, 360, 500, 1000, 2500, 5000, 10000, 25000, 50000, 100000];
-        let next = milestones.find(m => pts < m) || 200000;
-        let prev = milestones.filter(m => m <= pts).pop() || 0;
-        let percent = next === prev ? 100 : ((pts - prev) / (next - prev)) * 100;
-        document.getElementById('homeProgressFill').style.width = Math.min(100, percent) + '%';
-        let rewardMap = {120:'Free poster',360:'Free mystery pack',500:'15% off',1000:'Free mini poster + 50 KSH',2500:'Wall of Honor + 100 KSH',5000:'Bronze card + 200 KSH',10000:'Custom poster + 300 KSH',25000:'Silver card + free shipping',50000:'Gold card + 30% off',100000:'Face on limited poster'};
-        setText('nextMilestoneText', rewardMap[next] || 'Legend');
-        setText('nextPointsNeeded', next + ' pts');
-        
-        let tierPercent = (pts % 1000) / 1000 * 100;
-        document.getElementById('rankProgressBar').style.width = Math.min(100, tierPercent) + '%';
-        
-        let refCount = Math.floor(pts / 2000);
-        setText('refCount', Math.min(refCount, 10));
-        document.getElementById('refProgressFill').style.width = Math.min(100, (refCount / 10) * 100) + '%';
-        renderAudit();
-        renderCartUI();
-    }
-    
-    function renderAudit() {
+
+    function renderAuditLog() {
         const container = document.getElementById('auditLogContainer');
         if (!container) return;
-        if (!auditLog.length) { container.innerHTML = "<div style='padding:8px;text-align:center;'>No activity yet</div>"; return; }
+        if (!auditLog.length) {
+            container.innerHTML = '<div style="padding:8px;text-align:center;">No activity yet</div>';
+            return;
+        }
         container.innerHTML = '';
-        auditLog.forEach(a => { const row = document.createElement('div'); row.className = 'audit-item'; row.innerHTML = `<span>${a.action}</span><span>+${a.points} pts</span><span>${a.timestamp}</span>`; container.appendChild(row); });
-    }
-    
-    // Cart Functions
-    function renderCartUI() {
-        const container = document.getElementById('cartItemsList');
-        if (!container) return;
-        const count = cart.reduce((s,i)=>s+i.qty,0);
-        setText('cartItemCount', `(${count})`);
-        if (!cart.length) { container.innerHTML = "<div style='padding:8px; color:#B45A2E;'>Cart is empty</div>"; setText('cartTotalAmount', '0'); return; }
-        container.innerHTML = ''; let total = 0;
-        cart.forEach((item, idx) => {
-            const subtotal = item.price * item.qty; total += subtotal;
-            const row = document.createElement('div'); row.className = 'cart-item-row';
-            row.innerHTML = `<div><span>${item.emoji || '🖼️'} ${item.name} x${item.qty}</span></div><div>KSH ${subtotal} <button class="remove-cart-btn" data-idx="${idx}"><i class="fas fa-trash"></i></button></div>`;
+        auditLog.slice(0, 10).forEach(log => {
+            const row = document.createElement('div');
+            row.className = 'audit-item';
+            row.innerHTML = `<span>${log.action}</span><span>+${log.earned} pts</span><span>${new Date(log.timestamp).toLocaleTimeString()}</span>`;
             container.appendChild(row);
         });
-        setText('cartTotalAmount', total);
-        document.querySelectorAll('.remove-cart-btn').forEach(btn => { btn.addEventListener('click', () => { const idx = parseInt(btn.dataset.idx); if (cart[idx].qty > 1) cart[idx].qty--; else cart.splice(idx,1); renderCartUI(); }); });
     }
-    
-    function addToCart(item) { const existing = cart.find(i => i.id === item.id && i.type === item.type); if (existing) existing.qty++; else cart.push({ ...item, qty: 1 }); renderCartUI(); showToast(`✓ ${item.name} added to cart`); }
-    
-    // Gallery Functions
-    async function loadGallery(theme) {
-        currentGalleryTheme = theme;
-        setText('galleryHeroCat', theme.toUpperCase());
-        setText('galleryCarouselLabel', `More in ${theme}`);
-        document.getElementById('galleryCarousel').innerHTML = '<div style="color:white; padding:20px;">Loading...</div>';
-        if (galleryCache[theme]) { renderGallery(galleryCache[theme]); return; }
-        try {
-            const endpoint = theme === 'limited' ? '/posters?limited=true' : `/posters?category=${theme}`;
-            const res = await apiRequest(endpoint);
-            const data = await res.json();
-            if (res.ok && Array.isArray(data)) { galleryCache[theme] = data; renderGallery(data); }
-            else renderGallery([]);
-        } catch { renderGallery([]); }
-    }
-    
-    function renderGallery(posters) {
-        if (!posters.length) { setText('galleryHeroTitle', 'No posters'); return; }
-        const hero = posters[0]; currentHeroItem = hero;
-        setText('galleryHeroTitle', hero.name); setText('galleryHeroPrice', `KSH ${hero.price}`); setText('galleryHeroPoints', `+${hero.points} pts`);
-        const heroImg = document.getElementById('galleryHeroImg'); const heroPlaceholder = document.getElementById('galleryHeroPlaceholder');
-        if (hero.image_url) { heroImg.src = hero.image_url; heroImg.style.display = 'block'; heroPlaceholder.style.display = 'none'; }
-        else { heroImg.style.display = 'none'; heroPlaceholder.style.display = 'flex'; heroPlaceholder.textContent = hero.emoji || '🖼️'; }
-        const carousel = document.getElementById('galleryCarousel'); carousel.innerHTML = '';
-        posters.forEach((p, idx) => {
-            const card = document.createElement('div'); card.className = 'carousel-card' + (idx === 0 ? ' selected' : '');
-            if (p.image_url) { const img = document.createElement('img'); img.className = 'carousel-card-img'; img.src = p.image_url; card.appendChild(img); }
-            else { const em = document.createElement('div'); em.className = 'carousel-card-emoji'; em.textContent = p.emoji || '🖼️'; card.appendChild(em); }
-            const info = document.createElement('div'); info.className = 'carousel-card-info';
-            info.innerHTML = `<div class="carousel-card-name">${p.name}</div><div class="carousel-card-price">KSH ${p.price}</div>`;
-            card.appendChild(info); card.onclick = () => { document.querySelectorAll('.carousel-card').forEach(c => c.classList.remove('selected')); card.classList.add('selected'); updateGalleryHero(p); };
-            carousel.appendChild(card);
-        });
-    }
-    
-    function updateGalleryHero(item) { currentHeroItem = item; setText('galleryHeroTitle', item.name); setText('galleryHeroPrice', `KSH ${item.price}`); setText('galleryHeroPoints', `+${item.points} pts`); const heroImg = document.getElementById('galleryHeroImg'); const heroPlaceholder = document.getElementById('galleryHeroPlaceholder'); if (item.image_url) { heroImg.src = item.image_url; heroImg.style.display = 'block'; heroPlaceholder.style.display = 'none'; } else { heroImg.style.display = 'none'; heroPlaceholder.style.display = 'flex'; heroPlaceholder.textContent = item.emoji || '🖼️'; } }
-    
-    document.getElementById('galleryCategoryStrip')?.addEventListener('click', (e) => { const btn = e.target.closest('.gcat-btn'); if (btn) { document.querySelectorAll('.gcat-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); loadGallery(btn.dataset.theme); } });
-    document.getElementById('galleryHeroAddBtn')?.addEventListener('click', (e) => { e.stopPropagation(); if (currentHeroItem) addToCart({ type: currentHeroItem.is_limited ? 'limited' : 'poster', id: currentHeroItem.id, name: currentHeroItem.name, price: currentHeroItem.price, points: currentHeroItem.points, emoji: '🖼️' }); });
-    document.getElementById('galleryHeroWrap')?.addEventListener('click', (e) => { if (!e.target.closest('#galleryHeroAddBtn') && currentHeroItem) openOverlay(currentHeroItem); });
-    
-    function openOverlay(item) { showToast(`✨ ${item.name} - KSH ${item.price} · +${item.points} points`); addToCart({ type: item.is_limited ? 'limited' : 'poster', id: item.id, name: item.name, price: item.price, points: item.points, emoji: '🖼️' }); }
-    
-    // Limited Edition Shop
-    async function renderLimited() {
-        const container = document.getElementById('limitedGrid');
-        try {
-            const res = await apiRequest('/posters?limited=true');
-            const data = await res.json();
-            if (res.ok && data.length) {
-                container.innerHTML = '';
-                data.forEach(p => {
-                    const card = document.createElement('div'); card.className = 'gallery-card';
-                    card.innerHTML = `<div class="gallery-media">${p.image_url ? `<img src="${p.image_url}">` : '⚡'}</div><div class="gallery-info"><div class="gallery-title">${p.name}</div><div class="gallery-price">KSH ${p.price} · +${p.points} pts ⚡</div></div>`;
-                    card.onclick = () => addToCart({ type: 'limited', id: p.id, name: p.name, price: p.price, points: p.points, emoji: '⚡' });
-                    container.appendChild(card);
-                });
-            } else { container.innerHTML = '<div class="gallery-card" style="padding:20px; text-align:center;">No limited editions available</div>'; }
-        } catch { container.innerHTML = '<div class="gallery-card" style="padding:20px; text-align:center;">No limited editions available</div>'; }
-    }
-    
-    // QR Scanner
-    async function startCameraScan() {
+
+    // REAL QR SCANNING
+    async function startQRScanner() {
         const overlay = document.getElementById('cameraOverlay');
         const video = document.getElementById('cameraVideo');
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { showToast('Camera not supported'); return; }
-        try {
-            cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-            video.srcObject = cameraStream;
-            overlay.classList.add('open');
-            qrScanning = true;
-            detectQRCode();
-        } catch(err) { showToast('Camera access denied'); }
-    }
-    
-    async function detectQRCode() {
-        if (!qrScanning) return;
-        const video = document.getElementById('cameraVideo');
-        if (video.videoWidth === 0) { setTimeout(detectQRCode, 500); return; }
-        const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-        canvas.getContext('2d').drawImage(video, 0, 0);
-        const imageData = canvas.toDataURL('image/jpeg', 0.5);
-        try {
-            const blob = await (await fetch(imageData)).blob();
-            const formData = new FormData(); formData.append('image', blob, 'qr.jpg');
-            const response = await fetch('https://api.qrserver.com/v1/read-qr-code/', { method: 'POST', body: formData });
-            const result = await response.json();
-            if (result[0]?.symbol[0]?.data) {
-                qrScanning = false;
-                closeCamera();
-                addPointsLocally(POINTS.qr_standard, 'QR Scan');
-                showToast('🎉 +25 points from QR scan!');
-            }
-        } catch(e) {}
-        if (qrScanning) setTimeout(detectQRCode, 800);
-    }
-    
-    function closeCamera() {
-        document.getElementById('cameraOverlay').classList.remove('open');
-        if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
-        qrScanning = false;
-    }
-    
-    // Daily Actions
-    async function dailyCheckin() {
-        addPointsLocally(POINTS.daily_checkin, 'Daily check-in');
-        user.streak = (user.streak || 0) + 1;
-        if (user.streak === 7) { addPointsLocally(POINTS.daily_7_streak, '7-Day Streak Bonus'); showToast('🔥 7-day streak! +100 bonus points!'); }
-        if (user.streak === 14) { addPointsLocally(POINTS.daily_14_streak, '14-Day Streak Bonus'); showToast('🏆 14-day streak! +300 bonus points!'); }
-        if (user.streak === 30) { addPointsLocally(POINTS.daily_30_streak, '30-Day Streak Bonus'); showToast('👑 30-day streak! +1000 bonus points!'); }
-        refreshAllUI();
-    }
-    
-    function shareStory() { addPointsLocally(POINTS.story_share, 'Instagram Story Share'); }
-    function referFriend() { document.getElementById('referralModal').style.display = 'flex'; addPointsLocally(POINTS.referral_signup, 'Referral (friend joined)'); }
-    function roomTour() { addPointsLocally(POINTS.room_tour, 'Room Tour Post'); }
-    
-    // Discover Section
-    async function loadDiscover() {
-        const container = document.getElementById('discoverScroll');
-        container.innerHTML = '<div class="feed-loading" style="padding:20px;">Loading collections...</div>';
-        const categories = ['aesthetic', 'girlish', 'motivational', 'musical', 'theater'];
-        const featured = [];
-        for (const cat of categories) {
-            try {
-                const res = await apiRequest(`/posters?category=${cat}&limit=1`);
-                const data = await res.json();
-                if (res.ok && data.length) featured.push({ ...data[0], categoryKey: cat, price: 40, points: 120 });
-                else featured.push({ id: cat, name: `${cat.charAt(0).toUpperCase() + cat.slice(1)} Collection`, emoji: '🖼️', price: 40, points: 120, categoryKey: cat });
-            } catch { featured.push({ id: cat, name: `${cat} Collection`, emoji: '🖼️', price: 40, points: 120, categoryKey: cat }); }
-        }
-        try { const res = await apiRequest('/posters?limited=true'); const data = await res.json(); if (res.ok && data.length) featured.push({ ...data[0], categoryKey: 'limited', is_limited: true, price: 60, points: 200 }); }
-        catch { featured.push({ id: 'limited', name: 'Limited Edition', emoji: '⚡', price: 60, points: 200, categoryKey: 'limited', is_limited: true }); }
         
-        container.innerHTML = '';
-        discoverCards = [];
-        featured.forEach(item => {
-            const card = document.createElement('div'); card.className = 'discover-card-h'; card.dataset.category = item.categoryKey;
-            if (item.is_limited) { const badge = document.createElement('div'); badge.className = 'discover-badge'; badge.textContent = '⚡ LIMITED'; card.appendChild(badge); }
-            const img = document.createElement('img'); img.className = 'discover-image-h'; img.src = item.image_url || `https://picsum.photos/seed/${item.id}/170/180`; card.appendChild(img);
-            const info = document.createElement('div'); info.className = 'discover-info-h';
-            info.innerHTML = `<div class="discover-category-h">${item.categoryKey}</div><div class="discover-name-h">${item.name}</div><div class="discover-price-h">KSH ${item.price} · <span>+${item.points} pts</span></div>`;
-            card.appendChild(info); card.onclick = () => showScreen('gallery');
-            container.appendChild(card); discoverCards.push(card);
-        });
-        const scrollContainer = document.getElementById('discoverScrollContainer');
-        scrollContainer.addEventListener('scroll', updateActiveCard);
-        setTimeout(updateActiveCard, 100);
-    }
-    
-    function updateActiveCard() {
-        const container = document.getElementById('discoverScrollContainer');
-        const centerX = container.getBoundingClientRect().left + container.clientWidth / 2;
-        let closest = null, minDist = Infinity;
-        discoverCards.forEach(card => { const rect = card.getBoundingClientRect(); const dist = Math.abs(rect.left + rect.width/2 - centerX); if (dist < minDist) { minDist = dist; closest = card; } });
-        discoverCards.forEach(c => c.classList.remove('active'));
-        if (closest) closest.classList.add('active');
-    }
-    
-    // Custom Poster
-    document.getElementById('customImageUpload')?.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                currentCustomImage = ev.target.result;
-                document.getElementById('imagePreviewArea').innerHTML = `<div class="custom-thumb"><img src="${currentCustomImage}"></div><span style="font-size:0.7rem;">Ready ✓</span>`;
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-    
-    function addCustomToCart() {
-        if (!currentCustomImage) { showToast('Please upload an image first!'); return; }
-        const title = document.getElementById('customTitle').value.trim();
-        addToCart({ type: 'custom', id: 'cstm_' + Date.now(), name: title || 'Custom Poster', price: 50, points: 150, image: currentCustomImage, emoji: '🎨' });
-        document.getElementById('customTitle').value = ''; currentCustomImage = null; document.getElementById('imagePreviewArea').innerHTML = ''; document.getElementById('customImageUpload').value = '';
-    }
-    
-    function addMysteryToCart() { addToCart({ type: 'mystery', id: 'mystery', name: 'Mystery Pack', price: 100, points: 350, emoji: '🎁' }); }
-    
-    async function processCheckout() {
-        if (!cart.length) { showToast('Cart empty'); return; }
-        const totalPrice = cart.reduce((s,i)=>s+(i.price*i.qty),0);
-        const totalBasePoints = cart.reduce((s,i)=>s+(i.points*i.qty),0);
-        if (confirm(`💰 Total: KSH ${totalPrice}\n⭐ You'll earn ~${Math.floor(totalBasePoints * getBoost())} points\n\nProceed with payment?`)) {
-            // Simulate successful payment
-            const earned = Math.floor(totalBasePoints * getBoost());
-            addPointsLocally(totalBasePoints, 'Purchase order');
-            cart = [];
-            refreshAllUI();
-            showToast(`✅ Payment successful! +${earned} points earned!`);
+        try {
+            videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+            video.srcObject = videoStream;
+            overlay.classList.add('open');
+            scanning = true;
+            scanQRCode(video);
+        } catch (err) {
+            showToast('Camera access denied. Please allow camera permissions.');
         }
     }
-    
+
+    async function scanQRCode(videoElement) {
+        if (!scanning) return;
+        if (videoElement.videoWidth === 0) {
+            setTimeout(() => scanQRCode(videoElement), 500);
+            return;
+        }
+        
+        const canvas = document.createElement('canvas');
+        canvas.width = videoElement.videoWidth;
+        canvas.height = videoElement.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+        
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, canvas.width, canvas.height);
+        
+        if (code && code.data) {
+            scanning = false;
+            stopCamera();
+            await processQRCode(code.data);
+        } else {
+            setTimeout(() => scanQRCode(videoElement), 300);
+        }
+    }
+
+    async function processQRCode(qrData) {
+        showToast(`📱 Scanning QR: ${qrData.substring(0, 10)}...`);
+        try {
+            const result = await apiRequest('/scan/qr', {
+                method: 'POST',
+                body: JSON.stringify({ qr_data: qrData })
+            });
+            
+            if (result.success) {
+                showToast(`🎉 ${result.message || `+${result.earned} points!`}`);
+                await loadProfile();
+            } else {
+                showToast(`❌ ${result.error || 'Invalid QR code'}`);
+            }
+        } catch (error) {
+            showToast('Network error, please try again');
+        }
+    }
+
+    function stopCamera() {
+        const overlay = document.getElementById('cameraOverlay');
+        overlay.classList.remove('open');
+        if (videoStream) {
+            videoStream.getTracks().forEach(track => track.stop());
+            videoStream = null;
+        }
+        scanning = false;
+    }
+
+    // Daily check-in
+    async function dailyCheckin() {
+        try {
+            const result = await apiRequest('/daily/checkin', { method: 'POST' });
+            if (result.success) {
+                showToast(`☀️ +${result.earned} points! ${result.streak} day streak!`);
+                await loadProfile();
+            } else {
+                showToast(result.message || 'Already checked in today');
+            }
+        } catch (error) {
+            showToast('Error checking in');
+        }
+    }
+
+    // Instagram Story
+    function openInstagramModal() {
+        document.getElementById('instagramModal').style.display = 'flex';
+    }
+
+    async function submitInstagramStory() {
+        const link = document.getElementById('storyLink').value.trim();
+        if (!link) {
+            showToast('Please paste your Instagram story link');
+            return;
+        }
+        
+        try {
+            const result = await apiRequest('/social/story', {
+                method: 'POST',
+                body: JSON.stringify({ story_link: link })
+            });
+            
+            if (result.success) {
+                showToast(`📸 +${result.earned} points! Thanks for sharing!`);
+                document.getElementById('instagramModal').style.display = 'none';
+                document.getElementById('storyLink').value = '';
+                await loadProfile();
+            } else {
+                showToast(result.error || 'Failed to submit story');
+            }
+        } catch (error) {
+            showToast('Network error');
+        }
+    }
+
+    // Room Tour
+    function openRoomTourModal() {
+        document.getElementById('roomtourModal').style.display = 'flex';
+    }
+
+    async function submitRoomTour() {
+        const fileInput = document.getElementById('roomTourImage');
+        const file = fileInput.files[0];
+        
+        if (!file) {
+            showToast('Please select a photo of your room');
+            return;
+        }
+        
+        const formData = new FormData();
+        formData.append('image', file);
+        
+        try {
+            const response = await fetch(`${API_URL}/social/roomtour`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
+            });
+            const result = await response.json();
+            
+            if (result.success) {
+                showToast(`🏠 +${result.earned} points! Room tour submitted!`);
+                document.getElementById('roomtourModal').style.display = 'none';
+                fileInput.value = '';
+                await loadProfile();
+            } else {
+                showToast(result.error || 'Failed to submit room tour');
+            }
+        } catch (error) {
+            showToast('Network error');
+        }
+    }
+
+    // Referral
+    function openReferralModal() {
+        document.getElementById('referralModal').style.display = 'flex';
+    }
+
+    function copyReferralCode() {
+        const code = document.getElementById('profileCode').innerText;
+        navigator.clipboard.writeText(code);
+        showToast('Referral code copied!');
+    }
+
+    function logout() {
+        localStorage.removeItem('wall_culture_token');
+        window.location.href = 'index.html';
+    }
+
     // Navigation
-    const screens = { home:'homeScreen', gallery:'galleryScreen', shop:'shopScreen', profile:'profileScreen' };
-    function showScreen(s) {
-        Object.values(screens).forEach(sc => document.getElementById(sc).classList.remove('active'));
-        document.getElementById(screens[s]).classList.add('active');
-        document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
-        document.querySelector(`.tab-item[data-tab="${s}"]`).classList.add('active');
-        if (s === 'gallery') loadGallery(currentGalleryTheme);
-        if (s === 'shop') { renderLimited(); renderCartUI(); }
-        if (s === 'profile') refreshAllUI();
+    const screens = { home: 'homeScreen', profile: 'profileScreen' };
+    function showScreen(screenName) {
+        Object.values(screens).forEach(id => {
+            document.getElementById(id).classList.remove('active');
+        });
+        document.getElementById(screens[screenName]).classList.add('active');
+        document.querySelectorAll('.tab-item').forEach(tab => {
+            tab.classList.remove('active');
+            if (tab.dataset.tab === screenName) tab.classList.add('active');
+        });
+        if (screenName === 'profile') loadProfile();
+        if (screenName === 'home') loadPosters();
     }
-    
-    // Event Listeners
-    document.querySelectorAll('.tab-item').forEach(tab => tab.addEventListener('click', () => showScreen(tab.dataset.tab)));
-    document.getElementById('homeScanBtn').onclick = startCameraScan;
-    document.getElementById('cameraCloseBtn').onclick = closeCamera;
+
+    // Event listeners
+    document.querySelectorAll('.tab-item').forEach(tab => {
+        tab.addEventListener('click', () => showScreen(tab.dataset.tab));
+    });
+    document.getElementById('homeScanBtn').onclick = startQRScanner;
+    document.getElementById('cameraCloseBtn').onclick = stopCamera;
     document.getElementById('homeDailyBtn').onclick = dailyCheckin;
-    document.getElementById('homeStoryBtn').onclick = shareStory;
-    document.getElementById('homeReferBtn').onclick = referFriend;
-    document.getElementById('homeRoomBtn').onclick = roomTour;
-    document.getElementById('addMysteryBtn').onclick = addMysteryToCart;
-    document.getElementById('addCustomToCartBtn').onclick = addCustomToCart;
-    document.getElementById('checkoutBtnShop').onclick = processCheckout;
-    document.getElementById('copyCodeBtn').onclick = () => { navigator.clipboard.writeText(user.referralCode); showToast('Code copied!'); };
-    document.getElementById('copyReferralModalBtn').onclick = () => { navigator.clipboard.writeText(user.referralCode); showToast('Code copied!'); };
-    document.getElementById('closeReferralModal').onclick = () => document.getElementById('referralModal').style.display = 'none';
-    document.getElementById('logoutBtn').onclick = () => { localStorage.clear(); window.location.href = 'index.html'; };
-    
-    fetchUserProfile();
-    loadDiscover();
-    loadGallery('aesthetic');
-    renderLimited();
-    renderCartUI();
+    document.getElementById('homeReferBtn').onclick = openReferralModal;
+    document.getElementById('homeStoryBtn').onclick = openInstagramModal;
+    document.getElementById('homeRoomBtn').onclick = openRoomTourModal;
+    document.getElementById('copyCodeBtn').onclick = copyReferralCode;
+    document.getElementById('copyReferralBtn').onclick = copyReferralCode;
+    document.getElementById('submitStoryBtn').onclick = submitInstagramStory;
+    document.getElementById('submitRoomTourBtn').onclick = submitRoomTour;
+    document.getElementById('closeInstagramBtn').onclick = () => document.getElementById('instagramModal').style.display = 'none';
+    document.getElementById('closeRoomTourBtn').onclick = () => document.getElementById('roomtourModal').style.display = 'none';
+    document.getElementById('closeReferralBtn').onclick = () => document.getElementById('referralModal').style.display = 'none';
+    document.getElementById('logoutBtn').onclick = logout;
+
+    // Initialize
+    loadPosters();
+    loadProfile();
 </script>
 </body>
 </html>
