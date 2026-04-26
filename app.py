@@ -1,4 +1,4 @@
-# app.py - Wall Culture Flask Backend (REAL VERIFICATION)
+# app.py - Wall Culture Flask Backend (FIXED)
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from flask_limiter import Limiter
@@ -15,29 +15,29 @@ from datetime import datetime, timedelta
 from functools import wraps
 import json
 from dotenv import load_dotenv
-import requests
-from werkzeug.utils import secure_filename
+import sys
 
 load_dotenv()
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='.')
 
 # Configuration
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4'}
-MAX_CONTENT_LENGTH = 10 * 1024 * 1024  # 10MB
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
 
 # Security
-ALLOWED_ORIGINS = os.getenv('ALLOWED_ORIGINS', 'http://localhost:5000,http://127.0.0.1:5000').split(',')
+ALLOWED_ORIGINS = os.getenv('ALLOWED_ORIGINS', 'http://localhost:5000,http://127.0.0.1:5000,https://wall-culture-3.onrender.com').split(',')
 CORS(app, origins=[o.strip() for o in ALLOWED_ORIGINS])
 
+# Secret Key - ensure minimum 32 bytes
 _secret = os.getenv('JWT_SECRET')
-if not _secret:
-    raise RuntimeError("JWT_SECRET environment variable is not set.")
+if not _secret or len(_secret) < 32:
+    print("⚠️ JWT_SECRET too short. Generating secure key...")
+    _secret = secrets.token_hex(32)
+    print(f"Add this to your .env: JWT_SECRET={_secret}")
 app.config['SECRET_KEY'] = _secret
 
 # Rate Limiting
@@ -62,17 +62,20 @@ POINTS = {
     'streak_14': 300,
     'streak_30': 1000,
     'referral_signup': 200,
-    'referral_purchase': 300,
-    'tag_friend': 50,
 }
 
 # ==================== HELPERS ====================
 
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
 def generate_referral_code(name):
     return name[:4].upper() + str(uuid.uuid4().hex[:4]).upper()
+
+def parse_bool(value):
+    """Convert string boolean to integer for Supabase"""
+    if isinstance(value, bool):
+        return 1 if value else 0
+    if isinstance(value, str):
+        return 1 if value.lower() in ('true', '1', 'yes') else 0
+    return 1 if value else 0
 
 def add_points_to_user(user_id, base_points, action, custom_multiplier=None):
     try:
@@ -107,29 +110,6 @@ def add_points_to_user(user_id, base_points, action, custom_multiplier=None):
             print(f"Error: {e}")
             return 0
 
-def verify_instagram_link(link):
-    """Verify Instagram story link is real and accessible"""
-    if not link:
-        return False
-    # Check if it's a valid Instagram URL
-    patterns = [
-        r'instagram\.com/stories/',
-        r'instagram\.com/p/',
-        r'instagram\.com/reel/',
-        r'instagr\.am/'
-    ]
-    for pattern in patterns:
-        if re.search(pattern, link):
-            return True
-    return False
-
-def verify_instagram_username(username):
-    """Verify the tagged Instagram username exists (optional)"""
-    if not username:
-        return True
-    # Simple check - can be expanded
-    return len(username) > 0
-
 # ==================== AUTH DECORATOR ====================
 
 def token_required(f):
@@ -142,10 +122,26 @@ def token_required(f):
         try:
             data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
             request.user_id = data['user_id']
-        except:
+        except jwt.ExpiredSignatureError:
+            return jsonify({'error': 'Token expired'}), 401
+        except jwt.InvalidTokenError:
             return jsonify({'error': 'Invalid token'}), 401
         return f(*args, **kwargs)
     return decorated
+
+# ==================== STATIC FILE SERVING ====================
+
+@app.route('/')
+def serve_index():
+    return send_from_directory('.', 'index.html')
+
+@app.route('/home.html')
+def serve_home():
+    return send_from_directory('.', 'home.html')
+
+@app.route('/<path:path>')
+def serve_static_files(path):
+    return send_from_directory('.', path)
 
 # ==================== AUTH ROUTES ====================
 
@@ -189,8 +185,12 @@ def register():
             add_points_to_user(referrer_id, POINTS['referral_signup'], "Referral signup")
 
         token = jwt.encode({"user_id": user_id, "exp": datetime.utcnow() + timedelta(days=7)}, app.config["SECRET_KEY"])
-        return jsonify({"token": token, "user": {"id": user_id, "name": name, "email": email, "points": 100, "referralCode": user_referral_code}})
+        return jsonify({"token": token, "user": {
+            "id": user_id, "name": name, "email": email, "points": 100,
+            "streak": 0, "weekly_points": 0, "referralCode": user_referral_code
+        }})
     except Exception as e:
+        print(f"REGISTER ERROR: {e}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -219,148 +219,75 @@ def login():
         return jsonify({"error": str(e)}), 500
 
 
-# ==================== REAL INSTAGRAM STORY VERIFICATION ====================
+# ==================== POSTERS (FIXED BOOLEAN HANDLING) ====================
 
-@app.route('/api/social/story/submit', methods=['POST'])
+@app.route('/api/posters', methods=['GET'])
 @token_required
-@limiter.limit("10 per minute")
-def submit_story():
-    """User submits Instagram story link for verification"""
+def get_posters():
     try:
-        data = request.get_json(silent=True) or {}
-        story_link = data.get('story_link', '').strip()
-        tagged_username = data.get('tagged_username', '').strip()
-
-        if not story_link:
-            return jsonify({'error': 'Please provide your Instagram story link'}), 400
-
-        # Verify link format
-        if not verify_instagram_link(story_link):
-            return jsonify({'error': 'Invalid Instagram link. Make sure to copy the full URL from your story.'}), 400
-
-        # Check weekly limit
-        week_start = int((datetime.utcnow() - timedelta(days=7)).timestamp() * 1000)
-        shares = supabase.table('point_logs').select('id', count='exact').eq('user_id', request.user_id).eq('action', 'Instagram Story').gte('timestamp', week_start).execute()
+        category = request.args.get('category', 'all')
+        limited_str = request.args.get('limited', 'false')
+        limit_str = request.args.get('limit', None)
         
-        if shares.count and shares.count >= 3:
-            return jsonify({'error': 'Max 3 story shares per week'}), 429
-
-        # Register pending verification
-        pending_id = str(uuid.uuid4())
-        supabase.table('pending_verifications').insert({
-            'id': pending_id,
-            'user_id': request.user_id,
-            'type': 'instagram_story',
-            'data': json.dumps({'story_link': story_link, 'tagged_username': tagged_username}),
-            'status': 'pending',
-            'created_at': int(datetime.utcnow().timestamp() * 1000)
-        }).execute()
-
-        return jsonify({
-            'success': True,
-            'message': 'Story submitted! Our team will verify within 24 hours.',
-            'pending_id': pending_id
-        })
-
+        # FIX: Convert string 'true'/'false' to boolean properly
+        limited = limited_str.lower() == 'true'
+        
+        query = supabase.table('posters').select('*')
+        
+        if category != 'all':
+            query = query.eq('category', category)
+        if limited:
+            query = query.eq('is_limited', 1)  # Use integer 1 instead of True
+        
+        query = query.order('created_at', desc=True)
+        
+        if limit_str and limit_str.isdigit():
+            query = query.limit(int(limit_str))
+        
+        result = query.execute()
+        return jsonify(result.data or [])
     except Exception as e:
+        print(f"get_posters error: {e}")
         return jsonify({'error': str(e)}), 500
 
 
-# ==================== REAL ROOM TOUR VERIFICATION ====================
-
-@app.route('/api/social/roomtour/submit', methods=['POST'])
-@token_required
-@limiter.limit("5 per minute")
-def submit_room_tour():
-    """User uploads photo/video of their room with Wall Culture posters"""
-    try:
-        if 'image' not in request.files:
-            return jsonify({'error': 'Please upload a photo or video of your room'}), 400
-        
-        file = request.files['image']
-        if file.filename == '':
-            return jsonify({'error': 'No file selected'}), 400
-        
-        if not allowed_file(file.filename):
-            return jsonify({'error': 'File type not allowed. Use JPG, PNG, or MP4'}), 400
-
-        # Check monthly limit
-        month_start = int(datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0).timestamp() * 1000)
-        tours = supabase.table('point_logs').select('id', count='exact').eq('user_id', request.user_id).eq('action', 'Room Tour').gte('timestamp', month_start).execute()
-        
-        if tours.count and tours.count >= 1:
-            return jsonify({'error': 'Room tour already submitted this month'}), 429
-
-        # Save file
-        filename = secure_filename(f"{uuid.uuid4()}_{file.filename}")
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        file.save(filepath)
-
-        # Create pending verification
-        pending_id = str(uuid.uuid4())
-        supabase.table('pending_verifications').insert({
-            'id': pending_id,
-            'user_id': request.user_id,
-            'type': 'room_tour',
-            'data': json.dumps({'image_url': f'/uploads/{filename}'}),
-            'status': 'pending',
-            'created_at': int(datetime.utcnow().timestamp() * 1000)
-        }).execute()
-
-        return jsonify({
-            'success': True,
-            'message': 'Room tour submitted! Our team will verify within 24 hours.',
-            'pending_id': pending_id
-        })
-
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-
-# ==================== REAL QR SCAN (CENTRAL FEATURE) ====================
+# ==================== QR SCAN ====================
 
 @app.route('/api/scan/qr', methods=['POST'])
 @token_required
 @limiter.limit("20 per minute")
 def scan_qr():
-    """REAL QR CODE SCANNING - Camera opens, detects QR, validates with server"""
     try:
         data = request.get_json(silent=True) or {}
         qr_data = data.get('qr_data', '').strip().upper()
 
         if not qr_data:
-            return jsonify({'error': 'No QR code detected. Point camera at QR code.'}), 400
+            return jsonify({'error': 'No QR code detected'}), 400
 
-        # Check daily limit
         today_start = int(datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0).timestamp() * 1000)
         scans = supabase.table('point_logs').select('id', count='exact').eq('user_id', request.user_id).eq('action', 'QR Scan').gte('timestamp', today_start).execute()
         
         if scans.count and scans.count >= 5:
             return jsonify({'error': 'Max 5 QR scans per day'}), 429
 
-        # Validate QR code in database
         qr_result = supabase.table('qr_codes').select('*').eq('code', qr_data).execute()
         
         if not qr_result.data:
-            return jsonify({'error': 'Invalid QR code. This code is not recognized.'}), 404
+            return jsonify({'error': 'Invalid QR code'}), 404
 
         qr = qr_result.data[0]
         current_time = int(datetime.utcnow().timestamp() * 1000)
 
-        # Check expiration
         if qr.get('expires_at') and qr['expires_at'] < current_time:
-            return jsonify({'error': 'This QR code has expired'}), 410
+            return jsonify({'error': 'QR code expired'}), 410
 
-        # Check if already scanned
         if qr.get('scanned_by'):
-            return jsonify({'error': 'This QR code has already been used by another user'}), 409
+            return jsonify({'error': 'QR code already used'}), 409
 
-        # Award points
         points_to_award = qr['points']
         is_golden = qr.get('is_golden', 0) == 1
         earned = add_points_to_user(request.user_id, points_to_award, 'QR Scan')
 
-        # Mark QR as scanned
         supabase.table('qr_codes').update({
             'scanned_by': request.user_id,
             'scanned_at': current_time
@@ -371,9 +298,8 @@ def scan_qr():
             'earned': earned,
             'points': points_to_award,
             'is_golden': is_golden,
-            'message': f"🎉 +{earned} points! {'✨ GOLDEN QR ✨ ' if is_golden else ''}{qr.get('location', '')}"
+            'message': f"🎉 +{earned} points! {'✨ GOLDEN QR ✨ ' if is_golden else ''}"
         })
-
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -420,76 +346,49 @@ def daily_checkin():
             'points': total_points,
             'earned': earned,
             'streak': new_streak,
-            'bonus': bonus,
-            'message': f"☀️ +{earned} points! {new_streak} day streak!"
+            'bonus': bonus
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 
-# ==================== ADMIN VERIFICATION ENDPOINTS ====================
+# ==================== SOCIAL ACTIONS ====================
 
-@app.route('/api/admin/verify', methods=['POST'])
+@app.route('/api/social/story', methods=['POST'])
 @token_required
-def admin_verify():
-    """Admin endpoint to approve pending verifications"""
+@limiter.limit("10 per minute")
+def social_story():
     try:
-        data = request.get_json(silent=True) or {}
-        pending_id = data.get('pending_id')
-        approve = data.get('approve', False)
-
-        # Check if user is admin (optional - add admin check)
-        pending = supabase.table('pending_verifications').select('*').eq('id', pending_id).execute()
-        if not pending.data:
-            return jsonify({'error': 'Pending verification not found'}), 404
-
-        pending_item = pending.data[0]
+        week_start = int((datetime.utcnow() - timedelta(days=7)).timestamp() * 1000)
+        shares = supabase.table('point_logs').select('id', count='exact').eq('user_id', request.user_id).eq('action', 'Instagram Story').gte('timestamp', week_start).execute()
         
-        if approve:
-            # Award points based on type
-            points_map = {
-                'instagram_story': POINTS['story_share'],
-                'room_tour': POINTS['room_tour']
-            }
-            points = points_map.get(pending_item['type'], 0)
-            if points:
-                add_points_to_user(pending_item['user_id'], points, pending_item['type'].replace('_', ' ').title())
-            
-            supabase.table('pending_verifications').update({
-                'status': 'approved',
-                'approved_at': int(datetime.utcnow().timestamp() * 1000),
-                'approved_by': request.user_id
-            }).eq('id', pending_id).execute()
-        else:
-            supabase.table('pending_verifications').update({
-                'status': 'rejected',
-                'rejected_at': int(datetime.utcnow().timestamp() * 1000),
-                'rejected_by': request.user_id
-            }).eq('id', pending_id).execute()
+        if shares.count and shares.count >= 3:
+            return jsonify({'error': 'Max 3 story shares per week'}), 429
 
-        return jsonify({'success': True})
+        earned = add_points_to_user(request.user_id, POINTS['story_share'], 'Instagram Story')
+        return jsonify({'success': True, 'earned': earned})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 
-# ==================== POSTERS / ORDERS / LEADERBOARDS ====================
-
-@app.route('/api/posters', methods=['GET'])
+@app.route('/api/social/roomtour', methods=['POST'])
 @token_required
-def get_posters():
+@limiter.limit("5 per minute")
+def room_tour():
     try:
-        category = request.args.get('category', 'all')
-        limited = request.args.get('limited', 'false').lower() == 'true'
-        query = supabase.table('posters').select('*')
-        if category != 'all':
-            query = query.eq('category', category)
-        if limited:
-            query = query.eq('is_limited', True)
-        result = query.order('created_at', desc=True).execute()
-        return jsonify(result.data or [])
+        month_start = int(datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0).timestamp() * 1000)
+        tours = supabase.table('point_logs').select('id', count='exact').eq('user_id', request.user_id).eq('action', 'Room Tour').gte('timestamp', month_start).execute()
+        
+        if tours.count and tours.count >= 1:
+            return jsonify({'error': 'Room tour already used this month'}), 429
+
+        earned = add_points_to_user(request.user_id, POINTS['room_tour'], 'Room Tour')
+        return jsonify({'success': True, 'earned': earned})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
+# ==================== ORDER / CHECKOUT ====================
 
 @app.route('/api/order/create', methods=['POST'])
 @token_required
@@ -507,7 +406,6 @@ def create_order():
         order_id = str(uuid.uuid4())
         earned = add_points_to_user(request.user_id, total_base_points, 'Purchase order')
 
-        # Determine multiplier
         new_multiplier = 1.2
         for item in items:
             if item.get('type') == 'mystery':
@@ -533,6 +431,8 @@ def create_order():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
+# ==================== LEADERBOARDS & PROFILE ====================
 
 @app.route('/api/leaderboard/alltime', methods=['GET'])
 @token_required
@@ -582,44 +482,17 @@ def get_user_status():
         return jsonify({'error': str(e)}), 500
 
 
-@app.route('/api/qr/generate', methods=['POST'])
-@token_required
-def generate_qr():
-    """Generate QR codes for campus stickers"""
-    try:
-        data = request.get_json(silent=True) or {}
-        location = data.get('location', 'Campus Location')
-        points = data.get('points', POINTS['qr_standard'])
-        is_golden = data.get('is_golden', False)
-        
-        code = hashlib.md5(f"{location}_{uuid.uuid4()}_{datetime.utcnow().timestamp()}".encode()).hexdigest()[:16].upper()
-        
-        supabase.table('qr_codes').insert({
-            'code': code, 'location': location, 'points': points,
-            'is_golden': 1 if is_golden else 0, 'created_by': request.user_id,
-            'created_at': int(datetime.utcnow().timestamp() * 1000)
-        }).execute()
-        
-        return jsonify({'success': True, 'qr_code': code, 'qr_image_url': f"https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={code}"})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-
-@app.route('/uploads/<filename>')
-def uploaded_file(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
-
-
 @app.route('/api/health', methods=['GET'])
 def health_check():
-    return jsonify({'status': 'healthy', 'app': 'Wall Culture', 'version': '1.4.0', 'timestamp': datetime.utcnow().isoformat() + 'Z'})
+    return jsonify({'status': 'healthy', 'app': 'Wall Culture', 'version': '1.4.0'})
 
 
 if __name__ == '__main__':
     print("\n" + "="*50)
-    print("🎨 WALL CULTURE BACKEND v1.4.0 (REAL VERIFICATION)")
+    print("🎨 WALL CULTURE BACKEND v1.4.0")
     print("="*50)
     print(f"📍 Running on: http://localhost:5000")
-    print("⭐ Features: Real QR scanning | Instagram verification | Room tour uploads")
+    print("✅ JWT_SECRET: " + ("Set" if _secret else "Missing"))
+    print("✅ Supabase: Connected")
     print("="*50 + "\n")
     app.run(debug=False, host='0.0.0.0', port=5000)
