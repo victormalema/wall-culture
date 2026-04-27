@@ -6,8 +6,6 @@
     <title>Wall Culture · Studio</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <script src="https://unpkg.com/@capacitor/core"></script>
-    <script src="https://unpkg.com/@capacitor/camera"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -73,13 +71,13 @@
         .btn-success { background: linear-gradient(95deg, #38B000, #70E000); color: white; }
 
         /* Gallery Grid */
-        .poster-grid {
+        .gallery-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 16px;
             margin-top: 12px;
         }
-        .poster-card {
+        .gallery-card {
             background: white;
             border-radius: 24px;
             overflow: hidden;
@@ -87,35 +85,72 @@
             transition: transform 0.2s;
             border: 1px solid rgba(255,140,80,0.2);
         }
-        .poster-card:active { transform: scale(0.97); }
-        .poster-image {
+        .gallery-card:active { transform: scale(0.97); }
+        .gallery-image {
             width: 100%;
             height: 160px;
             object-fit: cover;
             background: linear-gradient(135deg, #FFF0E5, #FFE2CE);
         }
-        .poster-info {
+        .gallery-info {
             padding: 12px;
         }
-        .poster-name {
+        .gallery-name {
             font-weight: 800;
             font-size: 0.85rem;
             color: #2A1A0A;
         }
-        .poster-price {
+        .gallery-price {
             font-size: 0.7rem;
             color: #FF6B4A;
             margin-top: 4px;
         }
 
-        /* Loading state */
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #B45A2E;
+        /* Shop Cart */
+        .cart-sidebar {
+            background: #FFF0E5;
+            border-radius: 28px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid #FFB47A;
+        }
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #FFD9B5;
+            font-size: 0.8rem;
+        }
+        .remove-item {
+            color: #FF6B4A;
+            background: none;
+            border: none;
+            cursor: pointer;
         }
 
-        /* Camera Overlay for QR scanning */
+        /* Category tabs */
+        .category-tabs {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 12px;
+            margin-bottom: 8px;
+        }
+        .category-tab {
+            background: #FFE8D8;
+            padding: 6px 16px;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+        .category-tab.active {
+            background: #FF8E53;
+            color: white;
+        }
+
+        /* Camera Overlay */
         #cameraOverlay {
             display: none;
             position: fixed;
@@ -213,6 +248,29 @@
             border-radius: 50px;
             font-size: 0.7rem;
         }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #B45A2E;
+        }
+        .custom-input {
+            background: white;
+            border: 1px solid #FFD1A4;
+            border-radius: 60px;
+            padding: 12px;
+            width: 100%;
+            margin: 8px 0;
+        }
+        .file-input-label {
+            background: #FFE8DC;
+            border: 1px dashed #FFA559;
+            border-radius: 60px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            display: block;
+            margin: 8px 0;
+        }
     </style>
 </head>
 <body>
@@ -247,15 +305,64 @@
                 </div>
             </div>
 
-            <!-- REAL POSTERS FROM DATABASE -->
-            <h3 style="margin: 8px 0;"><i class="fas fa-images"></i> Discover Posters</h3>
-            <div id="postersGrid" class="poster-grid">
-                <div class="loading">Loading posters...</div>
-            </div>
-
-            <div class="card" style="margin-top: 16px;">
+            <div class="card">
                 <h3>Points Audit Log</h3>
                 <div id="auditLogContainer" style="max-height: 150px; overflow-y: auto;"></div>
+            </div>
+        </div>
+
+        <!-- GALLERY SCREEN -->
+        <div id="galleryScreen" class="screen">
+            <div class="card">
+                <h3><i class="fas fa-images"></i> Poster Gallery</h3>
+                <p style="font-size:0.7rem;">Browse all collections — tap to add to cart</p>
+            </div>
+            <div class="category-tabs" id="categoryTabs">
+                <div class="category-tab active" data-category="all">All</div>
+                <div class="category-tab" data-category="aesthetic">🎨 Aesthetic</div>
+                <div class="category-tab" data-category="girlish">🌸 Girlish</div>
+                <div class="category-tab" data-category="motivational">💪 Motivational</div>
+                <div class="category-tab" data-category="musical">🎵 Musical</div>
+                <div class="category-tab" data-category="theater">🎭 Theater</div>
+                <div class="category-tab" data-category="limited">⚡ Limited</div>
+            </div>
+            <div id="galleryGrid" class="gallery-grid">
+                <div class="loading">Loading posters...</div>
+            </div>
+        </div>
+
+        <!-- SHOP SCREEN -->
+        <div id="shopScreen" class="screen">
+            <div class="card" style="padding: 12px 16px; background:#FFE8DC;">
+                <div style="display: flex; justify-content: space-between;">
+                    <span><i class="fas fa-bolt"></i> Boost: <strong id="boostValue">1.0x</strong></span>
+                    <span><i class="fas fa-clock"></i> <span id="boostDays">0</span>d left</span>
+                    <span><i class="fas fa-trophy"></i> Rank #<span id="userRank">—</span></span>
+                </div>
+            </div>
+
+            <div class="cart-sidebar">
+                <h4><i class="fas fa-shopping-cart"></i> Your Cart <span id="cartCount">(0)</span></h4>
+                <div id="cartItems"></div>
+                <div style="display: flex; justify-content: space-between; margin-top: 12px; font-weight: bold;">
+                    <span>Total: KSH <span id="cartTotal">0</span></span>
+                    <button id="checkoutBtn" class="btn btn-success">Pay &amp; Earn</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3><i class="fas fa-gift"></i> Mystery Package</h3>
+                <p style="font-size:0.75rem;">3 random posters! +350pts, 1.5x boost</p>
+                <button id="addMysteryBtn" class="btn btn-primary" style="width:100%;">Add Mystery Pack (KSH 100)</button>
+            </div>
+
+            <div class="card">
+                <h3><i class="fas fa-palette"></i> Custom Poster</h3>
+                <label class="file-input-label" for="customImageUpload"><i class="fas fa-cloud-upload-alt"></i> Upload your design</label>
+                <input type="file" id="customImageUpload" accept="image/*" style="display:none;">
+                <div id="customPreview"></div>
+                <input type="text" id="customTitle" class="custom-input" placeholder="Poster title (optional)">
+                <button id="addCustomBtn" class="btn btn-secondary" style="width:100%; margin-top:8px;">Add Custom to Cart (KSH 50)</button>
             </div>
         </div>
 
@@ -270,21 +377,13 @@
             </div>
             <div class="card">
                 <h4>Points Summary</h4>
-                <div style="display:flex;justify-content:space-between;margin:8px 0;">
-                    <span>Total Points:</span><strong id="profilePoints">0</strong>
-                </div>
-                <div style="display:flex;justify-content:space-between;margin:8px 0;">
-                    <span>Global Rank:</span><strong>#<span id="profileRank">—</span></strong>
-                </div>
-                <div style="display:flex;justify-content:space-between;margin:8px 0;">
-                    <span>Active Boost:</span><strong id="profileBoost">1.0x</strong>
-                </div>
+                <div style="display:flex;justify-content:space-between;margin:8px 0;"><span>Total Points:</span><strong id="profilePoints">0</strong></div>
+                <div style="display:flex;justify-content:space-between;margin:8px 0;"><span>Global Rank:</span><strong>#<span id="profileRank">—</span></strong></div>
+                <div style="display:flex;justify-content:space-between;margin:8px 0;"><span>Active Boost:</span><strong id="profileBoost">1.0x</strong></div>
             </div>
             <div class="card">
                 <h4>Referral Code</h4>
-                <div style="background:#FFE8DC; border-radius:40px; padding:12px; text-align:center;">
-                    <strong id="profileCode">—</strong>
-                </div>
+                <div style="background:#FFE8DC; border-radius:40px; padding:12px; text-align:center;"><strong id="profileCode">—</strong></div>
                 <button id="copyCodeBtn" class="btn btn-secondary" style="margin-top:8px; width:100%;">Copy Code</button>
             </div>
             <div class="card">
@@ -295,6 +394,8 @@
 
     <div class="tab-bar">
         <button class="tab-item active" data-tab="home"><i class="fas fa-home"></i><span>Home</span></button>
+        <button class="tab-item" data-tab="gallery"><i class="fas fa-images"></i><span>Gallery</span></button>
+        <button class="tab-item" data-tab="shop"><i class="fas fa-store"></i><span>Shop</span></button>
         <button class="tab-item" data-tab="profile"><i class="fas fa-user"></i><span>Profile</span></button>
     </div>
 </div>
@@ -304,14 +405,12 @@
     <video id="cameraVideo" autoplay playsinline muted></video>
     <button class="camera-close" id="cameraCloseBtn"><i class="fas fa-times"></i></button>
     <div style="position:absolute; bottom:100px; width:100%; text-align:center;">
-        <div class="scan-frame">
-            <div class="scan-line"></div>
-        </div>
+        <div class="scan-frame"><div class="scan-line"></div></div>
         <div class="scan-label">Point camera at QR code</div>
     </div>
 </div>
 
-<!-- Referral Modal -->
+<!-- Modals -->
 <div id="referralModal" class="modal">
     <div class="modal-content">
         <h3>Refer a Friend</h3>
@@ -321,7 +420,6 @@
     </div>
 </div>
 
-<!-- Instagram Story Modal -->
 <div id="instagramModal" class="modal">
     <div class="modal-content">
         <h3><i class="fab fa-instagram"></i> Share Instagram Story</h3>
@@ -332,7 +430,6 @@
     </div>
 </div>
 
-<!-- Room Tour Modal -->
 <div id="roomtourModal" class="modal">
     <div class="modal-content">
         <h3><i class="fas fa-camera"></i> Room Tour</h3>
@@ -345,19 +442,18 @@
 
 <script>
     const API_URL = 'https://wall-culture-3.onrender.com/api';
-    
-    // Auth check
     const token = localStorage.getItem('wall_culture_token');
-    if (!token) {
-        window.location.href = 'index.html';
-    }
+    if (!token) window.location.href = 'index.html';
 
+    let cart = [];
     let currentUser = null;
     let auditLog = [];
+    let allPosters = [];
+    let currentCategory = 'all';
     let videoStream = null;
     let scanning = false;
+    let currentCustomImage = null;
 
-    // Helper functions
     function showToast(msg) {
         const toast = document.createElement('div');
         toast.textContent = msg;
@@ -378,52 +474,131 @@
         return response.json();
     }
 
-    // Load REAL posters from database
+    // Load posters from database
     async function loadPosters() {
-        const container = document.getElementById('postersGrid');
-        container.innerHTML = '<div class="loading">Loading posters...</div>';
-        
         try {
             const posters = await apiRequest('/posters');
-            if (posters.length === 0) {
-                container.innerHTML = '<div class="loading">No posters available</div>';
-                return;
-            }
-            
-            container.innerHTML = '';
-            posters.forEach(poster => {
-                const card = document.createElement('div');
-                card.className = 'poster-card';
-                card.onclick = () => addToCart(poster);
-                
-                const img = document.createElement('img');
-                img.className = 'poster-image';
-                img.src = poster.image_url || `https://picsum.photos/seed/${poster.id}/200/200`;
-                img.alt = poster.name;
-                
-                const info = document.createElement('div');
-                info.className = 'poster-info';
-                info.innerHTML = `
-                    <div class="poster-name">${poster.emoji || '🖼️'} ${poster.name}</div>
-                    <div class="poster-price">KSH ${poster.price} · +${poster.points} pts</div>
-                `;
-                
-                card.appendChild(img);
-                card.appendChild(info);
-                container.appendChild(card);
-            });
+            allPosters = posters;
+            renderGallery();
         } catch (error) {
             console.error('Load posters error:', error);
-            container.innerHTML = '<div class="loading">Error loading posters</div>';
         }
     }
 
-    function addToCart(poster) {
-        showToast(`✓ ${poster.name} added to cart!`);
-        // In production, you'd add to cart here
+    function renderGallery() {
+        const container = document.getElementById('galleryGrid');
+        if (!container) return;
+        
+        let filtered = allPosters;
+        if (currentCategory !== 'all') {
+            filtered = allPosters.filter(p => p.category === currentCategory);
+        }
+        
+        if (filtered.length === 0) {
+            container.innerHTML = '<div class="loading">No posters in this category</div>';
+            return;
+        }
+        
+        container.innerHTML = '';
+        filtered.forEach(poster => {
+            const card = document.createElement('div');
+            card.className = 'gallery-card';
+            card.onclick = () => addToCart(poster);
+            
+            const img = document.createElement('img');
+            img.className = 'gallery-image';
+            img.src = poster.image_url || `https://picsum.photos/seed/${poster.id}/200/200`;
+            img.alt = poster.name;
+            
+            const info = document.createElement('div');
+            info.className = 'gallery-info';
+            info.innerHTML = `
+                <div class="gallery-name">${poster.emoji || '🖼️'} ${poster.name}</div>
+                <div class="gallery-price">KSH ${poster.price} · +${poster.points} pts</div>
+            `;
+            
+            card.appendChild(img);
+            card.appendChild(info);
+            container.appendChild(card);
+        });
     }
 
-    // Load user profile
+    // Cart functions
+    function addToCart(poster) {
+        const existing = cart.find(i => i.id === poster.id);
+        if (existing) {
+            existing.qty++;
+        } else {
+            cart.push({ ...poster, qty: 1 });
+        }
+        renderCart();
+        showToast(`✓ ${poster.name} added to cart`);
+    }
+
+    function renderCart() {
+        const container = document.getElementById('cartItems');
+        const count = cart.reduce((s,i) => s + i.qty, 0);
+        const total = cart.reduce((s,i) => s + (i.price * i.qty), 0);
+        
+        document.getElementById('cartCount').innerText = `(${count})`;
+        document.getElementById('cartTotal').innerText = total;
+        
+        if (!cart.length) {
+            container.innerHTML = '<div style="padding:12px; text-align:center; color:#B45A2E;">Cart is empty</div>';
+            return;
+        }
+        
+        container.innerHTML = '';
+        cart.forEach((item, idx) => {
+            const row = document.createElement('div');
+            row.className = 'cart-item';
+            row.innerHTML = `
+                <div><strong>${item.name}</strong> x${item.qty}<br><span style="font-size:0.65rem;">KSH ${item.price} · +${item.points} pts</span></div>
+                <div>KSH ${item.price * item.qty} <button class="remove-item" data-idx="${idx}"><i class="fas fa-trash"></i></button></div>
+            `;
+            container.appendChild(row);
+        });
+        
+        document.querySelectorAll('.remove-item').forEach(btn => {
+            btn.onclick = () => {
+                const idx = parseInt(btn.dataset.idx);
+                if (cart[idx].qty > 1) cart[idx].qty--;
+                else cart.splice(idx, 1);
+                renderCart();
+            };
+        });
+    }
+
+    async function checkout() {
+        if (!cart.length) {
+            showToast('Cart is empty');
+            return;
+        }
+        
+        const totalPrice = cart.reduce((s,i) => s + (i.price * i.qty), 0);
+        const totalBasePoints = cart.reduce((s,i) => s + (i.points * i.qty), 0);
+        
+        if (confirm(`Total: KSH ${totalPrice}\nYou'll earn ~${Math.floor(totalBasePoints * 1.2)} points\n\nProceed with payment?`)) {
+            try {
+                const result = await apiRequest('/order/create', {
+                    method: 'POST',
+                    body: JSON.stringify({ items: cart, totalPrice, totalBasePoints })
+                });
+                if (result.success) {
+                    showToast(`✅ Payment successful! +${result.pointsEarned} points!`);
+                    cart = [];
+                    renderCart();
+                    loadProfile();
+                } else {
+                    showToast('Checkout failed');
+                }
+            } catch (error) {
+                showToast('Network error');
+            }
+        }
+    }
+
+    // Profile
     async function loadProfile() {
         try {
             const data = await apiRequest('/user/profile');
@@ -439,6 +614,7 @@
                 document.getElementById('profileCode').innerText = currentUser.referral_code || '—';
                 document.getElementById('modalReferralCode').innerText = currentUser.referral_code || '—';
                 document.getElementById('profileRank').innerText = data.rank || '—';
+                document.getElementById('userRank').innerText = data.rank || '—';
                 
                 if (data.auditLog) {
                     auditLog = data.auditLog;
@@ -466,11 +642,10 @@
         });
     }
 
-    // REAL QR SCANNING
+    // QR Scanner
     async function startQRScanner() {
         const overlay = document.getElementById('cameraOverlay');
         const video = document.getElementById('cameraVideo');
-        
         try {
             videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
             video.srcObject = videoStream;
@@ -478,7 +653,7 @@
             scanning = true;
             scanQRCode(video);
         } catch (err) {
-            showToast('Camera access denied. Please allow camera permissions.');
+            showToast('Camera access denied');
         }
     }
 
@@ -488,16 +663,13 @@
             setTimeout(() => scanQRCode(videoElement), 500);
             return;
         }
-        
         const canvas = document.createElement('canvas');
         canvas.width = videoElement.videoWidth;
         canvas.height = videoElement.videoHeight;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-        
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const code = jsQR(imageData.data, canvas.width, canvas.height);
-        
         if (code && code.data) {
             scanning = false;
             stopCamera();
@@ -508,21 +680,20 @@
     }
 
     async function processQRCode(qrData) {
-        showToast(`📱 Scanning QR: ${qrData.substring(0, 10)}...`);
+        showToast(`Scanning...`);
         try {
             const result = await apiRequest('/scan/qr', {
                 method: 'POST',
                 body: JSON.stringify({ qr_data: qrData })
             });
-            
             if (result.success) {
                 showToast(`🎉 ${result.message || `+${result.earned} points!`}`);
-                await loadProfile();
+                loadProfile();
             } else {
-                showToast(`❌ ${result.error || 'Invalid QR code'}`);
+                showToast(`❌ ${result.error}`);
             }
         } catch (error) {
-            showToast('Network error, please try again');
+            showToast('Network error');
         }
     }
 
@@ -536,69 +707,47 @@
         scanning = false;
     }
 
-    // Daily check-in
+    // Daily actions
     async function dailyCheckin() {
         try {
             const result = await apiRequest('/daily/checkin', { method: 'POST' });
             if (result.success) {
                 showToast(`☀️ +${result.earned} points! ${result.streak} day streak!`);
-                await loadProfile();
+                loadProfile();
             } else {
-                showToast(result.message || 'Already checked in today');
+                showToast(result.message || 'Already checked in');
             }
         } catch (error) {
             showToast('Error checking in');
         }
     }
 
-    // Instagram Story
-    function openInstagramModal() {
-        document.getElementById('instagramModal').style.display = 'flex';
-    }
-
     async function submitInstagramStory() {
         const link = document.getElementById('storyLink').value.trim();
-        if (!link) {
-            showToast('Please paste your Instagram story link');
-            return;
-        }
-        
+        if (!link) { showToast('Please paste your Instagram story link'); return; }
         try {
             const result = await apiRequest('/social/story', {
                 method: 'POST',
                 body: JSON.stringify({ story_link: link })
             });
-            
             if (result.success) {
-                showToast(`📸 +${result.earned} points! Thanks for sharing!`);
+                showToast(`📸 +${result.earned} points!`);
                 document.getElementById('instagramModal').style.display = 'none';
                 document.getElementById('storyLink').value = '';
-                await loadProfile();
+                loadProfile();
             } else {
-                showToast(result.error || 'Failed to submit story');
+                showToast(result.error);
             }
         } catch (error) {
             showToast('Network error');
         }
     }
 
-    // Room Tour
-    function openRoomTourModal() {
-        document.getElementById('roomtourModal').style.display = 'flex';
-    }
-
     async function submitRoomTour() {
-        const fileInput = document.getElementById('roomTourImage');
-        const file = fileInput.files[0];
-        
-        if (!file) {
-            showToast('Please select a photo of your room');
-            return;
-        }
-        
+        const file = document.getElementById('roomTourImage').files[0];
+        if (!file) { showToast('Please select a photo'); return; }
         const formData = new FormData();
         formData.append('image', file);
-        
         try {
             const response = await fetch(`${API_URL}/social/roomtour`, {
                 method: 'POST',
@@ -606,49 +755,64 @@
                 body: formData
             });
             const result = await response.json();
-            
             if (result.success) {
-                showToast(`🏠 +${result.earned} points! Room tour submitted!`);
+                showToast(`🏠 +${result.earned} points!`);
                 document.getElementById('roomtourModal').style.display = 'none';
-                fileInput.value = '';
-                await loadProfile();
+                document.getElementById('roomTourImage').value = '';
+                loadProfile();
             } else {
-                showToast(result.error || 'Failed to submit room tour');
+                showToast(result.error);
             }
         } catch (error) {
             showToast('Network error');
         }
     }
 
-    // Referral
-    function openReferralModal() {
-        document.getElementById('referralModal').style.display = 'flex';
+    // Custom poster
+    document.getElementById('customImageUpload')?.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                currentCustomImage = ev.target.result;
+                document.getElementById('customPreview').innerHTML = `<img src="${currentCustomImage}" style="width:60px;height:60px;border-radius:12px;object-fit:cover;">`;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    function addCustomToCart() {
+        if (!currentCustomImage) { showToast('Please upload an image first'); return; }
+        const title = document.getElementById('customTitle').value.trim();
+        addToCart({
+            id: 'custom_' + Date.now(),
+            name: title || 'Custom Poster',
+            price: 50,
+            points: 150,
+            emoji: '🎨',
+            image_url: currentCustomImage
+        });
+        document.getElementById('customTitle').value = '';
+        currentCustomImage = null;
+        document.getElementById('customPreview').innerHTML = '';
+        document.getElementById('customImageUpload').value = '';
     }
 
-    function copyReferralCode() {
-        const code = document.getElementById('profileCode').innerText;
-        navigator.clipboard.writeText(code);
-        showToast('Referral code copied!');
-    }
-
-    function logout() {
-        localStorage.removeItem('wall_culture_token');
-        window.location.href = 'index.html';
+    function addMysteryToCart() {
+        addToCart({ id: 'mystery', name: 'Mystery Pack', price: 100, points: 350, emoji: '🎁' });
     }
 
     // Navigation
-    const screens = { home: 'homeScreen', profile: 'profileScreen' };
     function showScreen(screenName) {
-        Object.values(screens).forEach(id => {
-            document.getElementById(id).classList.remove('active');
-        });
-        document.getElementById(screens[screenName]).classList.add('active');
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(`${screenName}Screen`).classList.add('active');
         document.querySelectorAll('.tab-item').forEach(tab => {
             tab.classList.remove('active');
             if (tab.dataset.tab === screenName) tab.classList.add('active');
         });
+        if (screenName === 'gallery') renderGallery();
         if (screenName === 'profile') loadProfile();
-        if (screenName === 'home') loadPosters();
+        if (screenName === 'shop') renderCart();
     }
 
     // Event listeners
@@ -658,21 +822,35 @@
     document.getElementById('homeScanBtn').onclick = startQRScanner;
     document.getElementById('cameraCloseBtn').onclick = stopCamera;
     document.getElementById('homeDailyBtn').onclick = dailyCheckin;
-    document.getElementById('homeReferBtn').onclick = openReferralModal;
-    document.getElementById('homeStoryBtn').onclick = openInstagramModal;
-    document.getElementById('homeRoomBtn').onclick = openRoomTourModal;
-    document.getElementById('copyCodeBtn').onclick = copyReferralCode;
-    document.getElementById('copyReferralBtn').onclick = copyReferralCode;
+    document.getElementById('homeReferBtn').onclick = () => document.getElementById('referralModal').style.display = 'flex';
+    document.getElementById('homeStoryBtn').onclick = () => document.getElementById('instagramModal').style.display = 'flex';
+    document.getElementById('homeRoomBtn').onclick = () => document.getElementById('roomtourModal').style.display = 'flex';
+    document.getElementById('copyCodeBtn').onclick = () => { navigator.clipboard.writeText(document.getElementById('profileCode').innerText); showToast('Copied!'); };
+    document.getElementById('copyReferralBtn').onclick = () => { navigator.clipboard.writeText(document.getElementById('profileCode').innerText); showToast('Copied!'); };
     document.getElementById('submitStoryBtn').onclick = submitInstagramStory;
     document.getElementById('submitRoomTourBtn').onclick = submitRoomTour;
+    document.getElementById('checkoutBtn').onclick = checkout;
+    document.getElementById('addMysteryBtn').onclick = addMysteryToCart;
+    document.getElementById('addCustomBtn').onclick = addCustomToCart;
+    document.getElementById('logoutBtn').onclick = () => { localStorage.clear(); window.location.href = 'index.html'; };
+    document.getElementById('closeReferralBtn').onclick = () => document.getElementById('referralModal').style.display = 'none';
     document.getElementById('closeInstagramBtn').onclick = () => document.getElementById('instagramModal').style.display = 'none';
     document.getElementById('closeRoomTourBtn').onclick = () => document.getElementById('roomtourModal').style.display = 'none';
-    document.getElementById('closeReferralBtn').onclick = () => document.getElementById('referralModal').style.display = 'none';
-    document.getElementById('logoutBtn').onclick = logout;
+
+    // Category filter
+    document.querySelectorAll('.category-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            currentCategory = tab.dataset.category;
+            renderGallery();
+        });
+    });
 
     // Initialize
     loadPosters();
     loadProfile();
+    renderCart();
 </script>
 </body>
 </html>
