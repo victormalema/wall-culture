@@ -70,41 +70,56 @@
         .btn-secondary { background: #FFE0C0; border: 1px solid #FFA559; color: #D45A2C; }
         .btn-success { background: linear-gradient(95deg, #38B000, #70E000); color: white; }
 
-        /* Gallery Grid */
-        .gallery-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 16px;
-            margin-top: 12px;
-        }
-        .gallery-card {
-            background: white;
-            border-radius: 24px;
-            overflow: hidden;
-            cursor: pointer;
-            transition: transform 0.2s;
-            border: 1px solid rgba(255,140,80,0.2);
-        }
-        .gallery-card:active { transform: scale(0.97); }
-        .gallery-image {
-            width: 100%;
-            height: 160px;
-            object-fit: cover;
-            background: linear-gradient(135deg, #FFF0E5, #FFE2CE);
-        }
-        .gallery-info {
-            padding: 12px;
-        }
-        .gallery-name {
-            font-weight: 800;
-            font-size: 0.85rem;
-            color: #2A1A0A;
-        }
-        .gallery-price {
-            font-size: 0.7rem;
-            color: #FF6B4A;
-            margin-top: 4px;
-        }
+        /* Gallery  */
+        .gallery-feed {
+         display: flex;
+         flex-direction: column;
+         gap: 20px;
+         padding: 0 12px 20px;
+       }
+
+       .gallery-card {
+         position: relative;
+         height: 220px;
+         border-radius: 28px;
+         overflow: hidden;
+         cursor: pointer;
+         box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+       }
+
+      .gallery-image {
+         width: 100%;
+         height: 100%;
+         object-fit: cover;
+      }
+
+      /* Overlay gradient like Tonal */
+       .gallery-overlay {
+         position: absolute;
+         inset: 0;
+         background: linear-gradient(
+         to top,
+         rgba(0,0,0,0.7),
+         rgba(0,0,0,0.2),
+         transparent
+  );
+         display: flex;
+         flex-direction: column;
+         justify-content: flex-end;
+         padding: 16px;
+     }
+
+      .gallery-name {
+         color: white;
+          font-size: 1rem;
+        font-weight: 800; 
+     }
+
+      .gallery-meta {
+         color: rgba(255,255,255,0.8);
+          font-size: 0.75rem;
+         margin-top: 4px;
+     }
 
         /* Cart */
         .cart-sidebar {
@@ -391,7 +406,7 @@
                 <div class="category-tab" data-cat="theater">🎭 Theater</div>
                 <div class="category-tab" data-cat="limited">⚡ Limited</div>
             </div>
-            <div id="galleryGrid" class="gallery-grid">
+            <div id="galleryGrid" class="gallery-feed">
                 <div class="loading">Loading...</div>
             </div>
         </div>
@@ -607,29 +622,40 @@
 }
 
     function renderGallery() {
-        const container = document.getElementById('galleryGrid');
-        let filtered = allPosters;
-        if (currentCategory !== 'all') {
-            filtered = allPosters.filter(p => p.category === currentCategory);
-        }
-        if (!filtered.length) {
-            container.innerHTML = '<div class="loading">No posters in this category</div>';
-            return;
-        }
-        container.innerHTML = '';
-        filtered.forEach(poster => {
-            const card = document.createElement('div');
-            card.className = 'gallery-card';
-            card.onclick = () => addToCart(poster);
-            card.innerHTML = `
-                <img class="gallery-image" src="${poster.image_url || 'https://picsum.photos/seed/' + poster.id + '/200/200'}" onerror="this.src='https://picsum.photos/200/200'">
-                <div class="gallery-info">
-                    <div class="gallery-name">${poster.name}</div>
-                    <div class="gallery-price">KSH ${poster.price} · +${poster.points} pts</div>
+    const container = document.getElementById('galleryGrid');
+
+    let filtered = allPosters;
+    if (currentCategory !== 'all') {
+        filtered = allPosters.filter(p => p.category === currentCategory);
+    }
+
+    if (!filtered.length) {
+        container.innerHTML = '<div class="loading">No posters in this category</div>';
+        return;
+    }
+
+    container.innerHTML = '';
+
+    filtered.forEach(poster => {
+        const card = document.createElement('div');
+        card.className = 'gallery-card';
+        card.onclick = () => addToCart(poster);
+
+        card.innerHTML = `
+            <img class="gallery-image"
+                src="${poster.image_url || 'https://picsum.photos/seed/' + poster.id + '/400/300'}"
+                onerror="this.src='https://picsum.photos/400/300'">
+
+            <div class="gallery-overlay">
+                <div class="gallery-name">${poster.name}</div>
+                <div class="gallery-meta">
+                    KSH ${poster.price} · +${poster.points} pts
                 </div>
-            `;
-            container.appendChild(card);
-        });
+            </div>
+        `;
+
+        container.appendChild(card);
+    });
     }
     function enableCenterScaling() {
     const container = document.getElementById('feedContainer');
