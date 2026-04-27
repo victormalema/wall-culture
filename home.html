@@ -70,7 +70,7 @@
         .btn-secondary { background: #FFE0C0; border: 1px solid #FFA559; color: #D45A2C; }
         .btn-success { background: linear-gradient(95deg, #38B000, #70E000); color: white; }
 
-        /* Gallery Grid */
+        /* Gallery Grid - 2 columns */
         .gallery-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -91,6 +91,10 @@
             height: 160px;
             object-fit: cover;
             background: linear-gradient(135deg, #FFF0E5, #FFE2CE);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
         }
         .gallery-info {
             padding: 12px;
@@ -106,26 +110,59 @@
             margin-top: 4px;
         }
 
-        /* Shop Cart */
-        .cart-sidebar {
-            background: #FFF0E5;
-            border-radius: 28px;
-            padding: 16px;
-            margin-bottom: 16px;
-            border: 1px solid #FFB47A;
-        }
-        .cart-item {
+        /* Discover Horizontal Scroll */
+        .discover-header {
             display: flex;
             justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid #FFD9B5;
-            font-size: 0.8rem;
+            align-items: baseline;
+            padding: 0 4px 12px 4px;
         }
-        .remove-item {
-            color: #FF6B4A;
-            background: none;
-            border: none;
+        .discover-scroll {
+            overflow-x: auto;
+            overflow-y: hidden;
+            white-space: nowrap;
+            display: flex;
+            gap: 12px;
+            padding: 8px 0 16px 0;
+            scrollbar-width: thin;
+        }
+        .discover-scroll::-webkit-scrollbar { height: 4px; }
+        .discover-scroll::-webkit-scrollbar-track { background: #FFD9B5; border-radius: 10px; }
+        .discover-scroll::-webkit-scrollbar-thumb { background: #FF8E53; border-radius: 10px; }
+        .discover-card {
+            flex: 0 0 auto;
+            width: 150px;
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
             cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        .discover-card:active { transform: scale(0.96); }
+        .discover-image {
+            width: 100%;
+            height: 140px;
+            object-fit: cover;
+            background: linear-gradient(135deg, #FFF0E5, #FFE2CE);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+        }
+        .discover-info {
+            padding: 10px;
+        }
+        .discover-name {
+            font-weight: 700;
+            font-size: 0.75rem;
+            color: #2A1A0A;
+            white-space: normal;
+        }
+        .discover-price {
+            font-size: 0.65rem;
+            color: #FF6B4A;
+            margin-top: 4px;
         }
 
         /* Category tabs */
@@ -148,6 +185,28 @@
         .category-tab.active {
             background: #FF8E53;
             color: white;
+        }
+
+        /* Shop Cart */
+        .cart-sidebar {
+            background: #FFF0E5;
+            border-radius: 28px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid #FFB47A;
+        }
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #FFD9B5;
+            font-size: 0.8rem;
+        }
+        .remove-item {
+            color: #FF6B4A;
+            background: none;
+            border: none;
+            cursor: pointer;
         }
 
         /* Camera Overlay */
@@ -305,7 +364,16 @@
                 </div>
             </div>
 
-            <div class="card">
+            <!-- DISCOVER SECTION - Horizontal Scroll -->
+            <div class="discover-header">
+                <h3><i class="fas fa-compass"></i> Discover Collections</h3>
+                <span>scroll →</span>
+            </div>
+            <div id="discoverScroll" class="discover-scroll">
+                <div class="loading">Loading...</div>
+            </div>
+
+            <div class="card" style="margin-top: 16px;">
                 <h3>Points Audit Log</h3>
                 <div id="auditLogContainer" style="max-height: 150px; overflow-y: auto;"></div>
             </div>
@@ -474,17 +542,82 @@
         return response.json();
     }
 
-    // Load posters from database
+    // Load REAL posters from database
     async function loadPosters() {
         try {
             const posters = await apiRequest('/posters');
-            allPosters = posters;
+            console.log('Loaded posters:', posters);
+            if (posters && posters.length > 0) {
+                allPosters = posters;
+            } else {
+                // Fallback sample data if database empty
+                allPosters = [
+                    { id: '1', name: 'Soft Sunset', category: 'aesthetic', emoji: '🌅', price: 40, points: 120, image_url: null },
+                    { id: '2', name: 'Minimal Waves', category: 'aesthetic', emoji: '🌊', price: 40, points: 120, image_url: null },
+                    { id: '3', name: 'Floral Heart', category: 'girlish', emoji: '🌸', price: 40, points: 120, image_url: null },
+                    { id: '4', name: 'Grind Mode', category: 'motivational', emoji: '🔥', price: 40, points: 120, image_url: null },
+                    { id: '5', name: 'Retro Vinyl', category: 'musical', emoji: '🎵', price: 40, points: 120, image_url: null },
+                    { id: '6', name: 'Drama Masks', category: 'theater', emoji: '🎭', price: 40, points: 120, image_url: null },
+                    { id: '7', name: 'Neon Dreams', category: 'limited', emoji: '🌈', price: 60, points: 200, image_url: null }
+                ];
+            }
+            renderDiscover();
             renderGallery();
         } catch (error) {
             console.error('Load posters error:', error);
+            // Fallback
+            allPosters = [
+                { id: '1', name: 'Soft Sunset', category: 'aesthetic', emoji: '🌅', price: 40, points: 120 },
+                { id: '2', name: 'Minimal Waves', category: 'aesthetic', emoji: '🌊', price: 40, points: 120 },
+                { id: '3', name: 'Floral Heart', category: 'girlish', emoji: '🌸', price: 40, points: 120 }
+            ];
+            renderDiscover();
+            renderGallery();
         }
     }
 
+    // Render Discover Section (one poster per category)
+    function renderDiscover() {
+        const container = document.getElementById('discoverScroll');
+        if (!container) return;
+        
+        const categories = ['aesthetic', 'girlish', 'motivational', 'musical', 'theater', 'limited'];
+        const featured = [];
+        
+        categories.forEach(cat => {
+            const poster = allPosters.find(p => p.category === cat);
+            if (poster) featured.push(poster);
+        });
+        
+        if (featured.length === 0) {
+            container.innerHTML = '<div class="loading">No posters available</div>';
+            return;
+        }
+        
+        container.innerHTML = '';
+        featured.forEach(poster => {
+            const card = document.createElement('div');
+            card.className = 'discover-card';
+            card.onclick = () => addToCart(poster);
+            
+            const imageDiv = document.createElement('div');
+            imageDiv.className = 'discover-image';
+            imageDiv.textContent = poster.emoji || '🖼️';
+            
+            const info = document.createElement('div');
+            info.className = 'discover-info';
+            info.innerHTML = `
+                <div class="discover-name">${poster.name}</div>
+                <div class="discover-price">KSH ${poster.price} · +${poster.points} pts</div>
+            `;
+            
+            card.appendChild(imageDiv);
+            card.appendChild(info);
+            container.appendChild(card);
+        });
+    }
+
+    // Render Gallery Grid
     function renderGallery() {
         const container = document.getElementById('galleryGrid');
         if (!container) return;
@@ -505,19 +638,18 @@
             card.className = 'gallery-card';
             card.onclick = () => addToCart(poster);
             
-            const img = document.createElement('img');
-            img.className = 'gallery-image';
-            img.src = poster.image_url || `https://picsum.photos/seed/${poster.id}/200/200`;
-            img.alt = poster.name;
+            const imageDiv = document.createElement('div');
+            imageDiv.className = 'gallery-image';
+            imageDiv.textContent = poster.emoji || '🖼️';
             
             const info = document.createElement('div');
             info.className = 'gallery-info';
             info.innerHTML = `
-                <div class="gallery-name">${poster.emoji || '🖼️'} ${poster.name}</div>
+                <div class="gallery-name">${poster.emoji || ''} ${poster.name}</div>
                 <div class="gallery-price">KSH ${poster.price} · +${poster.points} pts</div>
             `;
             
-            card.appendChild(img);
+            card.appendChild(imageDiv);
             card.appendChild(info);
             container.appendChild(card);
         });
@@ -789,8 +921,7 @@
             name: title || 'Custom Poster',
             price: 50,
             points: 150,
-            emoji: '🎨',
-            image_url: currentCustomImage
+            emoji: '🎨'
         });
         document.getElementById('customTitle').value = '';
         currentCustomImage = null;
@@ -813,6 +944,10 @@
         if (screenName === 'gallery') renderGallery();
         if (screenName === 'profile') loadProfile();
         if (screenName === 'shop') renderCart();
+        if (screenName === 'home') {
+            renderDiscover();
+            loadProfile();
+        }
     }
 
     // Event listeners
