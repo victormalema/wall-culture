@@ -3,125 +3,367 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>Wall Culture · Studio</title>
+    <title>Wall Culture · Studio | Tonal-Inspired Gallery</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             background: linear-gradient(145deg, #FFE8D4 0%, #FFD9B5 100%);
             font-family: 'Plus Jakarta Sans', sans-serif;
-            height: 100vh; overflow: hidden;
+            height: 100vh;
+            overflow: hidden;
         }
+
         .app-wrapper {
-            max-width: 450px; margin: 0 auto; height: 100vh;
+            max-width: 450px;
+            margin: 0 auto;
+            height: 100vh;
             background: linear-gradient(135deg, #FFF5E6 0%, #FFE0C8 100%);
-            display: flex; flex-direction: column; overflow: hidden;
-            box-shadow: 0 0 40px rgba(0,0,0,0.15); position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.15);
+            position: relative;
         }
+
         .app-header {
-            padding: 16px 20px 12px; display: flex;
-            justify-content: space-between; align-items: baseline;
-            border-bottom: 1px solid rgba(212,107,58,0.2); flex-shrink: 0;
+            padding: 16px 20px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            border-bottom: 1px solid rgba(212, 107, 58, 0.2);
+            flex-shrink: 0;
         }
+
         .logo-area h1 {
-            font-size: 1.6rem; font-weight: 800;
+            font-size: 1.6rem;
+            font-weight: 800;
             background: linear-gradient(135deg, #FF6B4A, #FF8E53, #FFB347);
-            -webkit-background-clip: text; background-clip: text; color: transparent;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
         }
+
         .quick-points {
-            background: #FFD5A4; padding: 6px 14px; border-radius: 40px;
-            color: #B45A2E; font-weight: 700;
+            background: #FFD5A4;
+            padding: 6px 14px;
+            border-radius: 40px;
+            color: #B45A2E;
+            font-weight: 700;
         }
-        .quick-points span { font-weight: 800; color: #E85D2E; }
+
+        .quick-points span {
+            font-weight: 800;
+            color: #E85D2E;
+        }
+
         .screen-container {
-            flex: 1; overflow-y: auto; overflow-x: hidden;
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
             padding: 0;
             padding-bottom: calc(0px + env(safe-area-inset-bottom, 0px));
         }
-        .screen { display: none; animation: fadeIn 0.3s ease; }
-        .screen.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .screen {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
         .tab-bar {
-            background: #FFF0E0; border-top: 1px solid rgba(255,150,80,0.3);
-            display: flex; padding: 8px 16px 12px; gap: 6px;
+            background: #FFF0E0;
+            border-top: 1px solid rgba(255, 150, 80, 0.3);
+            display: flex;
+            padding: 8px 16px 12px;
+            gap: 6px;
             justify-content: space-around;
             padding-bottom: max(12px, env(safe-area-inset-bottom, 12px));
             flex-shrink: 0;
         }
+
         .tab-item {
-            flex: 1; display: flex; flex-direction: column; align-items: center;
-            gap: 4px; padding: 8px 0; border-radius: 30px; background: transparent;
-            border: none; color: #CA834E; font-weight: 600; font-size: 0.7rem;
-            transition: 0.2s; cursor: pointer;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 0;
+            border-radius: 30px;
+            background: transparent;
+            border: none;
+            color: #CA834E;
+            font-weight: 600;
+            font-size: 0.7rem;
+            transition: 0.2s;
+            cursor: pointer;
         }
-        .tab-item i { font-size: 1.4rem; }
-        .tab-item.active { background: #FFD1A4; color: #E85D2E; }
+
+        .tab-item i {
+            font-size: 1.4rem;
+        }
+
+        .tab-item.active {
+            background: #FFD1A4;
+            color: #E85D2E;
+        }
 
         .card {
-            background: rgba(255,245,235,0.9); border-radius: 32px; padding: 1.2rem;
-            margin-bottom: 1rem; border: 1px solid rgba(255,140,80,0.3);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+            background: rgba(255, 245, 235, 0.9);
+            border-radius: 32px;
+            padding: 1.2rem;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(255, 140, 80, 0.3);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
         }
-        .btn { border: none; padding: 12px 20px; border-radius: 60px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: 0.15s; }
-        .btn-primary { background: linear-gradient(95deg, #FF6B4A, #FF8E53); color: white; }
-        .btn-secondary { background: #FFE0C0; border: 1px solid #FFA559; color: #D45A2C; }
-        .btn-success { background: linear-gradient(95deg, #38B000, #70E000); color: white; }
 
-        /* Gallery  */
+        .btn {
+            border: none;
+            padding: 12px 20px;
+            border-radius: 60px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(95deg, #FF6B4A, #FF8E53);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #FFE0C0;
+            border: 1px solid #FFA559;
+            color: #D45A2C;
+        }
+
+        .btn-success {
+            background: linear-gradient(95deg, #38B000, #70E000);
+            color: white;
+        }
+
+        /* ===== TONAL-INSPIRED GALLERY (similar to the provided image) ===== */
         .gallery-feed {
-         display: flex;
-         flex-direction: column;
-         gap: 20px;
-         padding: 0 12px 20px;
-       }
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 0 12px 20px;
+        }
 
-       .gallery-card {
-         position: relative;
-         height: 220px;
-         border-radius: 28px;
-         overflow: hidden;
-         cursor: pointer;
-         box-shadow: 0 6px 18px rgba(0,0,0,0.12);
-       }
+        .gallery-card {
+            position: relative;
+            height: 220px;
+            border-radius: 28px;
+            overflow: hidden;
+            cursor: pointer;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+            transition: transform 0.2s ease, box-shadow 0.2s;
+        }
 
-      .gallery-image {
-         width: 100%;
-         height: 100%;
-         object-fit: cover;
-      }
+        .gallery-card:active {
+            transform: scale(0.98);
+        }
 
-      /* Overlay gradient like Tonal */
-       .gallery-overlay {
-         position: absolute;
-         inset: 0;
-         background: linear-gradient(
-         to top,
-         rgba(0,0,0,0.7),
-         rgba(0,0,0,0.2),
-         transparent
-  );
-         display: flex;
-         flex-direction: column;
-         justify-content: flex-end;
-         padding: 16px;
-     }
+        .gallery-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
 
-      .gallery-name {
-         color: white;
-          font-size: 1rem;
-        font-weight: 800; 
-     }
+        /* Tonal style gradient overlay - exactly like reference image */
+        .gallery-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.25), transparent 70%);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 16px;
+        }
 
-      .gallery-meta {
-         color: rgba(255,255,255,0.8);
-          font-size: 0.75rem;
-         margin-top: 4px;
-     }
+        .gallery-name {
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+        }
 
-        /* Cart */
+        .gallery-meta {
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 0.75rem;
+            margin-top: 4px;
+            font-weight: 500;
+        }
+
+        /* Category tabs for gallery (pill style) */
+        .category-tabs {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 0 16px 16px;
+            scrollbar-width: none;
+        }
+        .category-tabs::-webkit-scrollbar {
+            display: none;
+        }
+        .category-tab {
+            background: #FFE8D8;
+            padding: 8px 18px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #B45A2E;
+        }
+        .category-tab.active {
+            background: #2A1A0A;
+            color: white;
+        }
+
+        /* ===== DISCOVER SECTION (RETAINED ORIGINAL LOOK) ===== */
+        .discover-tabs {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 0 16px 16px;
+            scrollbar-width: none;
+        }
+        .discover-tabs::-webkit-scrollbar {
+            display: none;
+        }
+        .discover-tab {
+            padding: 8px 18px;
+            border-radius: 40px;
+            background: #FFE8D8;
+            font-size: 0.8rem;
+            font-weight: 700;
+            white-space: nowrap;
+            cursor: pointer;
+            color: #B45A2E;
+        }
+        .discover-tab.active {
+            background: #2A1A0A;
+            color: white;
+        }
+
+        #feedContainer {
+            display: flex;
+            gap: 16px;
+            overflow-x: auto;
+            padding: 8px 16px 30px;
+            scroll-snap-type: x mandatory;
+            scroll-behavior: smooth;
+        }
+        #feedContainer::-webkit-scrollbar {
+            display: none;
+        }
+        .poster-feed-card {
+            min-width: 270px;
+            height: 260px;
+            border-radius: 32px;
+            overflow: hidden;
+            position: relative;
+            flex-shrink: 0;
+            scroll-snap-align: center;
+            transform: scale(0.92);
+            opacity: 0.7;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .poster-feed-card.active {
+            transform: scale(1);
+            opacity: 1;
+            box-shadow: 0 12px 28px rgba(0,0,0,0.2);
+        }
+        .poster-feed-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+        .poster-feed-card.active .poster-feed-image {
+            transform: scale(1.03);
+        }
+        .poster-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent 60%);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 16px;
+        }
+        .poster-feed-name {
+            color: white;
+            font-weight: 800;
+            font-size: 1rem;
+        }
+        .poster-feed-meta {
+            color: rgba(255,255,255,0.8);
+            font-size: 0.7rem;
+        }
+        .poster-fav {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .poster-fav.active {
+            background: #FF4D6D;
+            color: white;
+        }
+        .poster-add {
+            position: absolute;
+            bottom: 14px;
+            right: 14px;
+            background: white;
+            color: #2A1A0A;
+            border-radius: 50%;
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        /* Cart, modals, etc */
         .cart-sidebar {
             background: #FFF0E5;
             border-radius: 28px;
@@ -142,30 +384,6 @@
             border: none;
             cursor: pointer;
         }
-
-        /* Category tabs */
-        .category-tabs {
-            display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            padding-bottom: 12px;
-            margin-bottom: 8px;
-        }
-        .category-tab {
-            background: #FFE8D8;
-            padding: 6px 16px;
-            border-radius: 40px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            white-space: nowrap;
-            cursor: pointer;
-        }
-        .category-tab.active {
-            background: #FF8E53;
-            color: white;
-        }
-
-        /* Camera QR */
         #qr-reader {
             display: none;
             position: fixed;
@@ -194,136 +412,44 @@
             border-radius: 50%;
             font-size: 1.2rem;
             cursor: pointer;
-            z-index: 10;
         }
-        /* ===== DISCOVER ELITE ===== */
-
-#feedContainer {
-    display: flex;
-    gap: 16px;
-    overflow-x: auto;
-    padding: 20px 16px 30px;
-    scroll-snap-type: x mandatory;
-    scroll-behavior: smooth;
-}
-
-#feedContainer::-webkit-scrollbar {
-    display: none;
-}
-
-.poster-feed-card {
-    min-width: 260px;
-    height: 250px;
-    border-radius: 32px;
-    overflow: hidden;
-    position: relative;
-    flex-shrink: 0;
-    scroll-snap-align: center;
-
-    transform: scale(0.9);
-    opacity: 0.6;
-    transition: all 0.35s ease;
-}
-
-.poster-feed-card.active {
-    transform: scale(1);
-    opacity: 1;
-}
-
-.poster-feed-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.4s ease;
-}
-
-.poster-feed-card.active .poster-feed-image {
-    transform: scale(1.05);
-}
-
-/* overlay */
-.poster-overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    padding: 16px;
-}
-
-/* text */
-.poster-feed-name {
-    color: white;
-    font-weight: 800;
-    font-size: 1rem;
-}
-
-.poster-feed-meta {
-    color: rgba(255,255,255,0.8);
-    font-size: 0.75rem;
-}
-
-/* heart */
-.poster-fav {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.2);
-    backdrop-filter: blur(10px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    cursor: pointer;
-}
-
-.poster-fav.active {
-    background: #FF4D6D;
-}
-
-/* add to cart */
-.poster-add {
-    position: absolute;
-    bottom: 14px;
-    right: 14px;
-    background: white;
-    color: #000;
-    border-radius: 50%;
-    width: 42px;
-    height: 42px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-/* category pills */
-.discover-tabs {
-    display: flex;
-    gap: 10px;
-    overflow-x: auto;
-    padding: 0 16px 10px;
-}
-
-.discover-tab {
-    padding: 8px 16px;
-    border-radius: 20px;
-    background: #FFE8D8;
-    font-size: 0.75rem;
-    font-weight: 600;
-    white-space: nowrap;
-    cursor: pointer;
-}
-
-.discover-tab.active {
-    background: #2A1A0A;
-    color: white;
-}
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6);
+            align-items: center;
+            justify-content: center;
+            z-index: 1100;
+        }
+        .modal-content {
+            background: #FFF5EA;
+            border-radius: 40px;
+            padding: 24px;
+            width: 80%;
+            max-width: 320px;
+            text-align: center;
+        }
+        .custom-input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 60px;
+            border: 1px solid #FFB47A;
+            background: white;
+            margin: 8px 0;
+        }
+        .audit-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            padding: 4px 0;
+            border-bottom: 1px solid #FFD9B5;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #B45A2E;
+        }
     </style>
 </head>
 <body>
@@ -334,17 +460,16 @@
     </div>
 
     <div class="screen-container">
-        <!-- HOME SCREEN -->
+        <!-- HOME SCREEN (unchanged structure) -->
         <div id="homeScreen" class="screen active">
             <div class="card" style="background: linear-gradient(135deg, #FFD1A4, #FFB87A);">
                 <div style="display: flex; justify-content: space-between;">
                     <span>🔥 Streak</span>
-                    <div class="streak-badge"><i class="fas fa-fire"></i> <span id="homeStreak">0</span> day streak!</div>
+                    <div><i class="fas fa-fire"></i> <span id="homeStreak">0</span> day streak!</div>
                 </div>
                 <h2>Hey, <span id="homeUserName">there</span>!</h2>
                 <p>This week: <strong><span id="homeWeekly">0</span> pts</strong></p>
             </div>
-
             <div class="card">
                 <h3>Quick Actions</h3>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
@@ -357,10 +482,9 @@
                     <button class="btn" id="roomTourBtn" style="background:#FF9B5E; color:white; flex:1;"><i class="fas fa-camera"></i> Room Tour</button>
                 </div>
             </div>
-
             <div class="card">
-                <div style="display: flex; justify-content: space-between; font-size:0.7rem;">
-                    <span>🏆 Next: <span id="nextMilestone">Free poster (120 pts)</span></span>
+                <div style="display: flex; justify-content: space-between;">
+                    <span>🏆 Next: <span id="nextMilestone">Free poster</span></span>
                     <span id="nextPoints">120 pts</span>
                 </div>
                 <div style="background:#FFD9B5; border-radius:30px; height:8px; margin:8px 0;">
@@ -368,23 +492,14 @@
                 </div>
             </div>
 
-            <div style="margin-bottom: 8px;">
-    <h3><i class="fas fa-images"></i> Discover Posters</h3>
-</div>
-
-<!-- Category Pills -->
-<div class="discover-tabs">
-    <div class="discover-tab active">all</div>
-    <div class="discover-tab">aesthetic</div>
-    <div class="discover-tab">girlish</div>
-    <div class="discover-tab">motivational</div>
-    <div class="discover-tab">musical</div>
-</div>
-
-<!-- Carousel -->
-<div id="feedContainer">
-    <div class="loading">Loading posters...</div>
-</div>
+            <!-- DISCOVER SECTION (original outstanding look, only categories, no "all" button) -->
+            <div style="margin: 8px 16px 0;"><h3><i class="fas fa-images"></i> Discover Posters</h3></div>
+            <div class="discover-tabs" id="discoverTabsContainer">
+                <!-- categories will be injected dynamically without "all" -->
+            </div>
+            <div id="feedContainer">
+                <div class="loading">Loading art...</div>
+            </div>
 
             <div class="card">
                 <h3>Points Audit Log</h3>
@@ -392,10 +507,11 @@
             </div>
         </div>
 
-        <!-- GALLERY SCREEN -->
+        <!-- GALLERY SCREEN - TONAL STYLE REDESIGN -->
         <div id="galleryScreen" class="screen">
-            <div class="card">
-                <h3>Poster Gallery</h3>
+            <div style="padding: 16px 16px 8px;">
+                <h2 style="font-size: 1.4rem; font-weight: 800;">Poster Gallery</h2>
+                <p style="color:#B45A2E; font-size:0.75rem;">Tap any poster to add to cart</p>
             </div>
             <div class="category-tabs" id="categoryTabs">
                 <div class="category-tab active" data-cat="all">All</div>
@@ -407,7 +523,7 @@
                 <div class="category-tab" data-cat="limited">⚡ Limited</div>
             </div>
             <div id="galleryGrid" class="gallery-feed">
-                <div class="loading">Loading...</div>
+                <div class="loading">Loading gallery...</div>
             </div>
         </div>
 
@@ -419,7 +535,6 @@
                     <span>Rank #<span id="userRank">—</span></span>
                 </div>
             </div>
-
             <div class="cart-sidebar">
                 <h4>Your Cart <span id="cartCount">(0)</span></h4>
                 <div id="cartItems"></div>
@@ -428,15 +543,13 @@
                     <button id="checkoutBtn" class="btn btn-success">Pay & Earn</button>
                 </div>
             </div>
-
             <div class="card">
                 <h3>Mystery Package</h3>
                 <button id="mysteryBtn" class="btn btn-primary" style="width:100%;">Add Mystery Pack (KSH 100)</button>
             </div>
-
             <div class="card">
                 <h3>Custom Poster</h3>
-                <label class="file-input-label" for="customImage"><i class="fas fa-cloud-upload-alt"></i> Upload design</label>
+                <label class="btn btn-secondary" for="customImage" style="display:inline-block;"><i class="fas fa-cloud-upload-alt"></i> Upload design</label>
                 <input type="file" id="customImage" accept="image/*" style="display:none;">
                 <div id="customPreview"></div>
                 <input type="text" id="customTitle" class="custom-input" placeholder="Poster title">
@@ -447,9 +560,7 @@
         <!-- PROFILE SCREEN -->
         <div id="profileScreen" class="screen">
             <div class="card" style="text-align:center;">
-                <div style="width:70px;height:70px;background:#FFB87A;border-radius:50%;margin:0 auto;display:flex;align-items:center;justify-content:center;">
-                    <i class="fas fa-user-astronaut"></i>
-                </div>
+                <div style="width:70px;height:70px;background:#FFB87A;border-radius:50%;margin:0 auto;display:flex;align-items:center;justify-content:center;"><i class="fas fa-user-astronaut"></i></div>
                 <h3 id="profileName">—</h3>
                 <p id="profileEmail">—</p>
             </div>
@@ -463,9 +574,7 @@
                 <div style="background:#FFE8DC; border-radius:40px; padding:12px;"><strong id="profileCode">—</strong></div>
                 <button id="copyCodeBtn" class="btn btn-secondary" style="margin-top:8px; width:100%;">Copy Code</button>
             </div>
-            <div class="card">
-                <button id="logoutBtn" class="btn btn-secondary" style="width:100%;">Sign Out</button>
-            </div>
+            <div class="card"><button id="logoutBtn" class="btn btn-secondary" style="width:100%;">Sign Out</button></div>
         </div>
     </div>
 
@@ -477,28 +586,9 @@
     </div>
 </div>
 
-<!-- QR Scanner -->
 <div id="qr-reader"></div>
-
-<!-- Modals -->
-<div id="referralModal" class="modal">
-    <div class="modal-content">
-        <h3>Refer a Friend</h3>
-        <p>Your code: <strong id="modalCode">—</strong></p>
-        <button id="copyModalBtn" class="btn btn-primary">Copy Code</button>
-        <button id="closeModalBtn" class="btn btn-secondary" style="margin-top:8px;">Close</button>
-    </div>
-</div>
-
-<div id="storyModal" class="modal">
-    <div class="modal-content">
-        <h3>Instagram Story</h3>
-        <p>Post a story tagging <strong>@wallculture</strong> and paste your link:</p>
-        <input type="text" id="storyLink" class="custom-input" placeholder="https://www.instagram.com/stories/...">
-        <button id="submitStoryBtn" class="btn btn-primary">Submit & Earn</button>
-        <button id="closeStoryModal" class="btn btn-secondary" style="margin-top:8px;">Cancel</button>
-    </div>
-</div>
+<div id="referralModal" class="modal"><div class="modal-content"><h3>Refer a Friend</h3><p>Your code: <strong id="modalCode">—</strong></p><button id="copyModalBtn" class="btn btn-primary">Copy Code</button><button id="closeModalBtn" class="btn btn-secondary" style="margin-top:8px;">Close</button></div></div>
+<div id="storyModal" class="modal"><div class="modal-content"><h3>Instagram Story</h3><p>Post a story tagging <strong>@wallculture</strong> and paste your link:</p><input type="text" id="storyLink" class="custom-input" placeholder="Instagram story URL"><button id="submitStoryBtn" class="btn btn-primary">Submit & Earn</button><button id="closeStoryModal" class="btn btn-secondary" style="margin-top:8px;">Cancel</button></div></div>
 
 <script>
     const API_URL = 'https://wall-culture-3.onrender.com/api';
@@ -507,16 +597,16 @@
 
     let cart = [];
     let allPosters = [];
-    let currentCategory = 'all';
-    let html5QrCode = null;
+    let currentGalleryCategory = 'all';
+    let discoverCategory = 'all';      // dynamic but without "all" pill
     let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-    let discoverCategory = 'all';
+    let html5QrCode = null;
     let autoScrollInterval;
 
     function showToast(msg) {
         const toast = document.createElement('div');
         toast.textContent = msg;
-        toast.style.cssText = 'position:fixed;bottom:100px;left:20px;right:20px;background:#FFE0B5;color:#4A2A1A;padding:12px;border-radius:60px;text-align:center;font-weight:bold;z-index:2000;';
+        toast.style.cssText = 'position:fixed;bottom:100px;left:20px;right:20px;background:#2A1A0A;color:#FFE0C8;padding:12px;border-radius:60px;text-align:center;font-weight:bold;z-index:2000;';
         document.body.appendChild(toast);
         setTimeout(() => toast.remove(), 3000);
     }
@@ -524,180 +614,106 @@
     async function apiRequest(endpoint, options = {}) {
         const response = await fetch(`${API_URL}${endpoint}`, {
             ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
-                ...(options.headers || {})
-            }
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, ...(options.headers || {}) }
         });
-        if (response.status === 401) {
-            localStorage.removeItem('wall_culture_token');
-            window.location.href = 'index.html';
-        }
+        if (response.status === 401) { localStorage.removeItem('wall_culture_token'); window.location.href = 'index.html'; }
         return response.json();
     }
 
-    // Load posters from database
+    // Load posters from DB
     async function loadPosters() {
         try {
             const posters = await apiRequest('/posters');
-            if (posters && posters.length) {
-                allPosters = posters;
-                renderFeed();
-                renderGallery();
-            }
-        } catch (error) {
-            console.error('Error loading posters:', error);
+            if (posters && posters.length) allPosters = posters;
+            else allPosters = [];
+            renderDiscoverFeed();
+            renderTonalGallery();
+        } catch (error) { console.error(error); }
+    }
+
+    // ----- DISCOVER SECTION (retained original look, no "all" category) -----
+    function renderDiscoverFeed() {
+        const container = document.getElementById('feedContainer');
+        let data = allPosters;
+        if (discoverCategory !== 'all' && discoverCategory) {
+            data = data.filter(p => p.category === discoverCategory);
         }
-    }
-
-    function renderFeed() {
-    const container = document.getElementById('feedContainer');
-
-    let data = allPosters;
-
-    if (discoverCategory !== 'all') {
-        data = data.filter(p => p.category === discoverCategory);
-    }
-
-    if (!data.length) {
-        container.innerHTML = '<div class="loading">No posters found</div>';
-        return;
-    }
-
-    container.innerHTML = '';
-
-    data.slice(0, 12).forEach((poster, index) => {
-        const isFav = favorites.includes(poster.id);
-
-        const card = document.createElement('div');
-        card.className = 'poster-feed-card';
-        if (index === 0) card.classList.add('active');
-
-        card.innerHTML = `
-            <img loading="lazy" class="poster-feed-image"
-                src="${poster.image_url || 'https://picsum.photos/seed/' + poster.id + '/400/300'}">
-
-            <div class="poster-fav ${isFav ? 'active' : ''}">
-                <i class="fas fa-heart"></i>
-            </div>
-
-            <div class="poster-add">+</div>
-
-            <div class="poster-overlay">
-                <div class="poster-feed-name">${poster.name}</div>
-                <div class="poster-feed-meta">
-                    KSH ${poster.price} · ⭐ ${poster.points}
+        if (!data.length) { container.innerHTML = '<div class="loading">✨ No posters in this vibe</div>'; return; }
+        container.innerHTML = '';
+        data.slice(0, 12).forEach((poster, idx) => {
+            const isFav = favorites.includes(poster.id);
+            const card = document.createElement('div');
+            card.className = 'poster-feed-card';
+            if (idx === 0) card.classList.add('active');
+            card.innerHTML = `
+                <img class="poster-feed-image" src="${poster.image_url || 'https://picsum.photos/seed/' + poster.id + '/400/300'}">
+                <div class="poster-fav ${isFav ? 'active' : ''}"><i class="fas fa-heart"></i></div>
+                <div class="poster-add">+</div>
+                <div class="poster-overlay">
+                    <div class="poster-feed-name">${poster.name}</div>
+                    <div class="poster-feed-meta">KSH ${poster.price} · ⭐ ${poster.points} pts</div>
                 </div>
-            </div>
-        `;
-
-        // ❤️ favorite
-        card.querySelector('.poster-fav').onclick = (e) => {
-            e.stopPropagation();
-
-            if (favorites.includes(poster.id)) {
-                favorites = favorites.filter(id => id !== poster.id);
-            } else {
-                favorites.push(poster.id);
-            }
-
-            localStorage.setItem('favorites', JSON.stringify(favorites));
-            renderFeed();
-        };
-
-        // 🛒 quick add
-        card.querySelector('.poster-add').onclick = (e) => {
-            e.stopPropagation();
-            addToCart(poster);
-        };
-
-        card.onclick = () => openOverlay(poster);
-
-        container.appendChild(card);
-    });
-
-    enableCenterScaling();
-    startAutoScroll();
-}
-
-    function renderGallery() {
-    const container = document.getElementById('galleryGrid');
-
-    let filtered = allPosters;
-    if (currentCategory !== 'all') {
-        filtered = allPosters.filter(p => p.category === currentCategory);
+            `;
+            card.querySelector('.poster-fav').onclick = (e) => {
+                e.stopPropagation();
+                if (favorites.includes(poster.id)) favorites = favorites.filter(id => id !== poster.id);
+                else favorites.push(poster.id);
+                localStorage.setItem('favorites', JSON.stringify(favorites));
+                renderDiscoverFeed();
+                renderTonalGallery();
+            };
+            card.querySelector('.poster-add').onclick = (e) => { e.stopPropagation(); addToCart(poster); };
+            card.onclick = () => addToCart(poster);
+            container.appendChild(card);
+        });
+        setupDiscoverScrollCenter();
+        startAutoScrollDiscover();
     }
 
-    if (!filtered.length) {
-        container.innerHTML = '<div class="loading">No posters in this category</div>';
-        return;
+    function setupDiscoverScrollCenter() {
+        const container = document.getElementById('feedContainer');
+        const cards = container.querySelectorAll('.poster-feed-card');
+        const updateActive = () => {
+            let center = container.scrollLeft + container.offsetWidth / 2;
+            cards.forEach(card => {
+                const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+                if (Math.abs(center - cardCenter) < card.offsetWidth / 2) card.classList.add('active');
+                else card.classList.remove('active');
+            });
+        };
+        container.addEventListener('scroll', updateActive);
+        setTimeout(updateActive, 100);
+    }
+    function startAutoScrollDiscover() {
+        const container = document.getElementById('feedContainer');
+        if (autoScrollInterval) clearInterval(autoScrollInterval);
+        autoScrollInterval = setInterval(() => { container.scrollBy({ left: 280, behavior: 'smooth' }); }, 4500);
+        container.addEventListener('touchstart', () => clearInterval(autoScrollInterval), { once: true });
     }
 
-    container.innerHTML = '';
-
-    filtered.forEach(poster => {
-        const card = document.createElement('div');
-        card.className = 'gallery-card';
-        card.onclick = () => addToCart(poster);
-
-        card.innerHTML = `
-            <img class="gallery-image"
-                src="${poster.image_url || 'https://picsum.photos/seed/' + poster.id + '/400/300'}"
-                onerror="this.src='https://picsum.photos/400/300'">
-
-            <div class="gallery-overlay">
-                <div class="gallery-name">${poster.name}</div>
-                <div class="gallery-meta">
-                    KSH ${poster.price} · +${poster.points} pts
+    // ----- GALLERY SECTION: TONAL INSPIRED (exactly like reference image) -----
+    function renderTonalGallery() {
+        const container = document.getElementById('galleryGrid');
+        let filtered = allPosters;
+        if (currentGalleryCategory !== 'all') filtered = allPosters.filter(p => p.category === currentGalleryCategory);
+        if (!filtered.length) { container.innerHTML = '<div class="loading">No posters in this category</div>'; return; }
+        container.innerHTML = '';
+        filtered.forEach(poster => {
+            const card = document.createElement('div');
+            card.className = 'gallery-card';
+            card.onclick = () => addToCart(poster);
+            card.innerHTML = `
+                <img class="gallery-image" src="${poster.image_url || 'https://picsum.photos/seed/' + poster.id + '/500/400'}" onerror="this.src='https://picsum.photos/400/300'">
+                <div class="gallery-overlay">
+                    <div class="gallery-name">${poster.name}</div>
+                    <div class="gallery-meta">KSH ${poster.price} · +${poster.points} pts</div>
                 </div>
-            </div>
-        `;
-
-        container.appendChild(card);
-    });
-    }
-    function enableCenterScaling() {
-    const container = document.getElementById('feedContainer');
-    const cards = container.querySelectorAll('.poster-feed-card');
-
-    function update() {
-        let center = container.scrollLeft + container.offsetWidth / 2;
-
-        cards.forEach(card => {
-            const cardCenter = card.offsetLeft + card.offsetWidth / 2;
-            const distance = Math.abs(center - cardCenter);
-
-            if (distance < card.offsetWidth / 2) {
-                card.classList.add('active');
-            } else {
-                card.classList.remove('active');
-            }
+            `;
+            container.appendChild(card);
         });
     }
 
-    container.addEventListener('scroll', update);
-   }
-    function openOverlay(poster) {
-        addToCart(poster);
-        showToast(`✓ ${poster.name} added to cart!`);
-    }
-    function startAutoScroll() {
-    const container = document.getElementById('feedContainer');
-
-    clearInterval(autoScrollInterval);
-
-    autoScrollInterval = setInterval(() => {
-        container.scrollBy({
-            left: 280,
-            behavior: 'smooth'
-        });
-    }, 4000);
-
-    container.addEventListener('touchstart', () => clearInterval(autoScrollInterval));
-   }
-
-    // Cart functions
+    // Cart & helper
     function addToCart(poster) {
         const existing = cart.find(i => i.id === poster.id);
         if (existing) existing.qty++;
@@ -705,282 +721,88 @@
         renderCart();
         showToast(`✓ ${poster.name} added to cart`);
     }
-
     function renderCart() {
         const container = document.getElementById('cartItems');
         const count = cart.reduce((s,i) => s + i.qty, 0);
         const total = cart.reduce((s,i) => s + (i.price * i.qty), 0);
         document.getElementById('cartCount').innerText = `(${count})`;
         document.getElementById('cartTotal').innerText = total;
-        if (!cart.length) {
-            container.innerHTML = '<div style="padding:12px; text-align:center;">Cart is empty</div>';
-            return;
-        }
+        if (!cart.length) { container.innerHTML = '<div style="padding:12px; text-align:center;">Cart is empty</div>'; return; }
         container.innerHTML = '';
         cart.forEach((item, idx) => {
             const row = document.createElement('div');
             row.className = 'cart-item';
-            row.innerHTML = `
-                <div><strong>${item.name}</strong> x${item.qty}<br><span style="font-size:0.65rem;">KSH ${item.price} · +${item.points} pts</span></div>
-                <div>KSH ${item.price * item.qty} <button class="remove-item" data-idx="${idx}"><i class="fas fa-trash"></i></button></div>
-            `;
+            row.innerHTML = `<div><strong>${item.name}</strong> x${item.qty}<br><span style="font-size:0.65rem;">KSH ${item.price} · +${item.points} pts</span></div>
+                             <div>KSH ${item.price * item.qty} <button class="remove-item" data-idx="${idx}"><i class="fas fa-trash"></i></button></div>`;
             container.appendChild(row);
         });
-        document.querySelectorAll('.remove-item').forEach(btn => {
-            btn.onclick = () => {
-                const idx = parseInt(btn.dataset.idx);
-                cart.splice(idx, 1);
-                renderCart();
-            };
-        });
+        document.querySelectorAll('.remove-item').forEach(btn => { btn.onclick = () => { cart.splice(parseInt(btn.dataset.idx), 1); renderCart(); }; });
     }
-
     async function checkout() {
         if (!cart.length) { showToast('Cart empty'); return; }
         const totalPrice = cart.reduce((s,i) => s + (i.price * i.qty), 0);
-        const totalBasePoints = cart.reduce((s,i) => s + (i.points * i.qty), 0);
-        if (confirm(`Total: KSH ${totalPrice}\nEarn ~${Math.floor(totalBasePoints * 1.2)} points?`)) {
+        if (confirm(`Total: KSH ${totalPrice}\nEarn points?`)) {
             try {
-                const result = await apiRequest('/order/create', {
-                    method: 'POST',
-                    body: JSON.stringify({ items: cart, totalPrice, totalBasePoints })
-                });
-                if (result.success) {
-                    showToast(`✅ Payment successful! +${result.pointsEarned} points!`);
-                    cart = [];
-                    renderCart();
-                    loadProfile();
-                }
+                const result = await apiRequest('/order/create', { method: 'POST', body: JSON.stringify({ items: cart, totalPrice }) });
+                if (result.success) { showToast(`✅ Payment successful! +${result.pointsEarned} points!`); cart = []; renderCart(); loadProfile(); }
             } catch(e) { showToast('Error'); }
         }
     }
 
-    // QR Scanner
+    // QR & other features
     async function startQRScanner() {
         const scannerDiv = document.getElementById('qr-reader');
         scannerDiv.classList.add('open');
         html5QrCode = new Html5Qrcode("qr-reader");
-        try {
-            await html5QrCode.start(
-                { facingMode: "environment" },
-                { fps: 10, qrbox: { width: 250, height: 250 } },
-                async (decodedText) => {
-                    await html5QrCode.stop();
-                    scannerDiv.classList.remove('open');
-                    await processQRCode(decodedText);
-                },
-                (error) => { console.log(error); }
-            );
-        } catch (err) {
-            showToast('Camera access denied');
-            scannerDiv.classList.remove('open');
-        }
+        try { await html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, async (decodedText) => {
+            await html5QrCode.stop(); scannerDiv.classList.remove('open'); await processQRCode(decodedText);
+        }, (error) => {}); } catch (err) { showToast('Camera error'); scannerDiv.classList.remove('open'); }
     }
-
-    function stopScanner() {
-        if (html5QrCode) {
-            html5QrCode.stop();
-            document.getElementById('qr-reader').classList.remove('open');
-        }
-    }
-
-    async function processQRCode(qrData) {
-        showToast(`Scanning: ${qrData.substring(0,10)}...`);
-        try {
-            const result = await apiRequest('/scan/qr', {
-                method: 'POST',
-                body: JSON.stringify({ code: qrData })
-            });
-            if (result.success) {
-                showToast(`🎉 +${result.earned} points!`);
-                loadProfile();
-            } else {
-                showToast(result.error || 'Invalid QR code');
-            }
-        } catch(e) { showToast('Network error'); }
-    }
-
-    document.getElementById('scanBtn').onclick = startQRScanner;
-    document.querySelector('.close-scanner')?.remove();
-
-    // Daily check-in
-    async function dailyCheckin() {
-        try {
-            const result = await apiRequest('/daily/checkin', { method: 'POST' });
-            if (result.success) {
-                showToast(`☀️ +${result.earned} points! ${result.streak} day streak!`);
-                loadProfile();
-            } else {
-                showToast(result.message || 'Already checked in');
-            }
-        } catch(e) { showToast('Error'); }
-    }
-
-    // Instagram Story
+    async function processQRCode(qrData) { try {
+        const result = await apiRequest('/scan/qr', { method: 'POST', body: JSON.stringify({ code: qrData }) });
+        if (result.success) { showToast(`🎉 +${result.earned} points!`); loadProfile(); } else showToast(result.error || 'Invalid');
+    } catch(e) { showToast('Network error'); } }
+    async function dailyCheckin() { const result = await apiRequest('/daily/checkin', { method: 'POST' }); if (result.success) { showToast(`☀️ +${result.earned} pts!`); loadProfile(); } else showToast(result.message || 'Already checked in'); }
     function openStoryModal() { document.getElementById('storyModal').style.display = 'flex'; }
-    async function submitStory() {
-        const link = document.getElementById('storyLink').value.trim();
-        if (!link) { showToast('Please paste your story link'); return; }
-        try {
-            const result = await apiRequest('/social/story', {
-                method: 'POST',
-                body: JSON.stringify({ story_link: link })
-            });
-            if (result.success) {
-                showToast(`📸 +${result.earned} points!`);
-                document.getElementById('storyModal').style.display = 'none';
-                document.getElementById('storyLink').value = '';
-                loadProfile();
-            } else {
-                showToast(result.error);
-            }
-        } catch(e) { showToast('Error'); }
-    }
-
-    // Room Tour
-    function openRoomTour() {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = 'image/*';
-        input.onchange = async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            const formData = new FormData();
-            formData.append('image', file);
-            showToast('Uploading...');
-            try {
-                const response = await fetch(`${API_URL}/social/roomtour`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` },
-                    body: formData
-                });
-                const result = await response.json();
-                if (result.success) {
-                    showToast(`🏠 +${result.earned} points!`);
-                    loadProfile();
-                } else {
-                    showToast(result.error);
-                }
-            } catch(e) { showToast('Error'); }
-        };
-        input.click();
-    }
-
-    // Referral
-    function openReferralModal() { document.getElementById('referralModal').style.display = 'flex'; }
-    function copyReferralCode() {
-        const code = document.getElementById('profileCode').innerText;
-        navigator.clipboard.writeText(code);
-        showToast('Copied!');
-    }
-
-    // Profile
-    async function loadProfile() {
-        try {
-            const data = await apiRequest('/user/profile');
-            if (data.user) {
-                document.getElementById('globalPoints').innerText = data.user.points || 0;
-                document.getElementById('profilePoints').innerText = data.user.points || 0;
-                document.getElementById('homeStreak').innerText = data.user.streak || 0;
-                document.getElementById('homeWeekly').innerText = data.user.weekly_points || 0;
-                document.getElementById('homeUserName').innerText = (data.user.name || 'there').split(' ')[0];
-                document.getElementById('profileName').innerText = data.user.name || '—';
-                document.getElementById('profileEmail').innerText = data.user.email || '—';
-                document.getElementById('profileCode').innerText = data.user.referral_code || '—';
-                document.getElementById('modalCode').innerText = data.user.referral_code || '—';
-                document.getElementById('profileRank').innerText = data.rank || '—';
-                document.getElementById('userRank').innerText = data.rank || '—';
-                
-                const pts = data.user.points || 0;
-                const milestones = [120, 360, 500, 1000, 2500];
-                let next = milestones.find(m => pts < m) || 5000;
-                let prev = milestones.filter(m => m <= pts).pop() || 0;
-                let percent = next === prev ? 100 : ((pts - prev) / (next - prev)) * 100;
-                document.getElementById('milestoneFill').style.width = Math.min(100, percent) + '%';
-                const rewards = {120:'Free poster',360:'Free mystery pack',500:'15% off',1000:'Free mini poster + KSH 50',2500:'Wall of Honor'};
-                document.getElementById('nextMilestone').innerText = rewards[next] || 'Legend';
-                document.getElementById('nextPoints').innerText = next + ' pts';
-
-                if (data.auditLog) {
-                    const container = document.getElementById('auditLogContainer');
-                    container.innerHTML = '';
-                    data.auditLog.slice(0, 10).forEach(log => {
-                        const row = document.createElement('div');
-                        row.className = 'audit-item';
-                        row.innerHTML = `<span>${log.action}</span><span>+${log.earned} pts</span><span>${new Date(log.timestamp).toLocaleTimeString()}</span>`;
-                        container.appendChild(row);
-                    });
-                }
-            }
-        } catch(e) { console.error(e); }
-    }
-
-    // Custom poster
-    document.getElementById('customImage').addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                document.getElementById('customPreview').innerHTML = `<img src="${ev.target.result}" style="width:60px;height:60px;border-radius:12px;object-fit:cover;">`;
-            };
-            reader.readAsDataURL(file);
+    async function submitStory() { const link = document.getElementById('storyLink').value.trim(); if (!link) { showToast('Enter link'); return; } const result = await apiRequest('/social/story', { method: 'POST', body: JSON.stringify({ story_link: link }) }); if (result.success) { showToast(`📸 +${result.earned} pts`); document.getElementById('storyModal').style.display = 'none'; document.getElementById('storyLink').value = ''; loadProfile(); } else showToast(result.error); }
+    function openRoomTour() { const input = document.createElement('input'); input.type = 'file'; input.accept = 'image/*'; input.onchange = async (e) => { const file = e.target.files[0]; if (!file) return; const formData = new FormData(); formData.append('image', file); showToast('Uploading...'); const response = await fetch(`${API_URL}/social/roomtour`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData }); const result = await response.json(); if (result.success) { showToast(`🏠 +${result.earned} pts`); loadProfile(); } else showToast(result.error); }; input.click(); }
+    async function loadProfile() { try {
+        const data = await apiRequest('/user/profile');
+        if (data.user) {
+            document.getElementById('globalPoints').innerText = data.user.points || 0;
+            document.getElementById('profilePoints').innerText = data.user.points || 0;
+            document.getElementById('homeStreak').innerText = data.user.streak || 0;
+            document.getElementById('homeWeekly').innerText = data.user.weekly_points || 0;
+            document.getElementById('homeUserName').innerText = (data.user.name || 'there').split(' ')[0];
+            document.getElementById('profileName').innerText = data.user.name || '—';
+            document.getElementById('profileEmail').innerText = data.user.email || '—';
+            document.getElementById('profileCode').innerText = data.user.referral_code || '—';
+            document.getElementById('modalCode').innerText = data.user.referral_code || '—';
+            document.getElementById('profileRank').innerText = data.rank || '—';
+            document.getElementById('userRank').innerText = data.rank || '—';
+            const pts = data.user.points || 0;
+            const milestones = [120, 360, 500, 1000, 2500];
+            let next = milestones.find(m => pts < m) || 5000;
+            let prev = milestones.filter(m => m <= pts).pop() || 0;
+            let percent = next === prev ? 100 : ((pts - prev) / (next - prev)) * 100;
+            document.getElementById('milestoneFill').style.width = Math.min(100, percent) + '%';
+            const rewards = {120:'Free poster',360:'Free mystery pack',500:'15% off',1000:'Free mini poster + KSH 50',2500:'Wall of Honor'};
+            document.getElementById('nextMilestone').innerText = rewards[next] || 'Legend';
+            document.getElementById('nextPoints').innerText = next + ' pts';
+            if (data.auditLog) { const container = document.getElementById('auditLogContainer'); container.innerHTML = ''; data.auditLog.slice(0, 10).forEach(log => { const row = document.createElement('div'); row.className = 'audit-item'; row.innerHTML = `<span>${log.action}</span><span>+${log.earned} pts</span><span>${new Date(log.timestamp).toLocaleTimeString()}</span>`; container.appendChild(row); }); }
         }
-    });
-
-    let currentCustomImage = null;
-    function addCustomToCart() {
-        const file = document.getElementById('customImage').files[0];
-        if (!file) { showToast('Upload an image first'); return; }
-        const title = document.getElementById('customTitle').value.trim();
-        addToCart({
-            id: 'custom_' + Date.now(),
-            name: title || 'Custom Poster',
-            price: 50,
-            points: 150,
-            emoji: '🎨'
-        });
-        document.getElementById('customTitle').value = '';
-        document.getElementById('customImage').value = '';
-        document.getElementById('customPreview').innerHTML = '';
-    }
-
-    function addMysteryToCart() {
-        addToCart({ id: 'mystery', name: 'Mystery Pack', price: 100, points: 350, emoji: '🎁' });
-    }
-
-    // Navigation
-    function showScreen(screenName) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById(`${screenName}Screen`).classList.add('active');
-        document.querySelectorAll('.tab-item').forEach(tab => {
-            tab.classList.remove('active');
-            if (tab.dataset.tab === screenName) tab.classList.add('active');
-        });
-        if (screenName === 'gallery') renderGallery();
-        if (screenName === 'profile') loadProfile();
-        if (screenName === 'shop') renderCart();
-    }
-
-    // Logout
-    function logout() {
-        localStorage.removeItem('wall_culture_token');
-        window.location.href = 'index.html';
-    }
+    } catch(e) { console.error(e); } }
+    function addCustomToCart() { const file = document.getElementById('customImage').files[0]; if (!file) { showToast('Upload image first'); return; } const title = document.getElementById('customTitle').value.trim(); addToCart({ id: 'custom_' + Date.now(), name: title || 'Custom Poster', price: 50, points: 150 }); document.getElementById('customTitle').value = ''; document.getElementById('customImage').value = ''; document.getElementById('customPreview').innerHTML = ''; }
+    function addMysteryToCart() { addToCart({ id: 'mystery', name: 'Mystery Pack', price: 100, points: 350 }); }
+    function showScreen(screenName) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(`${screenName}Screen`).classList.add('active'); document.querySelectorAll('.tab-item').forEach(tab => { tab.classList.remove('active'); if (tab.dataset.tab === screenName) tab.classList.add('active'); }); if (screenName === 'gallery') renderTonalGallery(); if (screenName === 'profile') loadProfile(); if (screenName === 'shop') renderCart(); }
+    function logout() { localStorage.removeItem('wall_culture_token'); window.location.href = 'index.html'; }
+    function copyReferralCode() { const code = document.getElementById('profileCode').innerText; navigator.clipboard.writeText(code); showToast('Copied!'); }
 
     // Event listeners
-    document.querySelectorAll('.tab-item').forEach(tab => {
-        tab.addEventListener('click', () => showScreen(tab.dataset.tab));
-    });
-    document.querySelectorAll('.category-tab').forEach(tab => {
-        tab.addEventListener('click', () => {
-            document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            currentCategory = tab.dataset.cat;
-            renderGallery();
-        });
-    });
+    document.querySelectorAll('.tab-item').forEach(tab => tab.addEventListener('click', () => showScreen(tab.dataset.tab)));
+    document.querySelectorAll('.category-tab').forEach(tab => { tab.addEventListener('click', () => { document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active')); tab.classList.add('active'); currentGalleryCategory = tab.dataset.cat; renderTonalGallery(); }); });
     document.getElementById('dailyBtn').onclick = dailyCheckin;
-    document.getElementById('referBtn').onclick = openReferralModal;
+    document.getElementById('referBtn').onclick = () => document.getElementById('referralModal').style.display = 'flex';
     document.getElementById('storyBtn').onclick = openStoryModal;
     document.getElementById('roomTourBtn').onclick = openRoomTour;
     document.getElementById('copyCodeBtn').onclick = copyReferralCode;
@@ -992,10 +814,36 @@
     document.getElementById('logoutBtn').onclick = logout;
     document.getElementById('closeModalBtn').onclick = () => document.getElementById('referralModal').style.display = 'none';
     document.getElementById('closeStoryModal').onclick = () => document.getElementById('storyModal').style.display = 'none';
+    document.getElementById('scanBtn').onclick = startQRScanner;
+    document.getElementById('customImage').addEventListener('change', (e) => { if(e.target.files[0]) { const reader = new FileReader(); reader.onload = (ev) => { document.getElementById('customPreview').innerHTML = `<img src="${ev.target.result}" style="width:60px;height:60px;border-radius:12px;object-fit:cover;">`; }; reader.readAsDataURL(e.target.files[0]); } });
 
-    // Initialize
+    // Build discover tabs WITHOUT "all"
+    function buildDiscoverTabs() {
+        const container = document.getElementById('discoverTabsContainer');
+        const categories = ['aesthetic', 'girlish', 'motivational', 'musical', 'theater', 'limited'];
+        container.innerHTML = '';
+        categories.forEach(cat => {
+            const pill = document.createElement('div');
+            pill.className = `discover-tab ${discoverCategory === cat ? 'active' : ''}`;
+            pill.innerText = cat.charAt(0).toUpperCase() + cat.slice(1);
+            pill.onclick = () => {
+                document.querySelectorAll('.discover-tab').forEach(p => p.classList.remove('active'));
+                pill.classList.add('active');
+                discoverCategory = cat;
+                renderDiscoverFeed();
+            };
+            container.appendChild(pill);
+        });
+        // set default to aesthetic for richer start
+        if (discoverCategory === 'all') discoverCategory = 'aesthetic';
+        if (document.querySelector('.discover-tab')) document.querySelector('.discover-tab').classList.add('active');
+        renderDiscoverFeed();
+    }
+
+    // Initialization
     loadPosters();
     loadProfile();
+    buildDiscoverTabs();
     renderCart();
 </script>
 </body>
