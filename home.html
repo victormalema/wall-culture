@@ -6,8 +6,8 @@
     <title>Wall Culture · Studio</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <style>
-        /* ===== [YOUR EXISTING STYLES - KEEP THEM ALL] ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background: linear-gradient(145deg, #FFE8D4 0%, #FFD9B5 100%);
@@ -66,394 +66,210 @@
             box-shadow: 0 8px 20px rgba(0,0,0,0.05);
         }
         .btn { border: none; padding: 12px 20px; border-radius: 60px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: 0.15s; }
-        .btn-primary { background: linear-gradient(95deg, #FF6B4A, #FF8E53); color: white; box-shadow: 0 6px 14px #FF6B4A60; }
+        .btn-primary { background: linear-gradient(95deg, #FF6B4A, #FF8E53); color: white; }
         .btn-secondary { background: #FFE0C0; border: 1px solid #FFA559; color: #D45A2C; }
         .btn-success { background: linear-gradient(95deg, #38B000, #70E000); color: white; }
 
-        /* ===== HOME SCREEN ===== */
-        #homeScreen { padding: 16px 20px 20px; }
-
-        /* ===== FEED ===== */
-        #feedContainer { display: flex; flex-direction: column; gap: 28px; }
-        .poster-feed-card {
-            background: white; border-radius: 24px; overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            border: 1px solid rgba(255,140,80,0.12);
-            cursor: pointer;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        /* Gallery Grid */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-top: 12px;
         }
-        .poster-feed-card:active { transform: scale(0.985); }
-        .poster-feed-image {
-            width: 100%; height: 340px; object-fit: cover; display: block;
-            background: linear-gradient(135deg, #FFF0E5, #FFE2CE);
-        }
-        .poster-feed-placeholder {
-            width: 100%; height: 340px; display: flex; align-items: center;
-            justify-content: center; font-size: 6rem;
-            background: linear-gradient(135deg, #FFF0E5, #FFE2CE);
-        }
-        .poster-feed-info {
-            padding: 14px 18px 16px;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .poster-feed-name { font-weight: 700; font-size: 0.95rem; color: #2A1A0A; }
-        .poster-feed-price { font-weight: 800; font-size: 1rem; color: #FF6B4A; }
-        .poster-feed-pts { font-size: 0.7rem; color: #B45A2E; margin-top: 2px; }
-        .limited-dot {
-            width: 8px; height: 8px; border-radius: 50%; background: #FF6B4A;
-            display: inline-block; margin-right: 4px;
-        }
-        .feed-loading, .feed-empty {
-            text-align: center; padding: 40px 20px;
-            color: #B45A2E; font-size: 0.85rem;
-        }
-
-        /* ===== IMMERSIVE POSTER OVERLAY ===== */
-        .poster-overlay {
-            display: none; position: fixed; inset: 0;
-            background: rgba(15,8,2,0.92); backdrop-filter: blur(12px);
-            z-index: 500; flex-direction: column;
-            align-items: center; justify-content: flex-end;
-            overflow-y: auto;
-        }
-        .poster-overlay.open { display: flex; }
-        .overlay-image-wrap {
-            flex: 1; display: flex; align-items: center; justify-content: center;
-            padding: 40px 20px 16px; width: 100%;
-        }
-        .overlay-image-wrap img, .overlay-image-wrap .overlay-emoji {
-            max-width: 90%; max-height: 60vh; border-radius: 16px;
-            object-fit: contain; display: block;
-        }
-        .overlay-emoji { font-size: 10rem; }
-        .overlay-close {
-            position: absolute; top: 16px; right: 20px;
-            background: rgba(255,255,255,0.15); border: none; color: white;
-            width: 36px; height: 36px; border-radius: 50%; font-size: 1rem;
-            cursor: pointer; display: flex; align-items: center; justify-content: center;
-        }
-        .overlay-panel {
-            background: #FFF8F2; border-radius: 40px 40px 0 0;
-            padding: 24px 28px 32px; width: 100%;
-        }
-        .overlay-name { font-weight: 800; font-size: 1.15rem; color: #2A1A0A; margin-bottom: 4px; }
-        .overlay-sub { font-size: 0.8rem; color: #B45A2E; margin-bottom: 18px; }
-        .overlay-add-btn {
-            width: 100%; background: linear-gradient(95deg, #FF6B4A, #FF8E53);
-            color: white; border: none; border-radius: 60px; padding: 14px;
-            font-weight: 800; font-size: 1rem; cursor: pointer;
-            box-shadow: 0 6px 18px #FF6B4A50; transition: transform 0.15s;
-        }
-        .overlay-add-btn:active { transform: scale(0.97); }
-        .overlay-add-btn.added { background: linear-gradient(95deg, #38B000, #70E000); }
-
-        /* ===========================
-           TONAL-STYLE GALLERY SCREEN
-           =========================== */
-        #galleryScreen {
-            display: none;
-            height: 100%;
+        .gallery-card {
+            background: white;
+            border-radius: 24px;
             overflow: hidden;
-            flex-direction: column;
-            background: #0A0A0A;
+            cursor: pointer;
+            transition: transform 0.2s;
+            border: 1px solid rgba(255,140,80,0.2);
         }
-        #galleryScreen.active {
-            display: flex;
+        .gallery-card:active { transform: scale(0.97); }
+        .gallery-image {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            background: linear-gradient(135deg, #FFF0E5, #FFE2CE);
+        }
+        .gallery-info {
+            padding: 12px;
+        }
+        .gallery-name {
+            font-weight: 800;
+            font-size: 0.85rem;
+            color: #2A1A0A;
+        }
+        .gallery-price {
+            font-size: 0.7rem;
+            color: #FF6B4A;
+            margin-top: 4px;
         }
 
-        .gallery-category-strip {
-            flex-shrink: 0;
+        /* Cart */
+        .cart-sidebar {
+            background: #FFF0E5;
+            border-radius: 28px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid #FFB47A;
+        }
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #FFD9B5;
+            font-size: 0.8rem;
+        }
+        .remove-item {
+            color: #FF6B4A;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        /* Category tabs */
+        .category-tabs {
             display: flex;
             gap: 8px;
             overflow-x: auto;
-            padding: 14px 16px 10px;
-            background: #0A0A0A;
-            scrollbar-width: none;
+            padding-bottom: 12px;
+            margin-bottom: 8px;
         }
-        .gallery-category-strip::-webkit-scrollbar { display: none; }
-
-        .gcat-btn {
-            flex-shrink: 0;
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.15);
-            color: rgba(255,255,255,0.6);
+        .category-tab {
+            background: #FFE8D8;
             padding: 6px 16px;
             border-radius: 40px;
             font-size: 0.75rem;
-            font-weight: 700;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            cursor: pointer;
-            letter-spacing: 0.04em;
-            transition: 0.2s;
-        }
-        .gcat-btn.active {
-            background: linear-gradient(95deg, #FF6B4A, #FF8E53);
-            border-color: transparent;
-            color: white;
-        }
-
-        .gallery-hero-wrap {
-            flex: 0 0 72%;
-            position: relative;
-            overflow: hidden;
+            font-weight: 600;
+            white-space: nowrap;
             cursor: pointer;
         }
-        .gallery-hero-img {
-            width: 100%; height: 100%;
-            object-fit: cover;
-            display: block;
-            transition: transform 0.4s ease;
-        }
-        .gallery-hero-placeholder {
-            width: 100%; height: 100%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 8rem;
-            background: linear-gradient(135deg, #1A1A2E, #16213E);
-        }
-        .gallery-hero-wrap:active .gallery-hero-img { transform: scale(1.02); }
-
-        .gallery-hero-overlay {
-            position: absolute; inset: 0;
-            background: linear-gradient(
-                to bottom,
-                transparent 35%,
-                rgba(0,0,0,0.3) 60%,
-                rgba(0,0,0,0.85) 100%
-            );
-            pointer-events: none;
-        }
-
-        .gallery-hero-cat {
-            position: absolute;
-            top: 14px; left: 16px;
-            background: rgba(255,255,255,0.18);
-            backdrop-filter: blur(8px);
+        .category-tab.active {
+            background: #FF8E53;
             color: white;
-            font-size: 0.65rem;
-            font-weight: 800;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            padding: 5px 12px;
-            border-radius: 40px;
-            border: 1px solid rgba(255,255,255,0.25);
         }
 
-        .gallery-hero-menu {
-            position: absolute;
-            top: 14px; right: 16px;
-            background: rgba(255,255,255,0.18);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255,255,255,0.25);
-            color: white;
-            width: 32px; height: 32px;
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 0.8rem;
-            cursor: pointer;
+        /* Camera QR */
+        #qr-reader {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 1000;
+            background: #000;
+            padding: 20px;
         }
-
-        .gallery-hero-info {
-            position: absolute;
-            bottom: 16px; left: 16px; right: 16px;
-        }
-        .gallery-hero-title {
-            color: white;
-            font-size: 1.6rem;
-            font-weight: 800;
-            line-height: 1.15;
-            text-shadow: 0 2px 12px rgba(0,0,0,0.4);
-            margin-bottom: 6px;
-        }
-        .gallery-hero-meta {
-            color: rgba(255,255,255,0.75);
-            font-size: 0.8rem;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .gallery-hero-meta .dot { opacity: 0.5; }
-        .gallery-hero-add {
-            position: absolute;
-            bottom: 16px; right: 0;
-            background: linear-gradient(135deg, #FF6B4A, #FF8E53);
-            color: white;
-            border: none;
-            width: 44px; height: 44px;
-            border-radius: 50%;
-            font-size: 1.1rem;
-            cursor: pointer;
-            box-shadow: 0 4px 14px rgba(255,107,74,0.5);
-            display: flex; align-items: center; justify-content: center;
-            transition: transform 0.15s;
-        }
-        .gallery-hero-add:active { transform: scale(0.92); }
-
-        .gallery-carousel-wrap {
-            flex: 1;
-            background: #0A0A0A;
-            overflow: hidden;
+        #qr-reader.open {
             display: flex;
             flex-direction: column;
-            padding: 12px 16px 8px;
+            justify-content: center;
         }
-        .gallery-carousel-label {
-            color: rgba(255,255,255,0.9);
-            font-size: 0.8rem;
-            font-weight: 800;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
-            margin-bottom: 10px;
+        .close-scanner {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            cursor: pointer;
+            z-index: 10;
         }
-        .gallery-carousel {
-            display: flex;
-            gap: 10px;
-            overflow-x: auto;
-            scrollbar-width: none;
-            flex: 1;
-        }
-        .gallery-carousel::-webkit-scrollbar { display: none; }
 
-        .carousel-card {
-            flex-shrink: 0;
-            width: 110px;
-            border-radius: 16px;
+        /* Feed */
+        #feedContainer {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .poster-feed-card {
+            background: white;
+            border-radius: 24px;
             overflow: hidden;
             cursor: pointer;
-            position: relative;
-            transition: transform 0.2s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
-        .carousel-card:active { transform: scale(0.95); }
-        .carousel-card.selected { outline: 2px solid #FF6B4A; }
-
-        .carousel-card-img {
-            width: 110px; height: 80px;
-            object-fit: cover; display: block;
-            background: linear-gradient(135deg, #1A1A2E, #16213E);
+        .poster-feed-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
         }
-        .carousel-card-emoji {
-            width: 110px; height: 80px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 2.5rem;
-            background: linear-gradient(135deg, #1A1A2E, #2D1B69);
+        .poster-feed-info {
+            padding: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        .carousel-card-info {
-            background: #181818;
-            padding: 6px 8px;
-        }
-        .carousel-card-name {
-            color: white;
-            font-size: 0.68rem;
+        .poster-feed-name {
             font-weight: 700;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            font-size: 0.9rem;
         }
-        .carousel-card-price {
-            color: #FF8E53;
-            font-size: 0.6rem;
-            font-weight: 600;
-            margin-top: 2px;
+        .poster-feed-price {
+            font-weight: 800;
+            color: #FF6B4A;
         }
-        .gallery-loading-dark {
-            color: rgba(255,255,255,0.4);
-            font-size: 0.8rem;
-            padding: 20px;
+
+        .audit-item {
+            font-size: 0.7rem;
+            padding: 6px 0;
+            border-bottom: 1px solid #FFD9B5;
+            display: flex;
+            justify-content: space-between;
+        }
+        .streak-badge {
+            background: #FF8E53;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 0.7rem;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #B45A2E;
+        }
+        .custom-input {
+            background: white;
+            border: 1px solid #FFD1A4;
+            border-radius: 60px;
+            padding: 12px;
+            width: 100%;
+            margin: 8px 0;
+        }
+        .file-input-label {
+            background: #FFE8DC;
+            border: 1px dashed #FFA559;
+            border-radius: 60px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            display: block;
+            margin: 8px 0;
+        }
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1100;
+        }
+        .modal-content {
+            background: #FFF5EE;
+            border-radius: 48px;
+            padding: 1.5rem;
+            max-width: 320px;
+            width: 90%;
             text-align: center;
         }
-
-        /* ===== SHOP SCREEN ===== */
-        #shopScreen { padding: 16px 20px 20px; }
-        .cart-sidebar { background: #FFF0E5; border-radius: 28px; padding: 16px; margin-bottom: 16px; border: 1px solid #FFB47A; }
-        .cart-item-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #FFD9B5; font-size: 0.8rem; }
-        .remove-cart-btn { background: none; border: none; color: #FF6B4A; cursor: pointer; }
-        .custom-preview { display: flex; gap: 10px; margin: 10px 0; flex-wrap: wrap; }
-        .custom-thumb { width: 70px; height: 70px; background: #FFE8DC; border-radius: 20px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-        .custom-thumb img { width: 100%; height: 100%; object-fit: cover; }
-        .file-input-label { background: #FFE8DC; border: 1.5px dashed #FFA559; border-radius: 60px; padding: 12px; text-align: center; cursor: pointer; display: block; margin: 8px 0; color: #D45A2C; font-weight: 600; }
-        .custom-input { background: white; border: 1.5px solid #FFD1A4; border-radius: 60px; padding: 12px; width: 100%; color: #4A2A1A; margin: 8px 0; font-family: inherit; }
-        .badge { background: #FFD5A4; color: #B45A2E; padding: 4px 12px; border-radius: 50px; font-size: 0.7rem; font-weight: 600; display: inline-block; margin: 2px; }
-        .info-box { background: #FFE8DC; border-radius: 20px; padding: 12px; margin-top: 12px; font-size: 0.7rem; color: #B45A2E; }
-        .gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 8px; }
-        .gallery-card {
-            background: white; border-radius: 28px; overflow: hidden;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.08); transition: transform 0.2s ease;
-            cursor: pointer; border: 1px solid rgba(255,140,80,0.3);
-        }
-        .gallery-card:active { transform: scale(0.97); }
-        .gallery-media {
-            height: 140px; display: flex; align-items: center;
-            justify-content: center; font-size: 4rem;
-            background: linear-gradient(135deg, #FFF0E5, #FFE2CE); overflow: hidden;
-        }
-        .gallery-media img { width: 100%; height: 100%; object-fit: cover; }
-        .gallery-info { padding: 12px; }
-        .gallery-title { font-weight: 800; font-size: 0.85rem; color: #4A2A1A; }
-        .gallery-price { font-size: 0.7rem; color: #FF6B4A; font-weight: 700; margin-top: 4px; }
-        .gallery-loading { grid-column: 1 / -1; text-align: center; padding: 30px; color: #B45A2E; font-size: 0.85rem; }
-
-        /* ===== PROFILE SCREEN ===== */
-        #profileScreen { padding: 16px 20px 20px; }
-        .audit-item { font-size: 0.7rem; padding: 6px 0; border-bottom: 1px solid #FFD9B5; display: flex; justify-content: space-between; }
-        .earn-category { background: #FFF3E8; border-radius: 20px; padding: 10px; margin-bottom: 8px; }
-        .earn-header { font-weight: 800; color: #E85D2E; margin-bottom: 6px; font-size: 0.8rem; }
-        .earn-list { display: flex; flex-wrap: wrap; gap: 6px; }
-        .earn-item { background: #FFE0C8; padding: 4px 10px; border-radius: 30px; font-size: 0.65rem; color: #B45A2E; }
-        .streak-badge { background: #FF8E53; color: white; padding: 4px 12px; border-radius: 50px; font-size: 0.7rem; font-weight: bold; display: inline-block; }
-        .logout-btn { background: none; border: 1px solid #FFB47A; color: #B45A2E; padding: 8px 20px; border-radius: 60px; font-size: 0.75rem; font-weight: 600; cursor: pointer; margin-top: 12px; width: 100%; }
-        .logout-btn:hover { background: #FFE8DC; }
-
-        /* ===== CAMERA SCAN OVERLAY ===== */
-        #cameraOverlay {
-            display: none; position: fixed; inset: 0;
-            background: #000; z-index: 900;
-            flex-direction: column; align-items: center; justify-content: center;
-        }
-        #cameraOverlay.open { display: flex; }
-        #cameraVideo {
-            width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0;
-        }
-        .camera-ui {
-            position: relative; z-index: 10; display: flex; flex-direction: column;
-            align-items: center; width: 100%; padding: 20px;
-        }
-        .camera-close {
-            position: absolute; top: 20px; right: 20px; z-index: 20;
-            background: rgba(255,255,255,0.15); border: none; color: white;
-            width: 40px; height: 40px; border-radius: 50%; font-size: 1.1rem;
-            cursor: pointer; display: flex; align-items: center; justify-content: center;
-        }
-        .scan-frame {
-            width: 220px; height: 220px; border-radius: 24px;
-            border: 3px solid rgba(255,107,74,0.8);
-            box-shadow: 0 0 0 4000px rgba(0,0,0,0.55);
-            position: relative;
-        }
-        .scan-line {
-            width: 100%; height: 2px;
-            background: linear-gradient(90deg, transparent, #FF6B4A, transparent);
-            position: absolute; top: 50%; animation: scanAnim 1.8s ease-in-out infinite;
-        }
-        @keyframes scanAnim {
-            0% { top: 10%; } 50% { top: 85%; } 100% { top: 10%; }
-        }
-        .scan-label {
-            color: white; font-size: 0.85rem; font-weight: 600;
-            margin-top: 28px; text-align: center; opacity: 0.85;
-        }
-        .scan-earn-badge {
-            background: linear-gradient(95deg,#FF6B4A,#FF8E53);
-            color: white; padding: 8px 20px; border-radius: 40px;
-            font-weight: 800; margin-top: 14px; font-size: 0.9rem;
-        }
-
-        /* ===== MODALS ===== */
-        .modal {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
-            display: none; justify-content: center; align-items: center; z-index: 1000;
-        }
-        .modal-content { background: #FFF5EE; border-radius: 48px; padding: 1.5rem; max-width: 320px; width: 90%; text-align: center; max-height: 70vh; overflow-y: auto; }
     </style>
 </head>
 <body>
@@ -464,185 +280,129 @@
     </div>
 
     <div class="screen-container">
-
-        <!-- ===== HOME SCREEN ===== -->
+        <!-- HOME SCREEN -->
         <div id="homeScreen" class="screen active">
-            <div class="card" style="background: linear-gradient(135deg, #FFD1A4, #FFB87A); margin-bottom: 12px;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-size: 0.7rem;">🔥 Streak</span>
-                    <div class="streak-badge"><i class="fas fa-fire"></i> <span id="homeStreakDisplay">0</span> day streak!</div>
+            <div class="card" style="background: linear-gradient(135deg, #FFD1A4, #FFB87A);">
+                <div style="display: flex; justify-content: space-between;">
+                    <span>🔥 Streak</span>
+                    <div class="streak-badge"><i class="fas fa-fire"></i> <span id="homeStreak">0</span> day streak!</div>
                 </div>
-                <h2 style="margin: 12px 0 4px;">Hey, <span id="homeUserName">there</span>!</h2>
-                <p style="font-size: 0.8rem;">Scroll to discover posters · tap to view &amp; add to cart</p>
-                <p style="font-size: 0.7rem; margin-top: 6px; opacity: 0.8;">This week: <strong><span id="homeWeekly">0</span> pts</strong></p>
+                <h2>Hey, <span id="homeUserName">there</span>!</h2>
+                <p>This week: <strong><span id="homeWeekly">0</span> pts</strong></p>
             </div>
 
-            <div class="card" style="margin-bottom: 12px;">
-                <h3 style="margin-bottom: 10px;"><i class="fas fa-bolt"></i> Quick Actions</h3>
-                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                    <button class="btn btn-primary" id="homeScanBtn" style="flex:1; font-size:0.8rem;"><i class="fas fa-camera"></i> Scan QR</button>
-                    <button class="btn btn-secondary" id="homeDailyBtn" style="flex:1; font-size:0.8rem;"><i class="fas fa-sun"></i> Check-in +10</button>
-                    <button class="btn" id="homeStoryBtn" style="background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);color:white; font-size:0.8rem;"><i class="fab fa-instagram"></i> Story +150</button>
-                    <button class="btn btn-primary" id="homeReferBtn" style="flex:1; font-size:0.8rem;"><i class="fas fa-user-plus"></i> Refer +200</button>
+            <div class="card">
+                <h3>Quick Actions</h3>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn btn-primary" id="scanBtn" style="flex:1;"><i class="fas fa-camera"></i> Scan QR</button>
+                    <button class="btn btn-secondary" id="dailyBtn" style="flex:1;"><i class="fas fa-sun"></i> Check-in</button>
+                    <button class="btn btn-primary" id="referBtn" style="flex:1;"><i class="fas fa-user-plus"></i> Refer</button>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button class="btn" id="storyBtn" style="background:#E1306C; color:white; flex:1;"><i class="fab fa-instagram"></i> Story</button>
+                    <button class="btn" id="roomTourBtn" style="background:#FF9B5E; color:white; flex:1;"><i class="fas fa-camera"></i> Room Tour</button>
                 </div>
             </div>
 
-            <div class="card" style="margin-bottom: 12px;">
-                <div style="display: flex; justify-content: space-between; font-size:0.7rem;"><span>🏆 Next: <span id="nextMilestoneText">Sticker pack</span></span><span id="nextPointsNeeded">250 pts</span></div>
-                <div style="background:#FFD9B5; border-radius:30px; height:8px; margin:8px 0;"><div id="homeProgressFill" style="width:0%; height:100%; background:linear-gradient(90deg,#FF8E53,#FF6B4A); border-radius:30px; transition: width 0.6s ease;"></div></div>
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; font-size:0.7rem;">
+                    <span>🏆 Next: <span id="nextMilestone">Free poster (120 pts)</span></span>
+                    <span id="nextPoints">120 pts</span>
+                </div>
+                <div style="background:#FFD9B5; border-radius:30px; height:8px; margin:8px 0;">
+                    <div id="milestoneFill" style="width:0%; height:100%; background:linear-gradient(90deg,#FF8E53,#FF6B4A); border-radius:30px;"></div>
+                </div>
             </div>
 
-            <div style="margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
-                <h3 style="color:#4A2A1A; font-size:0.9rem;"><i class="fas fa-images" style="color:#FF6B4A;"></i> Discover Posters</h3>
-                <span style="font-size:0.65rem; color:#B45A2E;">tap to view &amp; add</span>
+            <div style="margin-bottom: 8px;">
+                <h3><i class="fas fa-images"></i> Discover Posters</h3>
             </div>
             <div id="feedContainer">
-                <div class="feed-loading"><i class="fas fa-spinner fa-spin"></i> Loading posters…</div>
-            </div>
-
-            <div class="card" style="margin-top: 16px;">
-                <h3><i class="fas fa-history"></i> Points Audit Log</h3>
-                <div id="auditLogContainer" style="max-height: 200px; overflow-y: auto;"></div>
+                <div class="loading">Loading posters...</div>
             </div>
 
             <div class="card">
-                <h3 style="margin-bottom: 10px;"><i class="fas fa-book-open"></i> Ways to Earn Points</h3>
-                <div class="earn-category">
-                    <div class="earn-header"><i class="fas fa-mobile-alt"></i> Social</div>
-                    <div class="earn-list">
-                        <span class="earn-item">Story +150</span><span class="earn-item">Refer +200</span>
-                        <span class="earn-item">Friend Buys +300</span><span class="earn-item">Room Tour +250</span>
-                        <span class="earn-item">Tag friends +50</span>
-                    </div>
-                </div>
-                <div class="earn-category">
-                    <div class="earn-header"><i class="fas fa-shopping-cart"></i> Purchase</div>
-                    <div class="earn-list">
-                        <span class="earn-item">Buy Poster +120</span><span class="earn-item">Mystery Pack +350</span>
-                        <span class="earn-item">Limited Ed. +200</span><span class="earn-item">Custom +150</span>
-                        <span class="earn-item">Spend KSH 140+ +250</span>
-                    </div>
-                </div>
-                <div class="earn-category">
-                    <div class="earn-header"><i class="fas fa-chart-line"></i> Multiplier Boost</div>
-                    <div class="earn-list">
-                        <span class="earn-item">Buy KSH 40+ → 1.2x (3d)</span>
-                        <span class="earn-item">Mystery → 1.5x (5d)</span>
-                        <span class="earn-item">Bundle KSH 140+ → 2.0x (7d)</span>
-                    </div>
-                </div>
-                <div class="info-box"><i class="fas fa-infinity"></i> Points NEVER reset! Keep stacking to become campus legend.</div>
+                <h3>Points Audit Log</h3>
+                <div id="auditLogContainer" style="max-height: 150px; overflow-y: auto;"></div>
             </div>
         </div>
 
-        <!-- ===== GALLERY SCREEN — TONAL STYLE ===== -->
+        <!-- GALLERY SCREEN -->
         <div id="galleryScreen" class="screen">
-
-            <div class="gallery-category-strip" id="galleryCategoryStrip">
-                <button class="gcat-btn active" data-theme="aesthetic">🎨 Aesthetic</button>
-                <button class="gcat-btn" data-theme="girlish">🌸 Girlish</button>
-                <button class="gcat-btn" data-theme="motivational">💪 Motivational</button>
-                <button class="gcat-btn" data-theme="musical">🎵 Musical</button>
-                <button class="gcat-btn" data-theme="theater">🎭 Theater</button>
-                <button class="gcat-btn" data-theme="limited">⚡ Limited</button>
+            <div class="card">
+                <h3>Poster Gallery</h3>
             </div>
-
-            <div class="gallery-hero-wrap" id="galleryHeroWrap">
-                <div class="gallery-hero-placeholder" id="galleryHeroPlaceholder">🖼️</div>
-                <img class="gallery-hero-img" id="galleryHeroImg" src="" alt="" style="display:none;">
-                <div class="gallery-hero-overlay"></div>
-                <div class="gallery-hero-cat" id="galleryHeroCat">AESTHETIC</div>
-                <div class="gallery-hero-menu"><i class="fas fa-ellipsis-h"></i></div>
-                <div class="gallery-hero-info">
-                    <div class="gallery-hero-title" id="galleryHeroTitle">Loading…</div>
-                    <div class="gallery-hero-meta">
-                        <span id="galleryHeroPrice">KSH —</span>
-                        <span class="dot">•</span>
-                        <span id="galleryHeroPoints">— pts</span>
-                        <span class="dot">•</span>
-                        <span id="galleryHeroTag">All Levels</span>
-                    </div>
-                </div>
-                <button class="gallery-hero-add" id="galleryHeroAddBtn" title="Add to cart">
-                    <i class="fas fa-cart-plus"></i>
-                </button>
+            <div class="category-tabs" id="categoryTabs">
+                <div class="category-tab active" data-cat="all">All</div>
+                <div class="category-tab" data-cat="aesthetic">🎨 Aesthetic</div>
+                <div class="category-tab" data-cat="girlish">🌸 Girlish</div>
+                <div class="category-tab" data-cat="motivational">💪 Motivational</div>
+                <div class="category-tab" data-cat="musical">🎵 Musical</div>
+                <div class="category-tab" data-cat="theater">🎭 Theater</div>
+                <div class="category-tab" data-cat="limited">⚡ Limited</div>
             </div>
-
-            <div class="gallery-carousel-wrap">
-                <div class="gallery-carousel-label" id="galleryCarouselLabel">More in Aesthetic</div>
-                <div class="gallery-carousel" id="galleryCarousel">
-                    <div class="gallery-loading-dark"><i class="fas fa-spinner fa-spin"></i> Loading…</div>
-                </div>
+            <div id="galleryGrid" class="gallery-grid">
+                <div class="loading">Loading...</div>
             </div>
-
         </div>
 
-        <!-- ===== SHOP SCREEN ===== -->
-        <div id="shopScreen" class="screen" style="padding:16px 20px 20px;">
-            <div class="card" style="padding: 12px 16px; background:#FFE8DC;">
+        <!-- SHOP SCREEN -->
+        <div id="shopScreen" class="screen">
+            <div class="card">
                 <div style="display: flex; justify-content: space-between;">
-                    <span><i class="fas fa-bolt"></i> Boost: <strong id="boostValue">1.0x</strong></span>
-                    <span><i class="fas fa-clock"></i> <span id="boostDays">0</span>d left</span>
-                    <span><i class="fas fa-trophy"></i> Rank #<span id="userRank">—</span></span>
+                    <span>Boost: <strong id="boostValue">1.0x</strong></span>
+                    <span>Rank #<span id="userRank">—</span></span>
                 </div>
             </div>
-            <div class="info-box">
-                <i class="fas fa-info-circle"></i> <strong>How Multiplier Works:</strong> Every purchase activates boost (1.2x–2x) for 7 days on ALL future points!
-            </div>
+
             <div class="cart-sidebar">
-                <h4><i class="fas fa-shopping-cart"></i> Your Cart <span id="cartItemCount">(0)</span></h4>
-                <div id="cartItemsList"></div>
-                <div style="display: flex; justify-content: space-between; margin-top: 12px; font-weight: bold;">
-                    <span>Total: KSH <span id="cartTotalAmount">0</span></span>
-                    <button id="checkoutBtnShop" class="btn btn-success" style="padding: 8px 20px;">Pay &amp; Earn</button>
+                <h4>Your Cart <span id="cartCount">(0)</span></h4>
+                <div id="cartItems"></div>
+                <div style="display: flex; justify-content: space-between; margin-top: 12px;">
+                    <span>Total: KSH <span id="cartTotal">0</span></span>
+                    <button id="checkoutBtn" class="btn btn-success">Pay & Earn</button>
                 </div>
             </div>
+
             <div class="card">
-                <h3><i class="fas fa-gift"></i> Mystery Package</h3>
-                <p style="font-size:0.75rem;">3 random posters! +350pts, 1.5x boost</p>
-                <button id="addMysteryBtn" class="btn btn-primary" style="width:100%; margin-top: 10px;"><i class="fas fa-question-circle"></i> Add Mystery Pack (KSH 100)</button>
+                <h3>Mystery Package</h3>
+                <button id="mysteryBtn" class="btn btn-primary" style="width:100%;">Add Mystery Pack (KSH 100)</button>
             </div>
+
             <div class="card">
-                <h3><i class="fas fa-clock"></i> Limited Edition</h3>
-                <div class="gallery-grid" id="limitedGrid" style="margin-top: 12px;"></div>
-            </div>
-            <div class="card">
-                <h3><i class="fas fa-palette"></i> Custom Poster</h3>
-                <label class="file-input-label" for="customImageUpload"><i class="fas fa-cloud-upload-alt"></i> Upload your design</label>
-                <input type="file" id="customImageUpload" accept="image/*" style="display: none;">
-                <div id="imagePreviewArea" class="custom-preview"></div>
-                <input type="text" id="customTitle" class="custom-input" placeholder="Poster title (optional)">
-                <div style="display: flex; gap: 8px; margin: 8px 0;"><span class="badge">+150 pts after payment</span><span class="badge">KSH 50</span></div>
-                <button id="addCustomToCartBtn" class="btn btn-secondary"><i class="fas fa-plus-circle"></i> Add Custom to Cart</button>
+                <h3>Custom Poster</h3>
+                <label class="file-input-label" for="customImage"><i class="fas fa-cloud-upload-alt"></i> Upload design</label>
+                <input type="file" id="customImage" accept="image/*" style="display:none;">
+                <div id="customPreview"></div>
+                <input type="text" id="customTitle" class="custom-input" placeholder="Poster title">
+                <button id="addCustomBtn" class="btn btn-secondary" style="width:100%; margin-top:8px;">Add Custom (KSH 50)</button>
             </div>
         </div>
 
-        <!-- ===== PROFILE SCREEN ===== -->
-        <div id="profileScreen" class="screen" style="padding:16px 20px 20px;">
+        <!-- PROFILE SCREEN -->
+        <div id="profileScreen" class="screen">
             <div class="card" style="text-align:center;">
-                <div style="width:70px;height:70px;background:#FFB87A;border-radius:50%;margin:0 auto;display:flex;align-items:center;justify-content:center;"><i class="fas fa-user-astronaut" style="font-size:2rem; color:#4A2A1A;"></i></div>
-                <h3 id="profileName" style="margin-top: 10px;">—</h3>
-                <p id="profileEmail" style="font-size:0.8rem; color:#B45A2E;">—</p>
+                <div style="width:70px;height:70px;background:#FFB87A;border-radius:50%;margin:0 auto;display:flex;align-items:center;justify-content:center;">
+                    <i class="fas fa-user-astronaut"></i>
+                </div>
+                <h3 id="profileName">—</h3>
+                <p id="profileEmail">—</p>
             </div>
             <div class="card">
-                <h4>📊 Points Summary</h4>
-                <div style="display:flex;justify-content:space-between;margin:8px 0;"><span>💰 Total Points:</span><strong id="profilePoints">0</strong></div>
-                <div style="display:flex;justify-content:space-between;margin:8px 0;"><span>🏅 Global Rank:</span><strong>#<span id="profileRankNum">—</span></strong></div>
-                <div style="display:flex;justify-content:space-between;margin:8px 0;"><span>⚡ Active Boost:</span><strong id="profileBoost">1.0x</strong></div>
-                <div style="height:6px; background:#FFD9B5; border-radius:4px; margin:12px 0;"><div id="rankProgressBar" style="width:0%; height:100%; background:#FF8E53; border-radius:4px; transition: width 0.6s ease;"></div></div>
-                <div class="info-box"><i class="fas fa-trophy"></i> <strong>Milestones:</strong> 120pts → Free poster | 360pts → Free mystery pack | 1000pts → Free mini poster + 50 KSH | 5000pts → Bronze card + 200 KSH</div>
+                <h4>Points Summary</h4>
+                <div><span>Total Points:</span> <strong id="profilePoints">0</strong></div>
+                <div><span>Global Rank:</span> <strong>#<span id="profileRank">—</span></strong></div>
             </div>
             <div class="card">
-                <h4>🔗 Referral Code</h4>
-                <div style="background:#FFE8DC; border-radius:40px; padding:12px; text-align:center; font-weight:bold; margin-top: 8px;"><strong id="profileCode">—</strong></div>
-                <button id="copyCodeBtn" class="btn btn-secondary" style="margin-top:8px; width:100%;"><i class="fas fa-copy"></i> Copy Code</button>
+                <h4>Referral Code</h4>
+                <div style="background:#FFE8DC; border-radius:40px; padding:12px;"><strong id="profileCode">—</strong></div>
+                <button id="copyCodeBtn" class="btn btn-secondary" style="margin-top:8px; width:100%;">Copy Code</button>
             </div>
             <div class="card">
-                <button class="logout-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
+                <button id="logoutBtn" class="btn btn-secondary" style="width:100%;">Sign Out</button>
             </div>
         </div>
-
-    </div><!-- /screen-container -->
+    </div>
 
     <div class="tab-bar">
         <button class="tab-item active" data-tab="home"><i class="fas fa-home"></i><span>Home</span></button>
@@ -652,65 +412,49 @@
     </div>
 </div>
 
-<!-- Immersive Poster Overlay -->
-<div id="posterOverlay" class="poster-overlay" role="dialog" aria-modal="true">
-    <button class="overlay-close" id="overlayClose" aria-label="Close"><i class="fas fa-times"></i></button>
-    <div class="overlay-image-wrap" id="overlayImageWrap"></div>
-    <div class="overlay-panel">
-        <div class="overlay-name" id="overlayName">—</div>
-        <div class="overlay-sub" id="overlaySub">—</div>
-        <button class="overlay-add-btn" id="overlayAddBtn"><i class="fas fa-cart-plus"></i> Add to Cart</button>
-    </div>
-</div>
+<!-- QR Scanner -->
+<div id="qr-reader"></div>
 
-<!-- Camera QR Overlay -->
-<div id="cameraOverlay">
-    <video id="cameraVideo" autoplay playsinline muted></video>
-    <button class="camera-close" id="cameraCloseBtn"><i class="fas fa-times"></i></button>
-    <div class="camera-ui" style="position:absolute;bottom:80px;left:0;right:0;align-items:center;">
-        <div class="scan-frame">
-            <div class="scan-line"></div>
-        </div>
-        <div class="scan-label">Point at a Wall Culture QR code</div>
-        <div class="scan-earn-badge"><i class="fas fa-gem"></i> +25 to +150 pts</div>
-    </div>
-</div>
-
-<!-- Referral Modal -->
-<div id="referralModal" class="modal" role="dialog" aria-modal="true">
+<!-- Modals -->
+<div id="referralModal" class="modal">
     <div class="modal-content">
-        <h3><i class="fas fa-user-friends"></i> Refer a Friend</h3>
-        <p>Your code: <strong id="modalReferralCode">—</strong></p>
-        <button id="copyReferralModalBtn" class="btn btn-primary" style="margin-top: 12px;">Copy Code</button>
-        <button id="closeReferralModal" class="btn btn-secondary" style="margin-top:8px; width: 100%;">Close</button>
+        <h3>Refer a Friend</h3>
+        <p>Your code: <strong id="modalCode">—</strong></p>
+        <button id="copyModalBtn" class="btn btn-primary">Copy Code</button>
+        <button id="closeModalBtn" class="btn btn-secondary" style="margin-top:8px;">Close</button>
     </div>
 </div>
 
-<!-- Instagram Story confirm modal -->
-<div id="instagramModal" class="modal" role="dialog" aria-modal="true">
+<div id="storyModal" class="modal">
     <div class="modal-content">
-        <div style="font-size:3rem; margin-bottom:10px;">📸</div>
-        <h3>Share on Instagram</h3>
-        <p style="font-size:0.8rem;color:#B45A2E;margin:12px 0;">Post a story tagging <strong>@wallculture</strong> and paste your link below to earn <strong>+150 pts</strong>.</p>
-        <input type="text" id="storyLinkInput" placeholder="https://www.instagram.com/stories/..." style="width:100%; padding:10px; border-radius:60px; border:1px solid #FFD1A4; margin:10px 0;">
-        <button id="submitStoryBtn" class="btn btn-primary" style="width:100%;margin-bottom:8px;">
-            Submit Story & Earn Points
-        </button>
-        <button id="closeInstagramModal" class="btn btn-secondary" style="width:100%;">Cancel</button>
+        <h3>Instagram Story</h3>
+        <p>Post a story tagging <strong>@wallculture</strong> and paste your link:</p>
+        <input type="text" id="storyLink" class="custom-input" placeholder="https://www.instagram.com/stories/...">
+        <button id="submitStoryBtn" class="btn btn-primary">Submit & Earn</button>
+        <button id="closeStoryModal" class="btn btn-secondary" style="margin-top:8px;">Cancel</button>
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 <script>
     const API_URL = 'https://wall-culture-3.onrender.com/api';
+    let token = localStorage.getItem('wall_culture_token');
+    if (!token) window.location.href = 'index.html';
 
-    (function authGuard() {
-        if (!localStorage.getItem('wall_culture_token')) window.location.href = 'index.html';
-    })();
+    let cart = [];
+    let allPosters = [];
+    let currentCategory = 'all';
+    let html5QrCode = null;
 
-    function apiRequest(endpoint, options = {}) {
-        const token = localStorage.getItem('wall_culture_token');
-        return fetch(`${API_URL}${endpoint}`, {
+    function showToast(msg) {
+        const toast = document.createElement('div');
+        toast.textContent = msg;
+        toast.style.cssText = 'position:fixed;bottom:100px;left:20px;right:20px;background:#FFE0B5;color:#4A2A1A;padding:12px;border-radius:60px;text-align:center;font-weight:bold;z-index:2000;';
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+
+    async function apiRequest(endpoint, options = {}) {
+        const response = await fetch(`${API_URL}${endpoint}`, {
             ...options,
             headers: {
                 'Content-Type': 'application/json',
@@ -718,905 +462,380 @@
                 ...(options.headers || {})
             }
         });
-    }
-
-    function setText(el, text) {
-        if (typeof el === 'string') el = document.getElementById(el);
-        if (el) el.textContent = text;
-    }
-
-    let cart = [];
-    let auditLog = [];
-    let allPosters = [];
-    let user = {
-        name: 'Guest', email: '', points: 0, streak: 0,
-        weeklyPoints: 0, weekly_points: 0,
-        referralCode: '—', referral_code: '—',
-        multiplier: 1, multiplierExpiry: null, multiplier_expiry: null
-    };
-    let globalRanking = [];
-    let currentCustomImage = null;
-    let currentGalleryTheme = 'aesthetic';
-    const galleryCache = {};
-    let currentHeroItem = null;
-    let cameraStream = null;
-    let scanning = false;
-
-    function showToast(msg) {
-        const d = document.createElement('div');
-        d.textContent = msg;
-        d.style.cssText = 'position:fixed;bottom:90px;left:20px;right:20px;background:#FFE0B5;color:#4A2A1A;padding:12px;border-radius:60px;text-align:center;font-weight:bold;z-index:2000;box-shadow:0 4px 16px rgba(0,0,0,0.15);';
-        document.body.appendChild(d);
-        setTimeout(() => d.remove(), 2500);
-    }
-
-    function saveUser() { localStorage.setItem('wall_culture_user', JSON.stringify(user)); }
-
-    function getBoost() {
-        const expiry = user.multiplierExpiry || user.multiplier_expiry || 0;
-        return (expiry && expiry > Date.now()) ? (user.multiplier || 1.0) : 1.0;
-    }
-
-    function getRank() {
-        if (!globalRanking.length) return '—';
-        const sorted = [...globalRanking].sort((a, b) => b.points - a.points);
-        const idx = sorted.findIndex(u => u.name === user.name);
-        return idx >= 0 ? idx + 1 : sorted.length + 1;
-    }
-
-    function addAudit(action, points) {
-        auditLog.unshift({ action, points, timestamp: new Date().toLocaleTimeString() });
-        if (auditLog.length > 20) auditLog.pop();
-        renderAudit();
-    }
-
-    function renderAudit() {
-        const container = document.getElementById('auditLogContainer');
-        if (!container) return;
-        if (!auditLog.length) {
-            container.innerHTML = "<div style='padding:8px;text-align:center;font-size:0.75rem;color:#B45A2E;'>No activity yet</div>";
-            return;
+        if (response.status === 401) {
+            localStorage.removeItem('wall_culture_token');
+            window.location.href = 'index.html';
         }
-        container.innerHTML = '';
-        auditLog.forEach(a => {
-            const row = document.createElement('div');
-            row.className = 'audit-item';
-            const action = document.createElement('span');
-            action.textContent = a.action;
-            const pts = document.createElement('span');
-            pts.style.cssText = 'color:#FF6B4A;font-weight:700;';
-            pts.textContent = (a.points > 0 ? '+' : '') + a.points + ' pts';
-            const ts = document.createElement('span');
-            ts.style.cssText = 'font-size:0.6rem;color:#B45A2E;';
-            ts.textContent = a.timestamp;
-            row.append(action, pts, ts);
-            container.appendChild(row);
-        });
+        return response.json();
     }
 
-    async function serverAddPoints(endpoint, method = 'POST', body = null) {
+    // Load posters from database
+    async function loadPosters() {
         try {
-            const res = await apiRequest(endpoint, {
-                method,
-                body: body ? JSON.stringify(body) : undefined
-            });
-            const data = await res.json();
-            if (res.ok && data.success) {
-                await fetchUserProfile();
-                if (data.earned) addAudit(body?.action || 'Points earned', data.earned);
-                return data;
-            } else {
-                showToast(data.error || 'Action failed.');
-                return null;
-            }
-        } catch {
-            showToast('Network error.');
-            return null;
-        }
-    }
-
-    // ===== LOAD POSTERS FROM DATABASE =====
-    async function loadAllPosters() {
-        try {
-            const response = await apiRequest('/posters');
-            allPosters = await response;
-            if (allPosters && allPosters.length) {
-                console.log('Loaded', allPosters.length, 'posters');
-                loadFeed();
-            } else {
-                console.log('No posters found in database');
+            const posters = await apiRequest('/posters');
+            if (posters && posters.length) {
+                allPosters = posters;
+                renderFeed();
+                renderGallery();
             }
         } catch (error) {
             console.error('Error loading posters:', error);
         }
     }
 
-    // ===== FEED (Discover Section) =====
-    async function loadFeed() {
+    function renderFeed() {
         const container = document.getElementById('feedContainer');
-        container.innerHTML = '<div class="feed-loading"><i class="fas fa-spinner fa-spin"></i> Loading posters…</div>';
-        
-        if (allPosters.length === 0) {
-            await loadAllPosters();
-        }
-        
         if (!allPosters.length) {
-            container.innerHTML = '<div class="feed-empty">No posters available. Check back soon! 🎨</div>';
-            return;
-        }
-        
-        renderFeed(allPosters);
-    }
-
-    function renderFeed(feed) {
-        const container = document.getElementById('feedContainer');
-        if (!feed || !feed.length) {
-            container.innerHTML = '<div class="feed-empty">No posters available yet. Check back soon! 🎨</div>';
+            container.innerHTML = '<div class="loading">No posters available</div>';
             return;
         }
         container.innerHTML = '';
-        feed.forEach(item => {
+        allPosters.slice(0, 6).forEach(poster => {
             const card = document.createElement('div');
             card.className = 'poster-feed-card';
-
-            if (item.image_url) {
-                const img = document.createElement('img');
-                img.className = 'poster-feed-image';
-                img.loading = 'lazy';
-                img.alt = '';
-                img.src = item.image_url;
-                img.onerror = () => { img.replaceWith(makeFeedPlaceholder()); };
-                card.appendChild(img);
-            } else {
-                card.appendChild(makeFeedPlaceholder());
-            }
-
-            const info = document.createElement('div');
-            info.className = 'poster-feed-info';
-
-            const left = document.createElement('div');
-            const name = document.createElement('div');
-            name.className = 'poster-feed-name';
-            name.textContent = item.name;
-            const pts = document.createElement('div');
-            pts.className = 'poster-feed-pts';
-            if (item.is_limited) {
-                const dot = document.createElement('span');
-                dot.className = 'limited-dot';
-                pts.appendChild(dot);
-                pts.append('Limited · ');
-            }
-            pts.append(`+${item.points} pts`);
-            left.append(name, pts);
-
-            const price = document.createElement('div');
-            price.className = 'poster-feed-price';
-            price.textContent = `KSH ${item.price}`;
-
-            info.append(left, price);
-            card.appendChild(info);
-            card.addEventListener('click', () => openOverlay(item));
+            card.onclick = () => openOverlay(poster);
+            card.innerHTML = `
+                <img class="poster-feed-image" src="${poster.image_url || 'https://picsum.photos/seed/' + poster.id + '/400/300'}" onerror="this.src='https://picsum.photos/400/300'">
+                <div class="poster-feed-info">
+                    <div class="poster-feed-name">${poster.name}</div>
+                    <div class="poster-feed-price">KSH ${poster.price}</div>
+                </div>
+            `;
             container.appendChild(card);
         });
     }
 
-    function makeFeedPlaceholder() {
-        const ph = document.createElement('div');
-        ph.className = 'poster-feed-placeholder';
-        ph.textContent = '🖼️';
-        return ph;
-    }
-
-    // ===== CAMERA SCAN (REAL QR DETECTION) =====
-    async function openCamera() {
-        const overlay = document.getElementById('cameraOverlay');
-        const video = document.getElementById('cameraVideo');
-
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            showToast('Camera not supported on this device');
+    function renderGallery() {
+        const container = document.getElementById('galleryGrid');
+        let filtered = allPosters;
+        if (currentCategory !== 'all') {
+            filtered = allPosters.filter(p => p.category === currentCategory);
+        }
+        if (!filtered.length) {
+            container.innerHTML = '<div class="loading">No posters in this category</div>';
             return;
         }
+        container.innerHTML = '';
+        filtered.forEach(poster => {
+            const card = document.createElement('div');
+            card.className = 'gallery-card';
+            card.onclick = () => addToCart(poster);
+            card.innerHTML = `
+                <img class="gallery-image" src="${poster.image_url || 'https://picsum.photos/seed/' + poster.id + '/200/200'}" onerror="this.src='https://picsum.photos/200/200'">
+                <div class="gallery-info">
+                    <div class="gallery-name">${poster.name}</div>
+                    <div class="gallery-price">KSH ${poster.price} · +${poster.points} pts</div>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
 
+    function openOverlay(poster) {
+        addToCart(poster);
+        showToast(`✓ ${poster.name} added to cart!`);
+    }
+
+    // Cart functions
+    function addToCart(poster) {
+        const existing = cart.find(i => i.id === poster.id);
+        if (existing) existing.qty++;
+        else cart.push({ ...poster, qty: 1 });
+        renderCart();
+        showToast(`✓ ${poster.name} added to cart`);
+    }
+
+    function renderCart() {
+        const container = document.getElementById('cartItems');
+        const count = cart.reduce((s,i) => s + i.qty, 0);
+        const total = cart.reduce((s,i) => s + (i.price * i.qty), 0);
+        document.getElementById('cartCount').innerText = `(${count})`;
+        document.getElementById('cartTotal').innerText = total;
+        if (!cart.length) {
+            container.innerHTML = '<div style="padding:12px; text-align:center;">Cart is empty</div>';
+            return;
+        }
+        container.innerHTML = '';
+        cart.forEach((item, idx) => {
+            const row = document.createElement('div');
+            row.className = 'cart-item';
+            row.innerHTML = `
+                <div><strong>${item.name}</strong> x${item.qty}<br><span style="font-size:0.65rem;">KSH ${item.price} · +${item.points} pts</span></div>
+                <div>KSH ${item.price * item.qty} <button class="remove-item" data-idx="${idx}"><i class="fas fa-trash"></i></button></div>
+            `;
+            container.appendChild(row);
+        });
+        document.querySelectorAll('.remove-item').forEach(btn => {
+            btn.onclick = () => {
+                const idx = parseInt(btn.dataset.idx);
+                cart.splice(idx, 1);
+                renderCart();
+            };
+        });
+    }
+
+    async function checkout() {
+        if (!cart.length) { showToast('Cart empty'); return; }
+        const totalPrice = cart.reduce((s,i) => s + (i.price * i.qty), 0);
+        const totalBasePoints = cart.reduce((s,i) => s + (i.points * i.qty), 0);
+        if (confirm(`Total: KSH ${totalPrice}\nEarn ~${Math.floor(totalBasePoints * 1.2)} points?`)) {
+            try {
+                const result = await apiRequest('/order/create', {
+                    method: 'POST',
+                    body: JSON.stringify({ items: cart, totalPrice, totalBasePoints })
+                });
+                if (result.success) {
+                    showToast(`✅ Payment successful! +${result.pointsEarned} points!`);
+                    cart = [];
+                    renderCart();
+                    loadProfile();
+                }
+            } catch(e) { showToast('Error'); }
+        }
+    }
+
+    // QR Scanner
+    async function startQRScanner() {
+        const scannerDiv = document.getElementById('qr-reader');
+        scannerDiv.classList.add('open');
+        html5QrCode = new Html5Qrcode("qr-reader");
         try {
-            cameraStream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 } }
-            });
-            video.srcObject = cameraStream;
-            overlay.classList.add('open');
-            scanning = true;
-            detectQRCode(video);
+            await html5QrCode.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 250, height: 250 } },
+                async (decodedText) => {
+                    await html5QrCode.stop();
+                    scannerDiv.classList.remove('open');
+                    await processQRCode(decodedText);
+                },
+                (error) => { console.log(error); }
+            );
         } catch (err) {
-            showToast('Camera access denied. Check browser permissions.');
+            showToast('Camera access denied');
+            scannerDiv.classList.remove('open');
         }
     }
 
-    async function detectQRCode(videoElement) {
-        if (!scanning) return;
-        if (videoElement.videoWidth === 0) {
-            setTimeout(() => detectQRCode(videoElement), 500);
-            return;
-        }
-        
-        const canvas = document.createElement('canvas');
-        canvas.width = videoElement.videoWidth;
-        canvas.height = videoElement.videoHeight;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const code = jsQR(imageData.data, canvas.width, canvas.height);
-        
-        if (code && code.data) {
-            scanning = false;
-            closeCamera();
-            await processQRCode(code.data);
-        } else {
-            setTimeout(() => detectQRCode(videoElement), 300);
+    function stopScanner() {
+        if (html5QrCode) {
+            html5QrCode.stop();
+            document.getElementById('qr-reader').classList.remove('open');
         }
     }
 
     async function processQRCode(qrData) {
-        showToast(`Scanning QR: ${qrData.substring(0, 10)}...`);
+        showToast(`Scanning: ${qrData.substring(0,10)}...`);
         try {
-            const res = await apiRequest('/scan/qr', {
+            const result = await apiRequest('/scan/qr', {
                 method: 'POST',
-                body: JSON.stringify({ qr_data: qrData })
+                body: JSON.stringify({ code: qrData })
             });
-            const data = await res;
-            if (data.success) {
-                await fetchUserProfile();
-                showToast(`🎉 QR scanned! +${data.earned} points!`);
+            if (result.success) {
+                showToast(`🎉 +${result.earned} points!`);
+                loadProfile();
             } else {
-                showToast(data.error || 'Invalid QR code');
+                showToast(result.error || 'Invalid QR code');
             }
-        } catch {
-            showToast('Network error — please try again.');
-        }
+        } catch(e) { showToast('Network error'); }
     }
 
-    function closeCamera() {
-        const overlay = document.getElementById('cameraOverlay');
-        overlay.classList.remove('open');
-        if (cameraStream) {
-            cameraStream.getTracks().forEach(t => t.stop());
-            cameraStream = null;
-        }
-        scanning = false;
-        document.getElementById('cameraVideo').srcObject = null;
-    }
+    document.getElementById('scanBtn').onclick = startQRScanner;
+    document.querySelector('.close-scanner')?.remove();
 
-    document.getElementById('cameraCloseBtn').addEventListener('click', closeCamera);
-
-    // ===== INSTAGRAM STORY (REAL SUBMISSION) =====
-    async function openInstagramModal() {
-        document.getElementById('instagramModal').style.display = 'flex';
-    }
-
-    document.getElementById('submitStoryBtn').addEventListener('click', async () => {
-        const storyLink = document.getElementById('storyLinkInput').value.trim();
-        if (!storyLink) {
-            showToast('Please paste your Instagram story link');
-            return;
-        }
-        
+    // Daily check-in
+    async function dailyCheckin() {
         try {
-            const res = await apiRequest('/social/story', {
-                method: 'POST',
-                body: JSON.stringify({ story_link: storyLink })
-            });
-            const data = await res;
-            if (data.success) {
-                await fetchUserProfile();
-                showToast(`📸 Story submitted! +${data.earned} points!`);
-                document.getElementById('instagramModal').style.display = 'none';
-                document.getElementById('storyLinkInput').value = '';
+            const result = await apiRequest('/daily/checkin', { method: 'POST' });
+            if (result.success) {
+                showToast(`☀️ +${result.earned} points! ${result.streak} day streak!`);
+                loadProfile();
             } else {
-                showToast(data.error || 'Failed to submit story');
+                showToast(result.message || 'Already checked in');
             }
-        } catch {
-            showToast('Network error');
-        }
-    });
+        } catch(e) { showToast('Error'); }
+    }
 
-    document.getElementById('closeInstagramModal').addEventListener('click', () => {
-        document.getElementById('instagramModal').style.display = 'none';
-    });
+    // Instagram Story
+    function openStoryModal() { document.getElementById('storyModal').style.display = 'flex'; }
+    async function submitStory() {
+        const link = document.getElementById('storyLink').value.trim();
+        if (!link) { showToast('Please paste your story link'); return; }
+        try {
+            const result = await apiRequest('/social/story', {
+                method: 'POST',
+                body: JSON.stringify({ story_link: link })
+            });
+            if (result.success) {
+                showToast(`📸 +${result.earned} points!`);
+                document.getElementById('storyModal').style.display = 'none';
+                document.getElementById('storyLink').value = '';
+                loadProfile();
+            } else {
+                showToast(result.error);
+            }
+        } catch(e) { showToast('Error'); }
+    }
 
-    // ===== ROOM TOUR (REAL UPLOAD) =====
-    let roomTourFile = null;
-
-    document.getElementById('homeRoomBtn').addEventListener('click', () => {
+    // Room Tour
+    function openRoomTour() {
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = 'image/*';
         input.onchange = async (e) => {
             const file = e.target.files[0];
             if (!file) return;
-            
             const formData = new FormData();
             formData.append('image', file);
-            
-            showToast('Uploading room tour...');
+            showToast('Uploading...');
             try {
-                const token = localStorage.getItem('wall_culture_token');
                 const response = await fetch(`${API_URL}/social/roomtour`, {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` },
                     body: formData
                 });
-                const data = await response.json();
-                if (data.success) {
-                    await fetchUserProfile();
-                    showToast(`🏠 Room tour submitted! +${data.earned} points!`);
+                const result = await response.json();
+                if (result.success) {
+                    showToast(`🏠 +${result.earned} points!`);
+                    loadProfile();
                 } else {
-                    showToast(data.error || 'Upload failed');
+                    showToast(result.error);
                 }
-            } catch {
-                showToast('Network error');
-            }
+            } catch(e) { showToast('Error'); }
         };
         input.click();
-    });
-
-    // ===== DAILY CHECK-IN =====
-    async function dailyCheck() {
-        const result = await serverAddPoints('/daily/checkin');
-        if (result) {
-            if (!result.success) { showToast(result.message || 'Already checked in today!'); return; }
-            showToast(`☀️ Checked in! +${result.earned} pts · ${result.streak} day streak`);
-        }
     }
 
-    function referFriend() { document.getElementById('referralModal').style.display = 'flex'; }
-
-    function logout() {
-        localStorage.removeItem('wall_culture_token');
-        localStorage.removeItem('wall_culture_user');
-        window.location.href = 'index.html';
+    // Referral
+    function openReferralModal() { document.getElementById('referralModal').style.display = 'flex'; }
+    function copyReferralCode() {
+        const code = document.getElementById('profileCode').innerText;
+        navigator.clipboard.writeText(code);
+        showToast('Copied!');
     }
 
-    // ===== REFRESH UI =====
-    function refreshAllUI() {
-        const refCode  = user.referralCode || user.referral_code || '—';
-        const pts      = user.points || 0;
-        const streak   = user.streak || 0;
-        const weekly   = user.weeklyPoints || user.weekly_points || 0;
-        const firstName = (user.name || 'there').split(' ')[0];
-
-        setText('globalPoints', pts);
-        setText('profilePoints', pts);
-        setText('homeStreakDisplay', streak);
-        setText('homeWeekly', weekly);
-        setText('homeUserName', firstName);
-        setText('profileName', user.name || '—');
-        setText('profileEmail', user.email || '—');
-        setText('profileCode', refCode);
-        setText('modalReferralCode', refCode);
-
-        const boost = getBoost();
-        setText('boostValue', boost.toFixed(1) + 'x');
-        setText('profileBoost', boost.toFixed(1) + 'x');
-        const expiry = user.multiplierExpiry || user.multiplier_expiry || 0;
-        const days = expiry ? Math.max(0, Math.ceil((expiry - Date.now()) / 86400000)) : 0;
-        setText('boostDays', days);
-
-        const rank = getRank();
-        setText('userRank', rank);
-        setText('profileRankNum', rank);
-
-        const milestones  = [120, 360, 500, 1000, 2500, 5000];
-        const next = milestones.find(m => pts < m) || 5000;
-        const prev = milestones.filter(m => m <= pts).pop() || 0;
-        const percent = next === prev ? 100 : ((pts - prev) / (next - prev)) * 100;
-        document.getElementById('homeProgressFill').style.width = Math.min(100, percent) + '%';
-        const rewardMap = { 120: 'Free poster', 360: 'Free mystery pack', 500: '15% off', 1000: 'Free mini poster + KSH 50', 2500: 'Wall of Honor + KSH 100', 5000: 'Bronze Card + KSH 200' };
-        setText('nextMilestoneText', rewardMap[next] || 'Legend');
-        setText('nextPointsNeeded', next + ' pts');
-        document.getElementById('rankProgressBar').style.width = Math.min(100, (pts % 1000) / 1000 * 100) + '%';
-
-        renderCartUI();
-    }
-
-    // ===== CART =====
-    function renderCartUI() {
-        const container = document.getElementById('cartItemsList');
-        const count = cart.reduce((s, i) => s + i.qty, 0);
-        setText('cartItemCount', `(${count})`);
-
-        if (!cart.length) {
-            container.innerHTML = "<div style='font-size:0.7rem; padding:8px; color:#B45A2E;'>Your cart is empty</div>";
-            setText('cartTotalAmount', '0');
-            return;
-        }
-
-        container.innerHTML = '';
-        let total = 0;
-        cart.forEach((item, idx) => {
-            const subtotal = item.price * item.qty;
-            total += subtotal;
-
-            const row = document.createElement('div');
-            row.className = 'cart-item-row';
-
-            const left = document.createElement('div');
-            left.style.cssText = 'display:flex;gap:10px;align-items:center;';
-
-            if (item.image) {
-                const img = document.createElement('img');
-                img.src = item.image;
-                img.style.cssText = 'width:28px;height:28px;border-radius:12px;object-fit:cover;';
-                left.appendChild(img);
-            } else {
-                const em = document.createElement('span');
-                em.style.fontSize = '1.2rem';
-                em.textContent = item.emoji || '🖼️';
-                left.appendChild(em);
-            }
-
-            const label = document.createElement('span');
-            const strong = document.createElement('strong');
-            strong.textContent = item.name;
-            label.appendChild(strong);
-            label.append(` ×${item.qty}`);
-            left.appendChild(label);
-
-            const right = document.createElement('div');
-            right.style.cssText = 'display:flex;align-items:center;gap:8px;';
-            right.append(`KSH ${subtotal} `);
-
-            const removeBtn = document.createElement('button');
-            removeBtn.className = 'remove-cart-btn';
-            removeBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
-            removeBtn.addEventListener('click', () => {
-                if (cart[idx].qty > 1) cart[idx].qty--;
-                else cart.splice(idx, 1);
-                renderCartUI();
-            });
-            right.appendChild(removeBtn);
-            row.append(left, right);
-            container.appendChild(row);
-        });
-        setText('cartTotalAmount', total);
-    }
-
-    function addToCart(item) {
-        const existing = cart.find(i => i.id === item.id && i.type === item.type);
-        if (existing) existing.qty++;
-        else cart.push({ ...item, qty: 1 });
-        renderCartUI();
-        showToast(`✓ ${item.name} added to cart`);
-    }
-
-    // ===== POSTER OVERLAY =====
-    let overlayItem = null;
-
-    function openOverlay(item) {
-        overlayItem = item;
-        const overlay = document.getElementById('posterOverlay');
-        const imgWrap = document.getElementById('overlayImageWrap');
-        imgWrap.innerHTML = '';
-
-        if (item.image_url) {
-            const img = document.createElement('img');
-            img.alt = '';
-            img.src = item.image_url;
-            img.style.cssText = 'max-width:90%; max-height:60vh; border-radius:16px; object-fit:contain;';
-            img.onerror = () => { img.replaceWith(makeOverlayEmoji()); };
-            imgWrap.appendChild(img);
-        } else {
-            imgWrap.appendChild(makeOverlayEmoji());
-        }
-
-        setText('overlayName', item.name);
-        const sub = `KSH ${item.price}` + (item.is_limited ? ' · ⚡ Limited Edition' : '') + ` · +${item.points} pts`;
-        setText('overlaySub', sub);
-
-        const addBtn = document.getElementById('overlayAddBtn');
-        addBtn.textContent = '🛒 Add to Cart';
-        addBtn.className = 'overlay-add-btn';
-
-        overlay.classList.add('open');
-        document.body.style.overflow = 'hidden';
-    }
-
-    function makeOverlayEmoji() {
-        const d = document.createElement('div');
-        d.className = 'overlay-emoji';
-        d.textContent = '🖼️';
-        return d;
-    }
-
-    function closeOverlay() {
-        document.getElementById('posterOverlay').classList.remove('open');
-        document.body.style.overflow = '';
-        overlayItem = null;
-    }
-
-    document.getElementById('overlayClose').addEventListener('click', closeOverlay);
-    document.getElementById('posterOverlay').addEventListener('click', (e) => {
-        if (e.target === document.getElementById('posterOverlay')) closeOverlay();
-    });
-
-    document.getElementById('overlayAddBtn').addEventListener('click', () => {
-        if (!overlayItem) return;
-        addToCart({
-            type: overlayItem.is_limited ? 'limited' : 'poster',
-            id: overlayItem.id,
-            name: overlayItem.name,
-            price: overlayItem.price,
-            points: overlayItem.points,
-            emoji: '🖼️'
-        });
-        const btn = document.getElementById('overlayAddBtn');
-        btn.textContent = '✓ Added to Cart';
-        btn.className = 'overlay-add-btn added';
-        setTimeout(closeOverlay, 800);
-    });
-
-    // ===== TONAL-STYLE GALLERY =====
-    async function loadGallery(theme) {
-        currentGalleryTheme = theme;
-
-        const catLabel = theme.charAt(0).toUpperCase() + theme.slice(1);
-        setText('galleryHeroCat', catLabel.toUpperCase());
-        setText('galleryCarouselLabel', `More in ${catLabel}`);
-
-        setText('galleryHeroTitle', 'Loading…');
-        setText('galleryHeroPrice', 'KSH —');
-        setText('galleryHeroPoints', '— pts');
-        document.getElementById('galleryHeroImg').style.display = 'none';
-        document.getElementById('galleryHeroPlaceholder').style.display = 'flex';
-
-        document.getElementById('galleryCarousel').innerHTML = '<div class="gallery-loading-dark"><i class="fas fa-spinner fa-spin"></i> Loading…</div>';
-
-        if (galleryCache[theme]) {
-            renderGalleryTonal(galleryCache[theme]);
-            return;
-        }
-
+    // Profile
+    async function loadProfile() {
         try {
-            const endpoint = theme === 'limited' ? '/posters?limited=true' : `/posters?category=${encodeURIComponent(theme)}`;
-            const res = await apiRequest(endpoint);
-            const data = await res;
-            if (res.ok && Array.isArray(data)) {
-                galleryCache[theme] = data;
-                renderGalleryTonal(data);
-            } else {
-                renderGalleryTonal([]);
+            const data = await apiRequest('/user/profile');
+            if (data.user) {
+                document.getElementById('globalPoints').innerText = data.user.points || 0;
+                document.getElementById('profilePoints').innerText = data.user.points || 0;
+                document.getElementById('homeStreak').innerText = data.user.streak || 0;
+                document.getElementById('homeWeekly').innerText = data.user.weekly_points || 0;
+                document.getElementById('homeUserName').innerText = (data.user.name || 'there').split(' ')[0];
+                document.getElementById('profileName').innerText = data.user.name || '—';
+                document.getElementById('profileEmail').innerText = data.user.email || '—';
+                document.getElementById('profileCode').innerText = data.user.referral_code || '—';
+                document.getElementById('modalCode').innerText = data.user.referral_code || '—';
+                document.getElementById('profileRank').innerText = data.rank || '—';
+                document.getElementById('userRank').innerText = data.rank || '—';
+                
+                const pts = data.user.points || 0;
+                const milestones = [120, 360, 500, 1000, 2500];
+                let next = milestones.find(m => pts < m) || 5000;
+                let prev = milestones.filter(m => m <= pts).pop() || 0;
+                let percent = next === prev ? 100 : ((pts - prev) / (next - prev)) * 100;
+                document.getElementById('milestoneFill').style.width = Math.min(100, percent) + '%';
+                const rewards = {120:'Free poster',360:'Free mystery pack',500:'15% off',1000:'Free mini poster + KSH 50',2500:'Wall of Honor'};
+                document.getElementById('nextMilestone').innerText = rewards[next] || 'Legend';
+                document.getElementById('nextPoints').innerText = next + ' pts';
+
+                if (data.auditLog) {
+                    const container = document.getElementById('auditLogContainer');
+                    container.innerHTML = '';
+                    data.auditLog.slice(0, 10).forEach(log => {
+                        const row = document.createElement('div');
+                        row.className = 'audit-item';
+                        row.innerHTML = `<span>${log.action}</span><span>+${log.earned} pts</span><span>${new Date(log.timestamp).toLocaleTimeString()}</span>`;
+                        container.appendChild(row);
+                    });
+                }
             }
-        } catch {
-            renderGalleryTonal([]);
-        }
+        } catch(e) { console.error(e); }
     }
 
-    function renderGalleryTonal(posters) {
-        if (!posters || !posters.length) {
-            setText('galleryHeroTitle', 'No posters yet');
-            setText('galleryHeroPrice', '—');
-            setText('galleryHeroPoints', '—');
-            document.getElementById('galleryCarousel').innerHTML = '<div class="gallery-loading-dark">No posters in this category yet.</div>';
-            currentHeroItem = null;
-            return;
-        }
-
-        setHero(posters[0], 0);
-
-        const carousel = document.getElementById('galleryCarousel');
-        carousel.innerHTML = '';
-        posters.forEach((p, idx) => {
-            const card = document.createElement('div');
-            card.className = 'carousel-card' + (idx === 0 ? ' selected' : '');
-            card.dataset.idx = idx;
-
-            if (p.image_url) {
-                const img = document.createElement('img');
-                img.className = 'carousel-card-img';
-                img.loading = 'lazy';
-                img.alt = '';
-                img.src = p.image_url;
-                img.onerror = () => { img.replaceWith(makeCarouselEmoji()); };
-                card.appendChild(img);
-            } else {
-                card.appendChild(makeCarouselEmoji());
-            }
-
-            const info = document.createElement('div');
-            info.className = 'carousel-card-info';
-
-            const name = document.createElement('div');
-            name.className = 'carousel-card-name';
-            name.textContent = p.name;
-
-            const price = document.createElement('div');
-            price.className = 'carousel-card-price';
-            price.textContent = `KSH ${p.price} · +${p.points}pts`;
-
-            info.append(name, price);
-            card.appendChild(info);
-
-            card.addEventListener('click', () => {
-                document.querySelectorAll('.carousel-card').forEach(c => c.classList.remove('selected'));
-                card.classList.add('selected');
-                setHero(p, idx);
-            });
-
-            carousel.appendChild(card);
-        });
-    }
-
-    function makeCarouselEmoji() {
-        const d = document.createElement('div');
-        d.className = 'carousel-card-emoji';
-        d.textContent = '🖼️';
-        return d;
-    }
-
-    function setHero(item, idx) {
-        currentHeroItem = item;
-        const heroImg = document.getElementById('galleryHeroImg');
-        const heroPlaceholder = document.getElementById('galleryHeroPlaceholder');
-
-        setText('galleryHeroTitle', item.name);
-        setText('galleryHeroPrice', `KSH ${item.price}`);
-        setText('galleryHeroPoints', `+${item.points} pts`);
-        setText('galleryHeroTag', item.is_limited ? '⚡ Limited' : 'All Styles');
-
-        if (item.image_url) {
-            heroImg.src = item.image_url;
-            heroImg.style.display = 'block';
-            heroPlaceholder.style.display = 'none';
-            heroImg.onerror = () => {
-                heroImg.style.display = 'none';
-                heroPlaceholder.style.display = 'flex';
-            };
-        } else {
-            heroImg.style.display = 'none';
-            heroPlaceholder.style.display = 'flex';
-        }
-    }
-
-    document.getElementById('galleryHeroWrap').addEventListener('click', (e) => {
-        if (e.target.closest('#galleryHeroAddBtn')) return;
-        if (currentHeroItem) openOverlay(currentHeroItem);
-    });
-
-    document.getElementById('galleryHeroAddBtn').addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (!currentHeroItem) return;
-        addToCart({
-            type: currentHeroItem.is_limited ? 'limited' : 'poster',
-            id: currentHeroItem.id,
-            name: currentHeroItem.name,
-            price: currentHeroItem.price,
-            points: currentHeroItem.points,
-            emoji: '🖼️'
-        });
-        const btn = document.getElementById('galleryHeroAddBtn');
-        btn.innerHTML = '<i class="fas fa-check"></i>';
-        btn.style.background = 'linear-gradient(135deg,#38B000,#70E000)';
-        setTimeout(() => {
-            btn.innerHTML = '<i class="fas fa-cart-plus"></i>';
-            btn.style.background = '';
-        }, 1200);
-    });
-
-    document.getElementById('galleryCategoryStrip').addEventListener('click', (e) => {
-        const btn = e.target.closest('.gcat-btn');
-        if (!btn) return;
-        document.querySelectorAll('.gcat-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        loadGallery(btn.dataset.theme);
-    });
-
-    // ===== LIMITED EDITION (SHOP) =====
-    async function renderLimited() {
-        const container = document.getElementById('limitedGrid');
-        try {
-            const res = await apiRequest('/posters?limited=true');
-            const data = await res;
-            if (res.ok && Array.isArray(data) && data.length) {
-                buildShopGrid(data, container);
-                return;
-            }
-        } catch { }
-
-        container.innerHTML = '<div class="gallery-loading">No limited editions available</div>';
-    }
-
-    function buildShopGrid(posters, container) {
-        container.innerHTML = '';
-        posters.forEach(p => {
-            const card = document.createElement('div');
-            card.className = 'gallery-card';
-            const media = document.createElement('div');
-            media.className = 'gallery-media';
-            if (p.image_url) {
-                const img = document.createElement('img');
-                img.loading = 'lazy'; img.alt = ''; img.src = p.image_url;
-                media.appendChild(img);
-            } else { media.textContent = p.emoji || '🖼️'; }
-            const info = document.createElement('div');
-            info.className = 'gallery-info';
-            const t = document.createElement('div');
-            t.className = 'gallery-title'; t.textContent = p.name;
-            const pr = document.createElement('div');
-            pr.className = 'gallery-price';
-            pr.textContent = `KSH ${p.price} · +${p.points} pts${p.is_limited ? ' ⚡' : ''}`;
-            info.append(t, pr); card.append(media, info);
-            card.addEventListener('click', () => openOverlay(p));
-            container.appendChild(card);
-        });
-    }
-
-    // ===== CHECKOUT =====
-    async function processCheckout() {
-        if (!cart.length) { showToast('Cart is empty!'); return; }
-        const totalPrice = cart.reduce((s, i) => s + (i.price * i.qty), 0);
-        const totalBasePoints = cart.reduce((s, i) => s + (i.points * i.qty), 0);
-        const boost = getBoost();
-        const previewPoints = Math.floor(totalBasePoints * boost);
-
-        if (!confirm(`💰 Total: KSH ${totalPrice}\n⭐ You'll earn ~${previewPoints} points (${totalBasePoints} base × ${boost.toFixed(1)}x boost)\n\nProceed with payment?`)) return;
-
-        try {
-            const res = await apiRequest('/order/create', {
-                method: 'POST',
-                body: JSON.stringify({ items: cart, totalPrice, totalBasePoints })
-            });
-            const data = await res;
-
-            if (data.success) {
-                await fetchUserProfile();
-                addAudit('Purchase order', data.pointsEarned || previewPoints);
-                cart = [];
-                refreshAllUI();
-                showToast(`✅ Payment successful! +${data.pointsEarned} points earned!`);
-            } else {
-                showToast(data.error || 'Checkout failed.');
-            }
-        } catch {
-            showToast('Network error — please try again.');
-        }
-    }
-
-    // ===== CUSTOM POSTER =====
-    document.getElementById('customImageUpload').addEventListener('change', (e) => {
+    // Custom poster
+    document.getElementById('customImage').addEventListener('change', (e) => {
         const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            currentCustomImage = ev.target.result;
-            const area = document.getElementById('imagePreviewArea');
-            area.innerHTML = '';
-            const thumb = document.createElement('div');
-            thumb.className = 'custom-thumb';
-            const img = document.createElement('img');
-            img.src = currentCustomImage;
-            img.alt = 'Preview';
-            thumb.appendChild(img);
-            const label = document.createElement('span');
-            label.style.fontSize = '0.7rem';
-            label.style.color = '#38B000';
-            label.textContent = 'Image ready ✓';
-            area.append(thumb, label);
-        };
-        reader.readAsDataURL(file);
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                document.getElementById('customPreview').innerHTML = `<img src="${ev.target.result}" style="width:60px;height:60px;border-radius:12px;object-fit:cover;">`;
+            };
+            reader.readAsDataURL(file);
+        }
     });
 
+    let currentCustomImage = null;
     function addCustomToCart() {
-        if (!currentCustomImage) { showToast('Please upload an image first!'); return; }
+        const file = document.getElementById('customImage').files[0];
+        if (!file) { showToast('Upload an image first'); return; }
         const title = document.getElementById('customTitle').value.trim();
         addToCart({
-            type: 'custom',
-            id: 'cstm_' + Date.now(),
-            name: title ? `Custom: ${title}` : 'Custom Poster',
-            price: 50, points: 150,
-            image: currentCustomImage,
+            id: 'custom_' + Date.now(),
+            name: title || 'Custom Poster',
+            price: 50,
+            points: 150,
             emoji: '🎨'
         });
         document.getElementById('customTitle').value = '';
-        currentCustomImage = null;
-        document.getElementById('imagePreviewArea').innerHTML = '';
-        document.getElementById('customImageUpload').value = '';
+        document.getElementById('customImage').value = '';
+        document.getElementById('customPreview').innerHTML = '';
     }
 
     function addMysteryToCart() {
-        addToCart({ type: 'mystery', id: 'mystery_' + Date.now(), name: 'Mystery Pack', price: 100, points: 350, emoji: '🎁' });
+        addToCart({ id: 'mystery', name: 'Mystery Pack', price: 100, points: 350, emoji: '🎁' });
     }
 
-    // ===== FETCH PROFILE =====
-    async function fetchUserProfile() {
-        try {
-            const res = await apiRequest('/user/profile');
-            const data = await res;
-            if (res.ok) {
-                const u = data.user || {};
-                user = {
-                    ...user,
-                    name: u.name || user.name,
-                    email: u.email || user.email,
-                    points: u.points ?? user.points,
-                    streak: u.streak ?? user.streak,
-                    weeklyPoints: u.weekly_points ?? user.weeklyPoints,
-                    weekly_points: u.weekly_points ?? user.weekly_points,
-                    referralCode: u.referral_code || user.referralCode,
-                    referral_code: u.referral_code || user.referral_code,
-                    multiplier: u.multiplier ?? user.multiplier,
-                    multiplier_expiry: u.multiplier_expiry ?? user.multiplier_expiry,
-                    multiplierExpiry: u.multiplier_expiry ?? user.multiplierExpiry
-                };
-                if (data.auditLog && data.auditLog.length) {
-                    auditLog = data.auditLog.map(l => ({
-                        action: l.action,
-                        points: l.earned,
-                        timestamp: new Date(l.timestamp).toLocaleTimeString()
-                    }));
-                    renderAudit();
-                }
-                saveUser();
-                refreshAllUI();
-            } else {
-                logout();
-            }
-        } catch {
-            const cached = JSON.parse(localStorage.getItem('wall_culture_user') || '{}');
-            if (cached.name) { user = { ...user, ...cached }; refreshAllUI(); }
-        }
-    }
-
-    // ===== NAVIGATION =====
-    const screens = { home: 'homeScreen', gallery: 'galleryScreen', shop: 'shopScreen', profile: 'profileScreen' };
-
-    function showScreen(s) {
-        Object.values(screens).forEach(sc => {
-            const el = document.getElementById(sc);
-            el.classList.remove('active');
+    // Navigation
+    function showScreen(screenName) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(`${screenName}Screen`).classList.add('active');
+        document.querySelectorAll('.tab-item').forEach(tab => {
+            tab.classList.remove('active');
+            if (tab.dataset.tab === screenName) tab.classList.add('active');
         });
-        document.getElementById(screens[s]).classList.add('active');
-        document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
-        document.querySelector(`.tab-item[data-tab="${s}"]`).classList.add('active');
-
-        if (s === 'gallery') loadGallery(currentGalleryTheme);
-        if (s === 'shop')    { renderLimited(); renderCartUI(); }
-        if (s === 'profile') refreshAllUI();
+        if (screenName === 'gallery') renderGallery();
+        if (screenName === 'profile') loadProfile();
+        if (screenName === 'shop') renderCart();
     }
 
-    // ===== EVENT LISTENERS =====
-    document.querySelectorAll('.tab-item').forEach(tab =>
-        tab.addEventListener('click', () => showScreen(tab.dataset.tab))
-    );
+    // Logout
+    function logout() {
+        localStorage.removeItem('wall_culture_token');
+        window.location.href = 'index.html';
+    }
 
-    document.getElementById('homeScanBtn').onclick    = openCamera;
-    document.getElementById('homeDailyBtn').onclick   = dailyCheck;
-    document.getElementById('homeStoryBtn').onclick   = openInstagramModal;
-    document.getElementById('homeReferBtn').onclick   = referFriend;
-    document.getElementById('addCustomToCartBtn').onclick = addCustomToCart;
-    document.getElementById('addMysteryBtn').onclick      = addMysteryToCart;
-    document.getElementById('checkoutBtnShop').onclick    = processCheckout;
-
-    document.getElementById('copyCodeBtn').onclick = () => {
-        navigator.clipboard.writeText(user.referralCode || user.referral_code || '')
-            .then(() => showToast('Code copied!')).catch(() => showToast('Copy failed'));
-    };
-    document.getElementById('copyReferralModalBtn').onclick = () => {
-        navigator.clipboard.writeText(user.referralCode || user.referral_code || '')
-            .then(() => showToast('Referral code copied!')).catch(() => {});
-    };
-    document.getElementById('closeReferralModal').onclick = () => document.getElementById('referralModal').style.display = 'none';
-    document.getElementById('logoutBtn').onclick = logout;
-
-    ['referralModal', 'instagramModal'].forEach(id => {
-        document.getElementById(id).addEventListener('click', (e) => {
-            if (e.target === document.getElementById(id)) document.getElementById(id).style.display = 'none';
+    // Event listeners
+    document.querySelectorAll('.tab-item').forEach(tab => {
+        tab.addEventListener('click', () => showScreen(tab.dataset.tab));
+    });
+    document.querySelectorAll('.category-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            currentCategory = tab.dataset.cat;
+            renderGallery();
         });
     });
+    document.getElementById('dailyBtn').onclick = dailyCheckin;
+    document.getElementById('referBtn').onclick = openReferralModal;
+    document.getElementById('storyBtn').onclick = openStoryModal;
+    document.getElementById('roomTourBtn').onclick = openRoomTour;
+    document.getElementById('copyCodeBtn').onclick = copyReferralCode;
+    document.getElementById('copyModalBtn').onclick = copyReferralCode;
+    document.getElementById('submitStoryBtn').onclick = submitStory;
+    document.getElementById('checkoutBtn').onclick = checkout;
+    document.getElementById('mysteryBtn').onclick = addMysteryToCart;
+    document.getElementById('addCustomBtn').onclick = addCustomToCart;
+    document.getElementById('logoutBtn').onclick = logout;
+    document.getElementById('closeModalBtn').onclick = () => document.getElementById('referralModal').style.display = 'none';
+    document.getElementById('closeStoryModal').onclick = () => document.getElementById('storyModal').style.display = 'none';
 
-    // ===== INIT =====
-    loadAllPosters();
-    fetchUserProfile();
-    renderCartUI();
-    renderAudit();
-    loadGallery('aesthetic');
-    renderLimited();
+    // Initialize
+    loadPosters();
+    loadProfile();
+    renderCart();
 </script>
 </body>
 </html>
