@@ -101,6 +101,8 @@
             justify-content: space-around;
             padding-bottom: max(12px, env(safe-area-inset-bottom, 12px));
             flex-shrink: 0;
+            position: relative;
+            z-index: 100;
         }
 
         .tab-item {
@@ -164,26 +166,144 @@
             color: white;
         }
 
-        /* ===== TONAL-INSPIRED GALLERY (similar to the provided image) ===== */
+        /* ===== TONAL-INSPIRED GALLERY (Wall Culture App style) ===== */
         .gallery-feed {
             display: flex;
             flex-direction: column;
-            gap: 20px;
-            padding: 0 12px 20px;
+            gap: 0;
+            padding: 0 0 20px;
         }
 
-        .gallery-card {
+        /* Featured hero card - full width, tall */
+        .gallery-card-hero {
             position: relative;
-            height: 220px;
-            border-radius: 28px;
+            width: 100%;
+            height: 340px;
             overflow: hidden;
             cursor: pointer;
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
-            transition: transform 0.2s ease, box-shadow 0.2s;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+            transition: transform 0.2s ease;
+        }
+        .gallery-card-hero:active { transform: scale(0.99); }
+
+        /* Detail strip below hero (like the BMW M4 section in screenshot) */
+        .gallery-detail-strip {
+            background: #111;
+            padding: 14px 16px 18px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+        .gallery-detail-thumbs {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .gallery-detail-thumb {
+            width: 60px;
+            height: 60px;
+            border-radius: 10px;
+            object-fit: cover;
+            border: 1px solid rgba(255,255,255,0.12);
+        }
+        .gallery-detail-logo {
+            width: 28px;
+            height: 28px;
+            object-fit: contain;
+            margin-bottom: 4px;
+        }
+        .gallery-detail-info {
+            flex: 1;
+        }
+        .gallery-detail-title {
+            color: #ccc;
+            font-size: 1.1rem;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+        }
+        .gallery-detail-desc {
+            color: rgba(255,255,255,0.5);
+            font-size: 0.65rem;
+            line-height: 1.5;
+            margin-top: 4px;
+        }
+        .gallery-detail-price {
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-top: 8px;
+        }
+        .gallery-cart-fab {
+            position: absolute;
+            bottom: 90px;
+            right: 16px;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FF6B4A, #FF8E53);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 14px rgba(255,107,74,0.5);
+            cursor: pointer;
+            border: none;
+            z-index: 10;
         }
 
-        .gallery-card:active {
-            transform: scale(0.98);
+        /* "More in [category]" section */
+        .gallery-more-section {
+            padding: 14px 16px 8px;
+            background: #0a0a0a;
+        }
+        .gallery-more-title {
+            color: white;
+            font-size: 1rem;
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        .gallery-grid-card {
+            position: relative;
+            border-radius: 14px;
+            overflow: hidden;
+            cursor: pointer;
+            aspect-ratio: 3/4;
+            transition: transform 0.18s;
+        }
+        .gallery-grid-card:active { transform: scale(0.96); }
+        .gallery-grid-card.selected {
+            outline: 2px solid #FF6B4A;
+        }
+        .gallery-grid-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .gallery-grid-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.85), transparent);
+            padding: 8px 8px 6px;
+        }
+        .gallery-grid-name {
+            color: white;
+            font-size: 0.65rem;
+            font-weight: 700;
+            display: block;
+        }
+        .gallery-grid-price {
+            color: #FF8E53;
+            font-size: 0.6rem;
+            font-weight: 600;
         }
 
         .gallery-image {
@@ -192,15 +312,29 @@
             object-fit: cover;
         }
 
-        /* Tonal style gradient overlay - exactly like reference image */
         .gallery-overlay {
             position: absolute;
             inset: 0;
-            background: linear-gradient(to top, rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.25), transparent 70%);
+            background: linear-gradient(to top, rgba(0,0,0,0.55), transparent 60%);
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
             padding: 16px;
+        }
+
+        .gallery-badge {
+            position: absolute;
+            top: 14px;
+            left: 14px;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(6px);
+            color: white;
+            font-size: 0.65rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            padding: 5px 12px;
+            border-radius: 40px;
         }
 
         .gallery-name {
@@ -217,6 +351,69 @@
             font-weight: 500;
         }
 
+        /* ===== LIGHTBOX ===== */
+        #imageLightbox {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.95);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            animation: lbFadeIn 0.2s ease;
+        }
+        #imageLightbox.open { display: flex; }
+        @keyframes lbFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        #lightboxImg {
+            max-width: 94vw;
+            max-height: 75vh;
+            object-fit: contain;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+        }
+        #lightboxInfo {
+            margin-top: 16px;
+            text-align: center;
+        }
+        #lightboxTitle {
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 800;
+        }
+        #lightboxMeta {
+            color: rgba(255,255,255,0.6);
+            font-size: 0.8rem;
+            margin-top: 4px;
+        }
+        #lightboxClose {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.15);
+            border: none;
+            color: white;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            font-size: 1.1rem;
+            cursor: pointer;
+        }
+        #lightboxAddBtn {
+            margin-top: 16px;
+            background: linear-gradient(95deg, #FF6B4A, #FF8E53);
+            color: white;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 60px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
         /* Category tabs for gallery (pill style) */
         .category-tabs {
             display: flex;
@@ -229,7 +426,7 @@
             display: none;
         }
         .category-tab {
-            background: #FFE8D8;
+            background: rgba(255,255,255,0.1);
             padding: 8px 18px;
             border-radius: 40px;
             font-size: 0.8rem;
@@ -237,10 +434,10 @@
             white-space: nowrap;
             cursor: pointer;
             transition: all 0.2s;
-            color: #B45A2E;
+            color: rgba(255,255,255,0.6);
         }
         .category-tab.active {
-            background: #2A1A0A;
+            background: #FF6B4A;
             color: white;
         }
 
@@ -277,6 +474,10 @@
             padding: 8px 16px 30px;
             scroll-snap-type: x mandatory;
             scroll-behavior: smooth;
+        }
+        #galleryScreen {
+            background: #0a0a0a;
+            min-height: 100%;
         }
         #feedContainer::-webkit-scrollbar {
             display: none;
@@ -507,13 +708,13 @@
             </div>
         </div>
 
-        <!-- GALLERY SCREEN - TONAL STYLE REDESIGN -->
+        <!-- GALLERY SCREEN - Wall Culture App Style (matches screenshot) -->
         <div id="galleryScreen" class="screen">
-            <div style="padding: 16px 16px 8px;">
-                <h2 style="font-size: 1.4rem; font-weight: 800;">Poster Gallery</h2>
-                <p style="color:#B45A2E; font-size:0.75rem;">Tap any poster to add to cart</p>
+            <div style="padding: 16px 16px 8px; background: #0a0a0a;">
+                <h2 style="font-size: 1.4rem; font-weight: 800; color: white;">Poster Gallery</h2>
+                <p style="color: rgba(255,255,255,0.45); font-size:0.75rem;">Tap any poster to view · Add to cart</p>
             </div>
-            <div class="category-tabs" id="categoryTabs">
+            <div class="category-tabs" id="categoryTabs" style="background:#0a0a0a; padding: 8px 16px 14px;">
                 <div class="category-tab active" data-cat="all">All</div>
                 <div class="category-tab" data-cat="aesthetic">🎨 Aesthetic</div>
                 <div class="category-tab" data-cat="girlish">🌸 Girlish</div>
@@ -523,7 +724,7 @@
                 <div class="category-tab" data-cat="limited">⚡ Limited</div>
             </div>
             <div id="galleryGrid" class="gallery-feed">
-                <div class="loading">Loading gallery...</div>
+                <div class="loading" style="color: rgba(255,255,255,0.5); background:#0a0a0a; padding: 60px 0;">Loading gallery...</div>
             </div>
         </div>
 
@@ -589,6 +790,17 @@
 <div id="qr-reader"></div>
 <div id="referralModal" class="modal"><div class="modal-content"><h3>Refer a Friend</h3><p>Your code: <strong id="modalCode">—</strong></p><button id="copyModalBtn" class="btn btn-primary">Copy Code</button><button id="closeModalBtn" class="btn btn-secondary" style="margin-top:8px;">Close</button></div></div>
 <div id="storyModal" class="modal"><div class="modal-content"><h3>Instagram Story</h3><p>Post a story tagging <strong>@wallculture</strong> and paste your link:</p><input type="text" id="storyLink" class="custom-input" placeholder="Instagram story URL"><button id="submitStoryBtn" class="btn btn-primary">Submit & Earn</button><button id="closeStoryModal" class="btn btn-secondary" style="margin-top:8px;">Cancel</button></div></div>
+
+<!-- LIGHTBOX -->
+<div id="imageLightbox">
+    <button id="lightboxClose" onclick="closeLightbox()"><i class="fas fa-times"></i></button>
+    <img id="lightboxImg" src="" alt="">
+    <div id="lightboxInfo">
+        <div id="lightboxTitle"></div>
+        <div id="lightboxMeta"></div>
+        <button id="lightboxAddBtn" onclick="lightboxAddToCart()"><i class="fas fa-shopping-cart"></i> Add to Cart</button>
+    </div>
+</div>
 
 <script>
     const API_URL = 'https://wall-culture-3.onrender.com/api';
@@ -691,26 +903,114 @@
         container.addEventListener('touchstart', () => clearInterval(autoScrollInterval), { once: true });
     }
 
-    // ----- GALLERY SECTION: TONAL INSPIRED (exactly like reference image) -----
+    // ----- GALLERY SECTION: Wall Culture App Style (matches screenshot) -----
+    let currentLightboxPoster = null;
+
+    function openLightbox(poster) {
+        currentLightboxPoster = poster;
+        const lb = document.getElementById('imageLightbox');
+        document.getElementById('lightboxImg').src = poster.image_url || `https://picsum.photos/seed/${poster.id}/500/700`;
+        document.getElementById('lightboxTitle').textContent = poster.name;
+        document.getElementById('lightboxMeta').textContent = `KSH ${poster.price} · +${poster.points} pts`;
+        lb.classList.add('open');
+        lb.style.display = 'flex';
+    }
+    function closeLightbox() {
+        const lb = document.getElementById('imageLightbox');
+        lb.classList.remove('open');
+        lb.style.display = 'none';
+    }
+    function lightboxAddToCart() {
+        if (currentLightboxPoster) {
+            addToCart(currentLightboxPoster);
+            closeLightbox();
+        }
+    }
+    document.getElementById('imageLightbox').addEventListener('click', function(e) {
+        if (e.target === this) closeLightbox();
+    });
+
     function renderTonalGallery() {
         const container = document.getElementById('galleryGrid');
         let filtered = allPosters;
         if (currentGalleryCategory !== 'all') filtered = allPosters.filter(p => p.category === currentGalleryCategory);
-        if (!filtered.length) { container.innerHTML = '<div class="loading">No posters in this category</div>'; return; }
+        if (!filtered.length) { container.innerHTML = '<div class="loading" style="color:rgba(255,255,255,0.5);background:#0a0a0a;padding:60px 0;">No posters in this category</div>'; return; }
         container.innerHTML = '';
-        filtered.forEach(poster => {
-            const card = document.createElement('div');
-            card.className = 'gallery-card';
-            card.onclick = () => addToCart(poster);
-            card.innerHTML = `
-                <img class="gallery-image" src="${poster.image_url || 'https://picsum.photos/seed/' + poster.id + '/500/400'}" onerror="this.src='https://picsum.photos/400/300'">
-                <div class="gallery-overlay">
-                    <div class="gallery-name">${poster.name}</div>
-                    <div class="gallery-meta">KSH ${poster.price} · +${poster.points} pts</div>
-                </div>
-            `;
-            container.appendChild(card);
-        });
+        container.style.background = '#0a0a0a';
+
+        // Hero card (first poster)
+        const hero = filtered[0];
+        const heroWrap = document.createElement('div');
+        heroWrap.style.position = 'relative';
+
+        const heroCard = document.createElement('div');
+        heroCard.className = 'gallery-card-hero';
+        heroCard.innerHTML = `
+            <img class="gallery-image" src="${hero.image_url || 'https://picsum.photos/seed/' + hero.id + '/700/500'}" onerror="this.src='https://picsum.photos/700/500'" style="width:100%;height:100%;object-fit:cover;">
+            <div class="gallery-badge">${(currentGalleryCategory !== 'all' ? currentGalleryCategory : (hero.category || 'featured')).toUpperCase()}</div>
+            <div class="gallery-overlay">
+                <div class="gallery-name">${hero.name}</div>
+                <div class="gallery-meta">KSH ${hero.price} · +${hero.points} pts</div>
+            </div>
+        `;
+        heroCard.onclick = () => openLightbox(hero);
+        heroWrap.appendChild(heroCard);
+
+        // Cart FAB on hero
+        const fab = document.createElement('button');
+        fab.className = 'gallery-cart-fab';
+        fab.innerHTML = '<i class="fas fa-cart-plus"></i>';
+        fab.onclick = (e) => { e.stopPropagation(); addToCart(hero); };
+        heroWrap.appendChild(fab);
+
+        // Detail strip below hero
+        const strip = document.createElement('div');
+        strip.className = 'gallery-detail-strip';
+        const thumb1 = hero.image_url || `https://picsum.photos/seed/${hero.id}/200/200`;
+        const thumb2 = filtered[1] ? (filtered[1].image_url || `https://picsum.photos/seed/${filtered[1].id}/200/200`) : thumb1;
+        strip.innerHTML = `
+            <div class="gallery-detail-thumbs">
+                <img class="gallery-detail-thumb" src="${thumb1}" onerror="this.src='https://picsum.photos/200/200'">
+                <img class="gallery-detail-thumb" src="${thumb2}" onerror="this.src='https://picsum.photos/seed/2/200/200'">
+            </div>
+            <div class="gallery-detail-info">
+                <div class="gallery-detail-title">${hero.name} ›››</div>
+                <div class="gallery-detail-desc">${hero.description || 'A stunning wall art piece crafted for bold interiors. Premium print quality on every order.'}</div>
+                <div class="gallery-detail-price">KSH ${hero.price} &nbsp;·&nbsp; +${hero.points} pts</div>
+            </div>
+        `;
+        heroWrap.appendChild(strip);
+        container.appendChild(heroWrap);
+
+        // "More in [category]" grid section
+        const rest = filtered.slice(1);
+        if (rest.length) {
+            const moreSection = document.createElement('div');
+            moreSection.className = 'gallery-more-section';
+
+            const catLabel = currentGalleryCategory !== 'all' ? currentGalleryCategory : (hero.category || 'aesthetic');
+            moreSection.innerHTML = `<div class="gallery-more-title">More in ${catLabel}</div>`;
+
+            const grid = document.createElement('div');
+            grid.className = 'gallery-grid';
+
+            rest.slice(0, 9).forEach((poster, idx) => {
+                const card = document.createElement('div');
+                card.className = 'gallery-grid-card' + (idx === 0 ? ' selected' : '');
+                card.innerHTML = `
+                    <img class="gallery-grid-img" src="${poster.image_url || 'https://picsum.photos/seed/' + poster.id + '/300/400'}" onerror="this.src='https://picsum.photos/seed/${idx+10}/300/400'">
+                    <div class="gallery-grid-overlay">
+                        <span class="gallery-grid-name">${poster.name}</span>
+                        <span class="gallery-grid-price">KSH ${poster.price}</span>
+                    </div>
+                `;
+                card.onclick = () => openLightbox(poster);
+                grid.appendChild(card);
+            });
+
+            moreSection.appendChild(grid);
+            container.appendChild(moreSection);
+        }
     }
 
     // Cart & helper
