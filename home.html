@@ -2,107 +2,854 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>Wall Culture · Studio | Tonal-Inspired Gallery</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+    <title>Aura Gallery</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
+        /* ═══════════════════════════════════════════
+           CSS CUSTOM PROPERTIES & RESET
+        ═══════════════════════════════════════════ */
+        :root {
+            --primary: #C084FC;
+            --accent: #818CF8;
+            --primary-glow: rgba(192, 132, 252, 0.35);
+            --accent-glow: rgba(129, 140, 248, 0.25);
+            --bg-base: #080810;
+            --bg-surface: rgba(255,255,255,0.04);
+            --bg-card: rgba(255,255,255,0.06);
+            --bg-glass: rgba(255,255,255,0.08);
+            --border: rgba(255,255,255,0.08);
+            --border-bright: rgba(255,255,255,0.15);
+            --text-primary: #F1F0FF;
+            --text-secondary: rgba(241,240,255,0.55);
+            --text-muted: rgba(241,240,255,0.3);
+            --radius-sm: 12px;
+            --radius-md: 20px;
+            --radius-lg: 28px;
+            --radius-xl: 36px;
+            --transition: 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            --font-display: 'Syne', sans-serif;
+            --font-body: 'DM Sans', sans-serif;
+            --nav-height: 72px;
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+        }
+
+        *, *::before, *::after {
+            margin: 0; padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        body {
-            background: linear-gradient(145deg, #FFE8D4 0%, #FFD9B5 100%);
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            height: 100vh;
-            overflow: hidden;
+        html, body {
+            height: 100%;
+            background: var(--bg-base);
+            font-family: var(--font-body);
+            color: var(--text-primary);
+            overscroll-behavior: none;
         }
 
-        .app-wrapper {
-            max-width: 450px;
+        /* ═══════════════════════════════════════════
+           APP SHELL
+        ═══════════════════════════════════════════ */
+        .app-shell {
+            max-width: 430px;
             margin: 0 auto;
-            height: 100vh;
-            background: linear-gradient(135deg, #FFF5E6 0%, #FFE0C8 100%);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            box-shadow: 0 0 40px rgba(0, 0, 0, 0.15);
+            height: 100dvh;
             position: relative;
+            overflow: hidden;
+            background: var(--bg-base);
         }
 
+        /* Ambient background blob that reacts to theme */
+        .ambient-bg {
+            position: fixed;
+            top: -20%;
+            left: -30%;
+            width: 160%;
+            height: 80%;
+            background: radial-gradient(
+                ellipse at 40% 50%,
+                var(--primary-glow) 0%,
+                var(--accent-glow) 40%,
+                transparent 70%
+            );
+            pointer-events: none;
+            z-index: 0;
+            transition: background var(--transition);
+            filter: blur(40px);
+        }
+
+        /* ═══════════════════════════════════════════
+           HEADER
+        ═══════════════════════════════════════════ */
         .app-header {
-            padding: 16px 20px 12px;
+            position: relative;
+            z-index: 50;
             display: flex;
+            align-items: center;
             justify-content: space-between;
-            align-items: baseline;
-            border-bottom: 1px solid rgba(212, 107, 58, 0.2);
-            flex-shrink: 0;
+            padding: 16px 20px 12px;
+            padding-top: max(16px, env(safe-area-inset-top, 16px));
         }
 
-        .logo-area h1 {
+        .logo-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            box-shadow: 0 4px 16px var(--primary-glow);
+        }
+
+        .logo-text {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, var(--text-primary) 40%, var(--primary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            transition: background var(--transition);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .coin-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-bright);
+            padding: 6px 14px 6px 10px;
+            border-radius: 40px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            transition: all var(--transition);
+        }
+
+        .coin-badge .coin-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FBBF24, #F59E0B);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+
+        .icon-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .icon-btn:active { transform: scale(0.9); }
+
+        /* ═══════════════════════════════════════════
+           SCREEN CONTAINER & SCREENS
+        ═══════════════════════════════════════════ */
+        .screen-container {
+            position: relative;
+            z-index: 10;
+            height: calc(100dvh - 60px - var(--nav-height));
+            overflow-y: auto;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+            padding-bottom: calc(var(--nav-height) + 16px + var(--safe-bottom));
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .screen-container::-webkit-scrollbar { display: none; }
+
+        .screen {
+            display: none;
+            animation: screenIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .screen.active { display: block; }
+
+        @keyframes screenIn {
+            from { opacity: 0; transform: translateY(14px) scale(0.98); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* ═══════════════════════════════════════════
+           CATEGORY PILLS
+        ═══════════════════════════════════════════ */
+        .category-rail {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 4px 20px 16px;
+            scroll-snap-type: x proximity;
+            scrollbar-width: none;
+        }
+
+        .category-rail::-webkit-scrollbar { display: none; }
+
+        .cat-pill {
+            flex-shrink: 0;
+            scroll-snap-align: start;
+            padding: 8px 18px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            background: var(--bg-glass);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-family: var(--font-body);
+            letter-spacing: 0.2px;
+        }
+
+        .cat-pill.active {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-color: transparent;
+            color: white;
+            box-shadow: 0 4px 20px var(--primary-glow);
+            transform: scale(1.04);
+        }
+
+        .cat-pill:not(.active):hover {
+            background: var(--bg-card);
+            border-color: var(--border-bright);
+            color: var(--text-primary);
+        }
+
+        /* ═══════════════════════════════════════════
+           GALLERY SCREEN — HERO CARD
+        ═══════════════════════════════════════════ */
+        #galleryScreen {
+            padding: 0 0 12px;
+        }
+
+        .gallery-header {
+            padding: 12px 20px 8px;
+        }
+
+        .gallery-header h2 {
+            font-family: var(--font-display);
             font-size: 1.6rem;
             font-weight: 800;
-            background: linear-gradient(135deg, #FF6B4A, #FF8E53, #FFB347);
+            letter-spacing: -0.5px;
+            color: var(--text-primary);
+        }
+
+        .gallery-header p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* Hero Card */
+        .hero-card {
+            position: relative;
+            margin: 0 16px 0;
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            height: 370px;
+            cursor: pointer;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px var(--border);
+        }
+
+        .hero-card:active { transform: scale(0.975); }
+
+        .hero-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.6s ease;
+            display: block;
+        }
+
+        .hero-card:hover .hero-img { transform: scale(1.04); }
+
+        /* Gradient overlay */
+        .hero-gradient {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                180deg,
+                transparent 20%,
+                rgba(0,0,0,0.2) 50%,
+                rgba(0,0,0,0.8) 80%,
+                rgba(0,0,0,0.95) 100%
+            );
+            pointer-events: none;
+        }
+
+        /* Category badge top-left */
+        .hero-badge {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            background: rgba(0,0,0,0.45);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            padding: 5px 12px;
+            border-radius: 40px;
+        }
+
+        /* Favorite button top-right */
+        .hero-fav {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255,255,255,0.7);
+            cursor: pointer;
+            transition: all 0.25s;
+            font-size: 0.9rem;
+        }
+
+        .hero-fav.liked { background: #FF4D6D; border-color: #FF4D6D; color: white; }
+        .hero-fav:active { transform: scale(1.2); }
+
+        /* Bottom overlay info */
+        .hero-info {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px 16px 16px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .hero-info-main { flex: 1; }
+
+        .hero-title {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: white;
+            line-height: 1.1;
+            letter-spacing: -0.5px;
+        }
+
+        .hero-desc {
+            color: rgba(255,255,255,0.65);
+            font-size: 0.72rem;
+            margin-top: 4px;
+            line-height: 1.4;
+        }
+
+        .hero-price {
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .hero-price .price-tag {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+        }
+
+        /* Thumbnail stack on hero */
+        .hero-thumbs {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .hero-thumb {
+            width: 52px;
+            height: 52px;
+            border-radius: 12px;
+            object-fit: cover;
+            border: 2px solid rgba(255,255,255,0.25);
+            cursor: pointer;
+            transition: all 0.2s;
+            filter: brightness(0.7);
+        }
+
+        .hero-thumb.active-thumb {
+            border-color: var(--primary);
+            filter: brightness(1);
+            box-shadow: 0 0 12px var(--primary-glow);
+        }
+
+        /* ═══════════════════════════════════════════
+           MORE LIKE THIS — HORIZONTAL SCROLL CARDS
+        ═══════════════════════════════════════════ */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 20px 12px;
+        }
+
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.3px;
+        }
+
+        .section-link {
+            font-size: 0.75rem;
+            color: var(--primary);
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .section-link:active { opacity: 0.6; }
+
+        /* Horizontal scroll row */
+        .h-scroll {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding: 4px 20px 16px;
+            scroll-snap-type: x mandatory;
+            scrollbar-width: none;
+        }
+
+        .h-scroll::-webkit-scrollbar { display: none; }
+
+        .h-card {
+            flex-shrink: 0;
+            width: 160px;
+            scroll-snap-align: start;
+            cursor: pointer;
+            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .h-card:active { transform: scale(0.94); }
+
+        .h-card-img-wrap {
+            width: 160px;
+            height: 200px;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+        }
+
+        .h-card-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+            display: block;
+        }
+
+        .h-card:hover .h-card-img { transform: scale(1.08); }
+
+        .h-card-fav {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.45);
+            backdrop-filter: blur(12px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255,255,255,0.7);
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .h-card-fav.liked { background: #FF4D6D; color: white; }
+
+        .h-card-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60%;
+            background: linear-gradient(to top, rgba(0,0,0,0.75), transparent);
+            border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+        }
+
+        .h-card-info {
+            padding: 8px 4px 0;
+        }
+
+        .h-card-name {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .h-card-price {
+            font-size: 0.72rem;
+            color: var(--primary);
+            font-weight: 700;
+            margin-top: 2px;
+        }
+
+        /* ═══════════════════════════════════════════
+           GRID GALLERY (secondary)
+        ═══════════════════════════════════════════ */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            padding: 0 16px 20px;
+        }
+
+        .grid-card {
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
+            aspect-ratio: 3/4;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .grid-card:active { transform: scale(0.93); }
+
+        .grid-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.4s;
+        }
+
+        .grid-card:hover img { transform: scale(1.08); }
+
+        .grid-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 55%);
+        }
+
+        .grid-info {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 8px;
+        }
+
+        .grid-name {
+            display: block;
+            color: white;
+            font-size: 0.6rem;
+            font-weight: 700;
+        }
+
+        .grid-price {
+            color: var(--primary);
+            font-size: 0.58rem;
+            font-weight: 600;
+            transition: color var(--transition);
+        }
+
+        /* Skeleton loader */
+        .skeleton {
+            background: linear-gradient(
+                90deg,
+                rgba(255,255,255,0.04) 25%,
+                rgba(255,255,255,0.1) 50%,
+                rgba(255,255,255,0.04) 75%
+            );
+            background-size: 200% 100%;
+            animation: shimmer 1.8s infinite;
+            border-radius: var(--radius-sm);
+        }
+
+        @keyframes shimmer {
+            0%   { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        /* ═══════════════════════════════════════════
+           HOME SCREEN
+        ═══════════════════════════════════════════ */
+        #homeScreen {
+            padding: 8px 0 0;
+        }
+
+        .home-greeting {
+            padding: 4px 20px 16px;
+        }
+
+        .home-greeting .sup {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .home-greeting h2 {
+            font-family: var(--font-display);
+            font-size: 1.7rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            line-height: 1.1;
+            margin-top: 2px;
+        }
+
+        .home-greeting .highlight {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
         }
 
-        .quick-points {
-            background: #FFD5A4;
-            padding: 6px 14px;
-            border-radius: 40px;
-            color: #B45A2E;
-            font-weight: 700;
+        /* Stats row */
+        .stats-row {
+            display: flex;
+            gap: 10px;
+            padding: 0 20px 20px;
         }
 
-        .quick-points span {
-            font-weight: 800;
-            color: #E85D2E;
-        }
-
-        .screen-container {
+        .stat-card {
             flex: 1;
-            overflow-y: auto;
-            overflow-x: hidden;
-            padding: 0;
-            padding-bottom: calc(0px + env(safe-area-inset-bottom, 0px));
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 14px 12px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
         }
 
-        .screen {
-            display: none;
-            animation: fadeIn 0.3s ease;
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, var(--primary-glow), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
         }
 
-        .screen.active {
+        .stat-card:hover::before { opacity: 1; }
+
+        .stat-val {
+            font-family: var(--font-display);
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+
+        .stat-lbl {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+            font-weight: 500;
+        }
+
+        .stat-icon {
+            font-size: 0.9rem;
+            margin-bottom: 4px;
             display: block;
         }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        /* Progress milestone */
+        .milestone-card {
+            margin: 0 20px 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 16px;
         }
 
-        .tab-bar {
-            background: #FFF0E0;
-            border-top: 1px solid rgba(255, 150, 80, 0.3);
+        .milestone-header {
             display: flex;
-            padding: 8px 16px 12px;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 0.78rem;
+        }
+
+        .milestone-label {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .milestone-pts {
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .progress-track {
+            height: 6px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 40px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            border-radius: 40px;
+            transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 0 12px var(--primary-glow);
+        }
+
+        /* Quick actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            padding: 0 20px 20px;
+        }
+
+        .qa-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             gap: 6px;
-            justify-content: space-around;
-            padding-bottom: max(12px, env(safe-area-inset-bottom, 12px));
+            padding: 14px 8px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            color: var(--text-secondary);
+            font-size: 0.65rem;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            font-family: var(--font-body);
+        }
+
+        .qa-btn:active { transform: scale(0.92); background: var(--bg-glass); }
+
+        .qa-btn .qa-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        .qa-btn:nth-child(1) .qa-icon { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; }
+        .qa-btn:nth-child(2) .qa-icon { background: linear-gradient(135deg, #FBBF24, #F59E0B); color: white; }
+        .qa-btn:nth-child(3) .qa-icon { background: linear-gradient(135deg, #34D399, #10B981); color: white; }
+        .qa-btn:nth-child(4) .qa-icon { background: linear-gradient(135deg, #F472B6, #EC4899); color: white; }
+
+        /* ═══════════════════════════════════════════
+           RECENTLY VIEWED
+        ═══════════════════════════════════════════ */
+        .recents-strip {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 0 20px 24px;
+            scrollbar-width: none;
+        }
+
+        .recents-strip::-webkit-scrollbar { display: none; }
+
+        .recent-chip {
             flex-shrink: 0;
-            position: relative;
-            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 8px 12px 8px 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .recent-chip:active { transform: scale(0.95); }
+
+        .recent-thumb {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+
+        .recent-info .name {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .recent-info .price {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+        }
+
+        /* ═══════════════════════════════════════════
+           BOTTOM NAV — FIXED, PROPERLY SPACED
+        ═══════════════════════════════════════════ */
+        .tab-bar {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 430px;
+            z-index: 1000;
+            background: rgba(8, 8, 16, 0.85);
+            backdrop-filter: blur(30px) saturate(1.5);
+            -webkit-backdrop-filter: blur(30px) saturate(1.5);
+            border-top: 1px solid var(--border);
+            display: flex;
+            padding: 10px 20px;
+            padding-bottom: max(10px, var(--safe-bottom));
+            gap: 4px;
+            justify-content: space-around;
         }
 
         .tab-item {
@@ -111,1040 +858,1910 @@
             flex-direction: column;
             align-items: center;
             gap: 4px;
-            padding: 8px 0;
-            border-radius: 30px;
+            padding: 8px 4px;
+            border-radius: 16px;
             background: transparent;
             border: none;
-            color: #CA834E;
+            color: var(--text-muted);
+            font-size: 0.62rem;
             font-weight: 600;
-            font-size: 0.7rem;
-            transition: 0.2s;
             cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            font-family: var(--font-body);
+            letter-spacing: 0.3px;
         }
 
         .tab-item i {
-            font-size: 1.4rem;
+            font-size: 1.2rem;
+            transition: all 0.25s;
         }
 
         .tab-item.active {
-            background: #FFD1A4;
-            color: #E85D2E;
+            color: var(--primary);
         }
 
-        .card {
-            background: rgba(255, 245, 235, 0.9);
-            border-radius: 32px;
-            padding: 1.2rem;
-            margin-bottom: 1rem;
-            border: 1px solid rgba(255, 140, 80, 0.3);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+        .tab-item.active i {
+            filter: drop-shadow(0 0 8px var(--primary-glow));
+            transform: translateY(-2px);
         }
 
-        .btn {
-            border: none;
-            padding: 12px 20px;
-            border-radius: 60px;
-            font-weight: 700;
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: 0.15s;
-        }
-
-        .btn-primary {
-            background: linear-gradient(95deg, #FF6B4A, #FF8E53);
-            color: white;
-        }
-
-        .btn-secondary {
-            background: #FFE0C0;
-            border: 1px solid #FFA559;
-            color: #D45A2C;
-        }
-
-        .btn-success {
-            background: linear-gradient(95deg, #38B000, #70E000);
-            color: white;
-        }
-
-        /* ===== TONAL-INSPIRED GALLERY (Wall Culture App style) ===== */
-        .gallery-feed {
-            display: flex;
-            flex-direction: column;
-            gap: 0;
-            padding: 0 0 20px;
-        }
-
-        /* Featured hero card - full width, tall */
-        .gallery-card-hero {
-            position: relative;
-            width: 100%;
-            height: 340px;
-            overflow: hidden;
-            cursor: pointer;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.18);
-            transition: transform 0.2s ease;
-        }
-        .gallery-card-hero:active { transform: scale(0.99); }
-
-        /* Detail strip below hero (like the BMW M4 section in screenshot) */
-        .gallery-detail-strip {
-            background: #111;
-            padding: 14px 16px 18px;
-            display: flex;
-            gap: 12px;
-            align-items: flex-start;
-        }
-        .gallery-detail-thumbs {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-        .gallery-detail-thumb {
-            width: 60px;
-            height: 60px;
-            border-radius: 10px;
-            object-fit: cover;
-            border: 1px solid rgba(255,255,255,0.12);
-        }
-        .gallery-detail-logo {
-            width: 28px;
-            height: 28px;
-            object-fit: contain;
-            margin-bottom: 4px;
-        }
-        .gallery-detail-info {
-            flex: 1;
-        }
-        .gallery-detail-title {
-            color: #ccc;
-            font-size: 1.1rem;
-            font-weight: 800;
-            letter-spacing: -0.3px;
-        }
-        .gallery-detail-desc {
-            color: rgba(255,255,255,0.5);
-            font-size: 0.65rem;
-            line-height: 1.5;
-            margin-top: 4px;
-        }
-        .gallery-detail-price {
-            color: white;
-            font-size: 0.75rem;
-            font-weight: 700;
-            margin-top: 8px;
-        }
-        .gallery-cart-fab {
-            position: absolute;
-            bottom: 90px;
-            right: 16px;
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #FF6B4A, #FF8E53);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 1.2rem;
-            box-shadow: 0 4px 14px rgba(255,107,74,0.5);
-            cursor: pointer;
-            border: none;
-            z-index: 10;
-        }
-
-        /* "More in [category]" section */
-        .gallery-more-section {
-            padding: 14px 16px 8px;
-            background: #0a0a0a;
-        }
-        .gallery-more-title {
-            color: white;
-            font-size: 1rem;
-            font-weight: 800;
-            margin-bottom: 12px;
-        }
-        .gallery-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-        }
-        .gallery-grid-card {
-            position: relative;
-            border-radius: 14px;
-            overflow: hidden;
-            cursor: pointer;
-            aspect-ratio: 3/4;
-            transition: transform 0.18s;
-        }
-        .gallery-grid-card:active { transform: scale(0.96); }
-        .gallery-grid-card.selected {
-            outline: 2px solid #FF6B4A;
-        }
-        .gallery-grid-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-        }
-        .gallery-grid-overlay {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: linear-gradient(to top, rgba(0,0,0,0.85), transparent);
-            padding: 8px 8px 6px;
-        }
-        .gallery-grid-name {
-            color: white;
-            font-size: 0.65rem;
-            font-weight: 700;
-            display: block;
-        }
-        .gallery-grid-price {
-            color: #FF8E53;
-            font-size: 0.6rem;
-            font-weight: 600;
-        }
-
-        .gallery-image {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .gallery-overlay {
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(to top, rgba(0,0,0,0.55), transparent 60%);
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            padding: 16px;
-        }
-
-        .gallery-badge {
-            position: absolute;
-            top: 14px;
-            left: 14px;
-            background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(6px);
-            color: white;
-            font-size: 0.65rem;
-            font-weight: 800;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            padding: 5px 12px;
-            border-radius: 40px;
-        }
-
-        .gallery-name {
-            color: white;
-            font-size: 1.1rem;
-            font-weight: 800;
-            letter-spacing: -0.3px;
-        }
-
-        .gallery-meta {
-            color: rgba(255, 255, 255, 0.85);
-            font-size: 0.75rem;
-            margin-top: 4px;
-            font-weight: 500;
-        }
-
-        /* ===== LIGHTBOX ===== */
-        #imageLightbox {
+        /* ═══════════════════════════════════════════
+           FULLSCREEN MODAL (Image Viewer)
+        ═══════════════════════════════════════════ */
+        #imageModal {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.95);
-            z-index: 2000;
+            z-index: 9000;
+            overflow: hidden;
+        }
+
+        #imageModal.open { display: flex; flex-direction: column; animation: modalIn 0.35s ease; }
+
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.96); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+
+        /* Blurred bg image */
+        .modal-bg {
+            position: absolute;
+            inset: 0;
+            background-size: cover;
+            background-position: center;
+            filter: blur(40px) brightness(0.3) saturate(1.5);
+            transform: scale(1.15);
+            transition: background var(--transition);
+        }
+
+        /* Modal content */
+        .modal-inner {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            padding-top: max(16px, env(safe-area-inset-top, 16px));
+        }
+
+        .modal-close {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.12);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: white;
+            display: flex;
             align-items: center;
             justify-content: center;
-            flex-direction: column;
-            animation: lbFadeIn 0.2s ease;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
         }
-        #imageLightbox.open { display: flex; }
-        @keyframes lbFadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        #lightboxImg {
-            max-width: 94vw;
-            max-height: 75vh;
-            object-fit: contain;
-            border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
-        }
-        #lightboxInfo {
-            margin-top: 16px;
-            text-align: center;
-        }
-        #lightboxTitle {
+
+        .modal-close:active { transform: scale(0.9); }
+
+        .modal-title-sm {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            font-weight: 700;
             color: white;
-            font-size: 1.1rem;
-            font-weight: 800;
         }
-        #lightboxMeta {
-            color: rgba(255,255,255,0.6);
-            font-size: 0.8rem;
+
+        .modal-img-wrap {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 16px;
+            overflow: hidden;
+        }
+
+        #modalImg {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: var(--radius-lg);
+            object-fit: contain;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.7);
+            transition: transform 0.3s ease;
+            transform-origin: center center;
+            touch-action: none;
+            user-select: none;
+        }
+
+        .modal-bottom {
+            padding: 16px 20px;
+            padding-bottom: max(24px, calc(var(--safe-bottom) + 16px));
+        }
+
+        .modal-info-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+
+        .modal-item-name {
+            font-family: var(--font-display);
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: white;
+            line-height: 1.1;
+        }
+
+        .modal-item-meta {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.55);
             margin-top: 4px;
         }
-        #lightboxClose {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(255,255,255,0.15);
-            border: none;
+
+        .modal-item-price {
+            font-family: var(--font-display);
+            font-size: 1.2rem;
+            font-weight: 800;
             color: white;
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            font-size: 1.1rem;
-            cursor: pointer;
         }
-        #lightboxAddBtn {
-            margin-top: 16px;
-            background: linear-gradient(95deg, #FF6B4A, #FF8E53);
-            color: white;
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 14px;
+            border-radius: var(--radius-md);
             border: none;
-            padding: 12px 32px;
-            border-radius: 60px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: var(--font-body);
+        }
+
+        .modal-btn:active { transform: scale(0.96); }
+
+        .modal-btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            box-shadow: 0 6px 20px var(--primary-glow);
+        }
+
+        .modal-btn-secondary {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: white;
+        }
+
+        .modal-icon-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .modal-icon-btn {
+            width: 46px;
+            height: 46px;
+            border-radius: 14px;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        .modal-icon-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.18); }
+        .modal-icon-btn.liked { background: #FF4D6D; border-color: #FF4D6D; }
+
+        /* ═══════════════════════════════════════════
+           SHOP SCREEN
+        ═══════════════════════════════════════════ */
+        #shopScreen {
+            padding: 8px 0 0;
+        }
+
+        .shop-header {
+            padding: 4px 20px 16px;
+        }
+
+        .shop-header h2 {
+            font-family: var(--font-display);
+            font-size: 1.6rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .cart-card {
+            margin: 0 20px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+        }
+
+        .cart-card-title {
+            font-weight: 700;
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .cart-count-badge {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            font-size: 0.65rem;
+            padding: 2px 8px;
+            border-radius: 20px;
+        }
+
+        .cart-item-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.8rem;
+        }
+
+        .cart-item-name { font-weight: 600; color: var(--text-primary); }
+        .cart-item-sub  { font-size: 0.65rem; color: var(--text-muted); }
+        .cart-item-price { color: var(--primary); font-weight: 700; }
+
+        .remove-btn {
+            background: none;
+            border: none;
+            color: rgba(255,80,80,0.6);
+            cursor: pointer;
+            padding: 4px;
+            transition: color 0.2s;
+        }
+
+        .remove-btn:hover { color: #FF4D6D; }
+
+        .cart-total {
+            display: flex;
+            justify-content: space-between;
+            padding-top: 12px;
+            font-weight: 700;
+        }
+
+        .checkout-btn {
+            width: 100%;
+            padding: 14px;
+            border-radius: var(--radius-md);
+            border: none;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
             font-weight: 700;
             font-size: 0.9rem;
             cursor: pointer;
-        }
-
-        /* Category tabs for gallery (pill style) */
-        .category-tabs {
-            display: flex;
-            gap: 10px;
-            overflow-x: auto;
-            padding: 0 16px 16px;
-            scrollbar-width: none;
-        }
-        .category-tabs::-webkit-scrollbar {
-            display: none;
-        }
-        .category-tab {
-            background: rgba(255,255,255,0.1);
-            padding: 8px 18px;
-            border-radius: 40px;
-            font-size: 0.8rem;
-            font-weight: 700;
-            white-space: nowrap;
-            cursor: pointer;
+            margin-top: 12px;
+            font-family: var(--font-body);
+            box-shadow: 0 6px 20px var(--primary-glow);
             transition: all 0.2s;
-            color: rgba(255,255,255,0.6);
-        }
-        .category-tab.active {
-            background: #FF6B4A;
-            color: white;
         }
 
-        /* ===== DISCOVER SECTION (RETAINED ORIGINAL LOOK) ===== */
-        .discover-tabs {
-            display: flex;
-            gap: 10px;
-            overflow-x: auto;
-            padding: 0 16px 16px;
-            scrollbar-width: none;
+        .checkout-btn:active { transform: scale(0.97); }
+
+        .shop-section-card {
+            margin: 0 20px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 16px;
         }
-        .discover-tabs::-webkit-scrollbar {
-            display: none;
-        }
-        .discover-tab {
-            padding: 8px 18px;
-            border-radius: 40px;
-            background: #FFE8D8;
-            font-size: 0.8rem;
+
+        .shop-section-title {
             font-weight: 700;
-            white-space: nowrap;
-            cursor: pointer;
-            color: #B45A2E;
-        }
-        .discover-tab.active {
-            background: #2A1A0A;
-            color: white;
+            font-size: 0.9rem;
+            margin-bottom: 12px;
         }
 
+        .mystery-btn {
+            width: 100%;
+            padding: 14px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-bright);
+            background: var(--bg-glass);
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            font-family: var(--font-body);
+            transition: all 0.2s;
+        }
+
+        .mystery-btn:active { background: var(--bg-card); }
+
+        .custom-file-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-bright);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+        }
+
+        .custom-file-label:active { opacity: 0.7; }
+
+        .custom-input-field {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,0.05);
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            margin: 8px 0;
+            font-family: var(--font-body);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .custom-input-field:focus { border-color: var(--primary); }
+        .custom-input-field::placeholder { color: var(--text-muted); }
+
+        /* ═══════════════════════════════════════════
+           PROFILE SCREEN
+        ═══════════════════════════════════════════ */
+        #profileScreen {
+            padding: 8px 0 0;
+        }
+
+        .profile-hero {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px 20px 24px;
+        }
+
+        .avatar-wrap {
+            width: 80px;
+            height: 80px;
+            border-radius: 24px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin-bottom: 12px;
+            box-shadow: 0 8px 32px var(--primary-glow);
+        }
+
+        .profile-name {
+            font-family: var(--font-display);
+            font-size: 1.3rem;
+            font-weight: 800;
+        }
+
+        .profile-email {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .profile-card {
+            margin: 0 20px 14px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+        }
+
+        .profile-card-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        .profile-stat-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            padding: 6px 0;
+        }
+
+        .profile-stat-label { color: var(--text-secondary); }
+        .profile-stat-value { font-weight: 700; color: var(--text-primary); }
+
+        .referral-code-wrap {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border-bright);
+            border-radius: var(--radius-md);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .referral-code {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: var(--primary);
+        }
+
+        .copy-btn {
+            padding: 8px 14px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            background: var(--bg-glass);
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: var(--font-body);
+            transition: all 0.2s;
+        }
+
+        .copy-btn:active { background: var(--primary); border-color: var(--primary); color: white; }
+
+        .sign-out-btn {
+            margin: 0 20px;
+            width: calc(100% - 40px);
+            padding: 14px;
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(255,80,80,0.3);
+            background: rgba(255,80,80,0.08);
+            color: rgba(255,120,120,0.9);
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            font-family: var(--font-body);
+            transition: all 0.2s;
+        }
+
+        .sign-out-btn:active { background: rgba(255,80,80,0.2); }
+
+        /* ═══════════════════════════════════════════
+           TOAST NOTIFICATION
+        ═══════════════════════════════════════════ */
+        .toast {
+            position: fixed;
+            bottom: calc(var(--nav-height) + 16px + var(--safe-bottom));
+            left: 20px;
+            right: 20px;
+            max-width: calc(430px - 40px);
+            margin: 0 auto;
+            background: rgba(20, 20, 35, 0.92);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-bright);
+            color: var(--text-primary);
+            padding: 14px 18px;
+            border-radius: 16px;
+            text-align: center;
+            font-size: 0.85rem;
+            font-weight: 600;
+            z-index: 8000;
+            animation: toastIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        }
+
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateY(16px) scale(0.95); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* ═══════════════════════════════════════════
+           MODALS (Referral, Story)
+        ═══════════════════════════════════════════ */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
+            z-index: 7000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.open { display: flex; }
+
+        .modal-box {
+            background: #12121E;
+            border: 1px solid var(--border-bright);
+            border-radius: var(--radius-xl);
+            padding: 28px;
+            width: calc(100% - 48px);
+            max-width: 340px;
+            text-align: center;
+            animation: modalIn 0.35s ease;
+        }
+
+        .modal-box h3 {
+            font-family: var(--font-display);
+            font-size: 1.2rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+
+        .modal-box p {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,0.05);
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            margin-bottom: 12px;
+            font-family: var(--font-body);
+            outline: none;
+        }
+
+        .modal-input:focus { border-color: var(--primary); }
+
+        .modal-btn-full {
+            width: 100%;
+            padding: 13px;
+            border-radius: var(--radius-md);
+            border: none;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            font-family: var(--font-body);
+            margin-bottom: 8px;
+            transition: all 0.2s;
+        }
+
+        .modal-btn-full:active { transform: scale(0.97); }
+
+        .modal-btn-full.primary {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            box-shadow: 0 4px 16px var(--primary-glow);
+        }
+
+        .modal-btn-full.ghost {
+            background: var(--bg-glass);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+        /* Audit log */
+        .audit-card {
+            margin: 0 20px 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+        }
+
+        .audit-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        .audit-list {
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .audit-list::-webkit-scrollbar { display: none; }
+
+        .audit-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.72rem;
+        }
+
+        .audit-action { color: var(--text-secondary); }
+        .audit-pts { color: var(--primary); font-weight: 700; }
+        .audit-time { color: var(--text-muted); }
+
+        /* QR reader */
+        #qr-reader {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 9500;
+            background: #000;
+        }
+
+        #qr-reader.open { display: flex; flex-direction: column; justify-content: center; }
+
+        .close-scanner {
+            position: absolute;
+            top: 24px;
+            right: 20px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.15);
+            border: none;
+            color: white;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        /* Loading state */
+        .loading-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        /* discover feed (home screen horizontal cards) */
         #feedContainer {
             display: flex;
-            gap: 16px;
+            gap: 14px;
             overflow-x: auto;
-            padding: 8px 16px 30px;
+            padding: 4px 20px 20px;
             scroll-snap-type: x mandatory;
-            scroll-behavior: smooth;
+            scrollbar-width: none;
         }
-        #galleryScreen {
-            background: #0a0a0a;
-            min-height: 100%;
-        }
-        #feedContainer::-webkit-scrollbar {
-            display: none;
-        }
+
+        #feedContainer::-webkit-scrollbar { display: none; }
+
         .poster-feed-card {
-            min-width: 270px;
-            height: 260px;
-            border-radius: 32px;
+            flex-shrink: 0;
+            width: 220px;
+            height: 240px;
+            border-radius: var(--radius-xl);
             overflow: hidden;
             position: relative;
-            flex-shrink: 0;
             scroll-snap-align: center;
-            transform: scale(0.92);
-            opacity: 0.7;
-            transition: all 0.3s ease;
             cursor: pointer;
+            transform: scale(0.93);
+            opacity: 0.65;
+            transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
         }
+
         .poster-feed-card.active {
             transform: scale(1);
             opacity: 1;
-            box-shadow: 0 12px 28px rgba(0,0,0,0.2);
+            box-shadow: 0 16px 40px rgba(0,0,0,0.45);
         }
+
         .poster-feed-image {
             width: 100%;
             height: 100%;
             object-fit: cover;
             transition: transform 0.4s ease;
         }
-        .poster-feed-card.active .poster-feed-image {
-            transform: scale(1.03);
-        }
+
+        .poster-feed-card.active .poster-feed-image { transform: scale(1.03); }
+
         .poster-overlay {
             position: absolute;
             inset: 0;
-            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent 60%);
+            background: linear-gradient(to top, rgba(0,0,0,0.85), transparent 55%);
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
-            padding: 16px;
+            padding: 14px;
         }
+
         .poster-feed-name {
             color: white;
-            font-weight: 800;
-            font-size: 1rem;
+            font-weight: 700;
+            font-size: 0.9rem;
+            font-family: var(--font-display);
         }
+
         .poster-feed-meta {
-            color: rgba(255,255,255,0.8);
-            font-size: 0.7rem;
+            color: rgba(255,255,255,0.65);
+            font-size: 0.68rem;
+            margin-top: 2px;
         }
+
         .poster-fav {
             position: absolute;
             top: 12px;
             right: 12px;
-            width: 38px;
-            height: 38px;
+            width: 34px;
+            height: 34px;
             border-radius: 50%;
-            background: rgba(0,0,0,0.4);
+            background: rgba(0,0,0,0.45);
             backdrop-filter: blur(8px);
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
+            color: rgba(255,255,255,0.7);
             cursor: pointer;
-            transition: 0.2s;
+            font-size: 0.8rem;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.2s;
         }
-        .poster-fav.active {
-            background: #FF4D6D;
-            color: white;
-        }
+
+        .poster-fav.liked { background: #FF4D6D; color: white; border-color: #FF4D6D; }
+        .poster-fav:active { transform: scale(1.2); }
+
         .poster-add {
             position: absolute;
             bottom: 14px;
             right: 14px;
             background: white;
-            color: #2A1A0A;
+            color: #0a0a14;
             border-radius: 50%;
-            width: 42px;
-            height: 42px;
+            width: 36px;
+            height: 36px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: bold;
+            font-weight: 800;
+            font-size: 1.1rem;
             cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+            transition: all 0.2s;
         }
 
-        /* Cart, modals, etc */
-        .cart-sidebar {
-            background: #FFF0E5;
-            border-radius: 28px;
-            padding: 16px;
-            margin-bottom: 16px;
-            border: 1px solid #FFB47A;
-        }
-        .cart-item {
+        .poster-add:active { transform: scale(0.85); }
+
+        /* ═══════════════════════════════════════════
+           GALLERY SCREEN - discover tabs
+        ═══════════════════════════════════════════ */
+        #discoverTabsContainer {
             display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid #FFD9B5;
-            font-size: 0.8rem;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 0 20px 16px;
+            scrollbar-width: none;
         }
-        .remove-item {
-            color: #FF6B4A;
-            background: none;
-            border: none;
-            cursor: pointer;
-        }
-        #qr-reader {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            z-index: 1000;
-            background: #000;
-            padding: 20px;
-        }
-        #qr-reader.open {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-        .close-scanner {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(255,255,255,0.2);
-            border: none;
-            color: white;
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            font-size: 1.2rem;
-            cursor: pointer;
-        }
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.6);
-            align-items: center;
-            justify-content: center;
-            z-index: 1100;
-        }
-        .modal-content {
-            background: #FFF5EA;
+
+        #discoverTabsContainer::-webkit-scrollbar { display: none; }
+
+        .discover-tab {
+            flex-shrink: 0;
+            padding: 7px 16px;
             border-radius: 40px;
-            padding: 24px;
-            width: 80%;
-            max-width: 320px;
-            text-align: center;
+            background: var(--bg-glass);
+            border: 1px solid var(--border);
+            font-size: 0.78rem;
+            font-weight: 600;
+            white-space: nowrap;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+            font-family: var(--font-body);
         }
-        .custom-input {
-            width: 100%;
-            padding: 12px;
-            border-radius: 60px;
-            border: 1px solid #FFB47A;
-            background: white;
-            margin: 8px 0;
-        }
-        .audit-item {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.7rem;
-            padding: 4px 0;
-            border-bottom: 1px solid #FFD9B5;
-        }
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #B45A2E;
+
+        .discover-tab.active {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-color: transparent;
+            color: white;
         }
     </style>
 </head>
 <body>
-<div class="app-wrapper">
+
+<!-- Ambient background -->
+<div class="ambient-bg" id="ambientBg"></div>
+
+<div class="app-shell">
+
+    <!-- ══ HEADER ══ -->
     <div class="app-header">
-        <div class="logo-area"><h1>WALL CULTURE</h1></div>
-        <div class="quick-points"><i class="fas fa-gem"></i> <span id="globalPoints">0</span> pts</div>
+        <div class="logo-group">
+            <div class="logo-icon">✦</div>
+            <span class="logo-text">Aura</span>
+        </div>
+        <div class="header-actions">
+            <div class="coin-badge">
+                <div class="coin-icon">✦</div>
+                <span id="globalCoins">0</span> coins
+            </div>
+            <button class="icon-btn" onclick="showToast('🔔 Notifications coming soon')">
+                <i class="fas fa-bell"></i>
+            </button>
+        </div>
     </div>
 
-    <div class="screen-container">
-        <!-- HOME SCREEN (unchanged structure) -->
+    <!-- ══ SCREEN CONTAINER ══ -->
+    <div class="screen-container" id="screenContainer">
+
+        <!-- ════ HOME SCREEN ════ -->
         <div id="homeScreen" class="screen active">
-            <div class="card" style="background: linear-gradient(135deg, #FFD1A4, #FFB87A);">
-                <div style="display: flex; justify-content: space-between;">
-                    <span>🔥 Streak</span>
-                    <div><i class="fas fa-fire"></i> <span id="homeStreak">0</span> day streak!</div>
-                </div>
-                <h2>Hey, <span id="homeUserName">there</span>!</h2>
-                <p>This week: <strong><span id="homeWeekly">0</span> pts</strong></p>
+
+            <div class="home-greeting">
+                <div class="sup">Good evening ✦</div>
+                <h2>Hey, <span class="highlight" id="homeUserName">Curator</span>!</h2>
             </div>
-            <div class="card">
-                <h3>Quick Actions</h3>
-                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <button class="btn btn-primary" id="scanBtn" style="flex:1;"><i class="fas fa-camera"></i> Scan QR</button>
-                    <button class="btn btn-secondary" id="dailyBtn" style="flex:1;"><i class="fas fa-sun"></i> Check-in</button>
-                    <button class="btn btn-primary" id="referBtn" style="flex:1;"><i class="fas fa-user-plus"></i> Refer</button>
+
+            <!-- Stats -->
+            <div class="stats-row">
+                <div class="stat-card">
+                    <span class="stat-icon">🔥</span>
+                    <div class="stat-val" id="homeStreak">0</div>
+                    <div class="stat-lbl">Day Streak</div>
                 </div>
-                <div style="display: flex; gap: 10px; margin-top: 10px;">
-                    <button class="btn" id="storyBtn" style="background:#E1306C; color:white; flex:1;"><i class="fab fa-instagram"></i> Story</button>
-                    <button class="btn" id="roomTourBtn" style="background:#FF9B5E; color:white; flex:1;"><i class="fas fa-camera"></i> Room Tour</button>
+                <div class="stat-card">
+                    <span class="stat-icon">✦</span>
+                    <div class="stat-val" id="homeWeekly">0</div>
+                    <div class="stat-lbl">This Week</div>
                 </div>
-            </div>
-            <div class="card">
-                <div style="display: flex; justify-content: space-between;">
-                    <span>🏆 Next: <span id="nextMilestone">Free poster</span></span>
-                    <span id="nextPoints">120 pts</span>
-                </div>
-                <div style="background:#FFD9B5; border-radius:30px; height:8px; margin:8px 0;">
-                    <div id="milestoneFill" style="width:0%; height:100%; background:linear-gradient(90deg,#FF8E53,#FF6B4A); border-radius:30px;"></div>
+                <div class="stat-card">
+                    <span class="stat-icon">🎨</span>
+                    <div class="stat-val" id="homeFavCount">0</div>
+                    <div class="stat-lbl">Favorites</div>
                 </div>
             </div>
 
-            <!-- DISCOVER SECTION (original outstanding look, only categories, no "all" button) -->
-            <div style="margin: 8px 16px 0;"><h3><i class="fas fa-images"></i> Discover Posters</h3></div>
-            <div class="discover-tabs" id="discoverTabsContainer">
-                <!-- categories will be injected dynamically without "all" -->
+            <!-- Milestone progress -->
+            <div class="milestone-card">
+                <div class="milestone-header">
+                    <span class="milestone-label">🏆 <span id="nextMilestone">Free Poster</span></span>
+                    <span class="milestone-pts"><span id="nextPoints">120</span> coins</span>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill" id="milestoneFill" style="width:0%"></div>
+                </div>
             </div>
+
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <button class="qa-btn" id="scanBtn">
+                    <div class="qa-icon"><i class="fas fa-qrcode"></i></div>
+                    Scan QR
+                </button>
+                <button class="qa-btn" id="dailyBtn">
+                    <div class="qa-icon"><i class="fas fa-sun"></i></div>
+                    Check In
+                </button>
+                <button class="qa-btn" id="referBtn">
+                    <div class="qa-icon"><i class="fas fa-user-plus"></i></div>
+                    Refer
+                </button>
+                <button class="qa-btn" id="storyBtn">
+                    <div class="qa-icon"><i class="fab fa-instagram"></i></div>
+                    Story
+                </button>
+            </div>
+
+            <!-- Recently Viewed -->
+            <div class="section-header">
+                <span class="section-title">Recently Viewed</span>
+                <span class="section-link" onclick="showScreen('gallery')">See All →</span>
+            </div>
+            <div class="recents-strip" id="recentsStrip">
+                <div style="color: var(--text-muted); font-size:0.8rem; padding:4px;">Browse gallery to see history</div>
+            </div>
+
+            <!-- Discover Posters -->
+            <div class="section-header">
+                <span class="section-title">Discover</span>
+            </div>
+            <div id="discoverTabsContainer"></div>
             <div id="feedContainer">
-                <div class="loading">Loading art...</div>
+                <div class="loading-state">Loading art...</div>
             </div>
 
-            <div class="card">
-                <h3>Points Audit Log</h3>
-                <div id="auditLogContainer" style="max-height: 150px; overflow-y: auto;"></div>
+            <!-- Audit Log -->
+            <div class="audit-card">
+                <div class="audit-title">Activity Log</div>
+                <div class="audit-list" id="auditLogContainer">
+                    <div style="color:var(--text-muted);font-size:0.78rem;">No activity yet</div>
+                </div>
             </div>
         </div>
 
-        <!-- GALLERY SCREEN - Wall Culture App Style (matches screenshot) -->
+        <!-- ════ GALLERY SCREEN ════ -->
         <div id="galleryScreen" class="screen">
-            <div style="padding: 16px 16px 8px; background: #0a0a0a;">
-                <h2 style="font-size: 1.4rem; font-weight: 800; color: white;">Poster Gallery</h2>
-                <p style="color: rgba(255,255,255,0.45); font-size:0.75rem;">Tap any poster to view · Add to cart</p>
+            <div class="gallery-header">
+                <h2>Gallery</h2>
+                <p>Tap any artwork to explore</p>
             </div>
-            <div class="category-tabs" id="categoryTabs" style="background:#0a0a0a; padding: 8px 16px 14px;">
-                <div class="category-tab active" data-cat="all">All</div>
-                <div class="category-tab" data-cat="aesthetic">🎨 Aesthetic</div>
-                <div class="category-tab" data-cat="girlish">🌸 Girlish</div>
-                <div class="category-tab" data-cat="motivational">💪 Motivational</div>
-                <div class="category-tab" data-cat="musical">🎵 Musical</div>
-                <div class="category-tab" data-cat="theater">🎭 Theater</div>
-                <div class="category-tab" data-cat="limited">⚡ Limited</div>
+
+            <div class="category-rail" id="categoryTabs">
+                <div class="cat-pill active" data-cat="all">All</div>
+                <div class="cat-pill" data-cat="aesthetic">✦ Aesthetic</div>
+                <div class="cat-pill" data-cat="girlish">🌸 Girlish</div>
+                <div class="cat-pill" data-cat="motivational">⚡ Motivational</div>
+                <div class="cat-pill" data-cat="musical">🎵 Musical</div>
+                <div class="cat-pill" data-cat="theater">🎭 Theater</div>
+                <div class="cat-pill" data-cat="limited">🔥 Limited</div>
             </div>
-            <div id="galleryGrid" class="gallery-feed">
-                <div class="loading" style="color: rgba(255,255,255,0.5); background:#0a0a0a; padding: 60px 0;">Loading gallery...</div>
+
+            <div id="galleryGrid">
+                <!-- Hero + grid rendered dynamically -->
+                <div class="loading-state" style="color:var(--text-muted)">Loading gallery...</div>
             </div>
         </div>
 
-        <!-- SHOP SCREEN -->
+        <!-- ════ SHOP SCREEN ════ -->
         <div id="shopScreen" class="screen">
-            <div class="card">
-                <div style="display: flex; justify-content: space-between;">
-                    <span>Boost: <strong id="boostValue">1.0x</strong></span>
-                    <span>Rank #<span id="userRank">—</span></span>
+            <div class="shop-header">
+                <h2>Shop</h2>
+            </div>
+
+            <!-- Rank bar -->
+            <div class="cart-card" style="background: linear-gradient(135deg, rgba(192,132,252,0.12), rgba(129,140,248,0.08));">
+                <div style="display:flex; justify-content:space-between; font-size:0.82rem;">
+                    <span>Boost: <strong id="boostValue">1.0×</strong></span>
+                    <span>Rank <strong>#<span id="userRank">—</span></strong></span>
                 </div>
             </div>
-            <div class="cart-sidebar">
-                <h4>Your Cart <span id="cartCount">(0)</span></h4>
-                <div id="cartItems"></div>
-                <div style="display: flex; justify-content: space-between; margin-top: 12px;">
-                    <span>Total: KSH <span id="cartTotal">0</span></span>
-                    <button id="checkoutBtn" class="btn btn-success">Pay & Earn</button>
+
+            <!-- Cart -->
+            <div class="cart-card">
+                <div class="cart-card-title">
+                    Your Cart
+                    <span class="cart-count-badge" id="cartCount">0 items</span>
                 </div>
+                <div id="cartItems">
+                    <div style="padding:16px 0; text-align:center; color:var(--text-muted); font-size:0.82rem;">Cart is empty</div>
+                </div>
+                <div class="cart-total">
+                    <span style="color:var(--text-secondary)">Total</span>
+                    <span>KSH <span id="cartTotal">0</span></span>
+                </div>
+                <button class="checkout-btn" id="checkoutBtn">Pay & Earn Coins →</button>
             </div>
-            <div class="card">
-                <h3>Mystery Package</h3>
-                <button id="mysteryBtn" class="btn btn-primary" style="width:100%;">Add Mystery Pack (KSH 100)</button>
+
+            <!-- Mystery -->
+            <div class="shop-section-card">
+                <div class="shop-section-title">🎁 Mystery Package</div>
+                <p style="font-size:0.78rem; color:var(--text-muted); margin-bottom:12px;">Get a surprise pack of curated prints — always a great deal.</p>
+                <button class="mystery-btn" id="mysteryBtn">Add Mystery Pack — KSH 100</button>
             </div>
-            <div class="card">
-                <h3>Custom Poster</h3>
-                <label class="btn btn-secondary" for="customImage" style="display:inline-block;"><i class="fas fa-cloud-upload-alt"></i> Upload design</label>
-                <input type="file" id="customImage" accept="image/*" style="display:none;">
+
+            <!-- Custom Poster -->
+            <div class="shop-section-card">
+                <div class="shop-section-title">🖼 Custom Poster</div>
+                <label class="custom-file-label" for="customImage">
+                    <i class="fas fa-cloud-upload-alt"></i> Upload your design
+                </label>
+                <input type="file" id="customImage" accept="image/*" style="display:none">
                 <div id="customPreview"></div>
-                <input type="text" id="customTitle" class="custom-input" placeholder="Poster title">
-                <button id="addCustomBtn" class="btn btn-secondary" style="width:100%; margin-top:8px;">Add Custom (KSH 50)</button>
+                <input type="text" id="customTitle" class="custom-input-field" placeholder="Poster title (optional)">
+                <button class="checkout-btn" id="addCustomBtn" style="margin-top:0">Add Custom — KSH 50</button>
             </div>
         </div>
 
-        <!-- PROFILE SCREEN -->
+        <!-- ════ PROFILE SCREEN ════ -->
         <div id="profileScreen" class="screen">
-            <div class="card" style="text-align:center;">
-                <div style="width:70px;height:70px;background:#FFB87A;border-radius:50%;margin:0 auto;display:flex;align-items:center;justify-content:center;"><i class="fas fa-user-astronaut"></i></div>
-                <h3 id="profileName">—</h3>
-                <p id="profileEmail">—</p>
+            <div class="profile-hero">
+                <div class="avatar-wrap">👤</div>
+                <div class="profile-name" id="profileName">—</div>
+                <div class="profile-email" id="profileEmail">—</div>
             </div>
-            <div class="card">
-                <h4>Points Summary</h4>
-                <div><span>Total Points:</span> <strong id="profilePoints">0</strong></div>
-                <div><span>Global Rank:</span> <strong>#<span id="profileRank">—</span></strong></div>
+
+            <div class="profile-card">
+                <div class="profile-card-title">Summary</div>
+                <div class="profile-stat-row">
+                    <span class="profile-stat-label">Total Coins</span>
+                    <span class="profile-stat-value" id="profilePoints">0</span>
+                </div>
+                <div class="profile-stat-row">
+                    <span class="profile-stat-label">Global Rank</span>
+                    <span class="profile-stat-value">#<span id="profileRank">—</span></span>
+                </div>
+                <div class="profile-stat-row">
+                    <span class="profile-stat-label">Favorites</span>
+                    <span class="profile-stat-value" id="profileFavs">0</span>
+                </div>
             </div>
-            <div class="card">
-                <h4>Referral Code</h4>
-                <div style="background:#FFE8DC; border-radius:40px; padding:12px;"><strong id="profileCode">—</strong></div>
-                <button id="copyCodeBtn" class="btn btn-secondary" style="margin-top:8px; width:100%;">Copy Code</button>
+
+            <div class="profile-card">
+                <div class="profile-card-title">Referral Code</div>
+                <div class="referral-code-wrap">
+                    <span class="referral-code" id="profileCode">—</span>
+                    <button class="copy-btn" id="copyCodeBtn">Copy</button>
+                </div>
             </div>
-            <div class="card"><button id="logoutBtn" class="btn btn-secondary" style="width:100%;">Sign Out</button></div>
+
+            <button class="sign-out-btn" id="logoutBtn">
+                <i class="fas fa-sign-out-alt"></i> Sign Out
+            </button>
+        </div>
+
+    </div>
+
+    <!-- ══ BOTTOM NAV ══ -->
+    <div class="tab-bar">
+        <button class="tab-item active" data-tab="home">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </button>
+        <button class="tab-item" data-tab="gallery">
+            <i class="fas fa-images"></i>
+            <span>Gallery</span>
+        </button>
+        <button class="tab-item" data-tab="shop">
+            <i class="fas fa-bag-shopping"></i>
+            <span>Shop</span>
+        </button>
+        <button class="tab-item" data-tab="profile">
+            <i class="fas fa-user"></i>
+            <span>Profile</span>
+        </button>
+    </div>
+</div>
+
+<!-- ══ FULLSCREEN IMAGE MODAL ══ -->
+<div id="imageModal">
+    <div class="modal-bg" id="modalBg"></div>
+    <div class="modal-inner">
+        <div class="modal-topbar">
+            <button class="modal-close" onclick="closeModal()">
+                <i class="fas fa-chevron-down"></i>
+            </button>
+            <span class="modal-title-sm" id="modalTitleBar">—</span>
+            <div style="width:40px"></div>
+        </div>
+        <div class="modal-img-wrap" id="modalImgWrap">
+            <img id="modalImg" src="" alt="">
+        </div>
+        <div class="modal-bottom">
+            <div class="modal-icon-actions">
+                <button class="modal-icon-btn" id="modalFavBtn" onclick="toggleModalFav()">
+                    <i class="fas fa-heart"></i>
+                </button>
+                <button class="modal-icon-btn" onclick="shareItem()">
+                    <i class="fas fa-share-nodes"></i>
+                </button>
+                <button class="modal-icon-btn" onclick="downloadItem()">
+                    <i class="fas fa-arrow-down"></i>
+                </button>
+                <button class="modal-icon-btn" onclick="showToast('🔗 Link copied!')">
+                    <i class="fas fa-link"></i>
+                </button>
+            </div>
+            <div class="modal-info-row">
+                <div>
+                    <div class="modal-item-name" id="modalItemName">—</div>
+                    <div class="modal-item-meta" id="modalItemMeta">—</div>
+                </div>
+                <div class="modal-item-price" id="modalItemPrice">—</div>
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-secondary" onclick="closeModal()">
+                    <i class="fas fa-chevron-left"></i> Back
+                </button>
+                <button class="modal-btn modal-btn-primary" id="modalAddBtn">
+                    <i class="fas fa-cart-plus"></i> Add to Cart
+                </button>
+            </div>
         </div>
     </div>
+</div>
 
-    <div class="tab-bar">
-        <button class="tab-item active" data-tab="home"><i class="fas fa-home"></i><span>Home</span></button>
-        <button class="tab-item" data-tab="gallery"><i class="fas fa-images"></i><span>Gallery</span></button>
-        <button class="tab-item" data-tab="shop"><i class="fas fa-store"></i><span>Shop</span></button>
-        <button class="tab-item" data-tab="profile"><i class="fas fa-user"></i><span>Profile</span></button>
+<!-- ══ REFERRAL MODAL ══ -->
+<div class="modal-overlay" id="referralModal">
+    <div class="modal-box">
+        <h3>✦ Refer a Friend</h3>
+        <p>Share your code and earn coins when they make their first purchase.</p>
+        <div class="referral-code-wrap" style="margin-bottom:16px;">
+            <span class="referral-code" id="modalCode">—</span>
+        </div>
+        <button class="modal-btn-full primary" id="copyModalBtn">Copy Code</button>
+        <button class="modal-btn-full ghost" id="closeModalBtn">Close</button>
     </div>
 </div>
 
-<div id="qr-reader"></div>
-<div id="referralModal" class="modal"><div class="modal-content"><h3>Refer a Friend</h3><p>Your code: <strong id="modalCode">—</strong></p><button id="copyModalBtn" class="btn btn-primary">Copy Code</button><button id="closeModalBtn" class="btn btn-secondary" style="margin-top:8px;">Close</button></div></div>
-<div id="storyModal" class="modal"><div class="modal-content"><h3>Instagram Story</h3><p>Post a story tagging <strong>@wallculture</strong> and paste your link:</p><input type="text" id="storyLink" class="custom-input" placeholder="Instagram story URL"><button id="submitStoryBtn" class="btn btn-primary">Submit & Earn</button><button id="closeStoryModal" class="btn btn-secondary" style="margin-top:8px;">Cancel</button></div></div>
-
-<!-- LIGHTBOX -->
-<div id="imageLightbox">
-    <button id="lightboxClose" onclick="closeLightbox()"><i class="fas fa-times"></i></button>
-    <img id="lightboxImg" src="" alt="">
-    <div id="lightboxInfo">
-        <div id="lightboxTitle"></div>
-        <div id="lightboxMeta"></div>
-        <button id="lightboxAddBtn" onclick="lightboxAddToCart()"><i class="fas fa-shopping-cart"></i> Add to Cart</button>
+<!-- ══ STORY MODAL ══ -->
+<div class="modal-overlay" id="storyModal">
+    <div class="modal-box">
+        <h3>📸 Instagram Story</h3>
+        <p>Post a story tagging <strong>@auragallery</strong> and paste your story link to earn coins.</p>
+        <input type="text" id="storyLink" class="modal-input" placeholder="Paste Instagram story URL…">
+        <button class="modal-btn-full primary" id="submitStoryBtn">Submit & Earn</button>
+        <button class="modal-btn-full ghost" id="closeStoryModal">Cancel</button>
     </div>
 </div>
+
+<!-- ══ QR READER ══ -->
+<div id="qr-reader">
+    <button class="close-scanner" onclick="closeScanner()"><i class="fas fa-times"></i></button>
+</div>
+
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
 <script>
-    const API_URL = 'https://wall-culture-3.onrender.com/api';
-    let token = localStorage.getItem('wall_culture_token');
-    if (!token) window.location.href = 'index.html';
+/* ═══════════════════════════════════════════════════════════
+   AURA GALLERY — MAIN APPLICATION
+   Premium dark gallery with dynamic color theming
+═══════════════════════════════════════════════════════════ */
 
-    let cart = [];
-    let allPosters = [];
-    let currentGalleryCategory = 'all';
-    let discoverCategory = 'all';      // dynamic but without "all" pill
-    let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-    let html5QrCode = null;
-    let autoScrollInterval;
+const API_URL = 'https://wall-culture-3.onrender.com/api';
+let token = localStorage.getItem('wall_culture_token');
+if (!token) window.location.href = 'index.html';
 
-    function showToast(msg) {
-        const toast = document.createElement('div');
-        toast.textContent = msg;
-        toast.style.cssText = 'position:fixed;bottom:100px;left:20px;right:20px;background:#2A1A0A;color:#FFE0C8;padding:12px;border-radius:60px;text-align:center;font-weight:bold;z-index:2000;';
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
+// ─── State ───────────────────────────────────────────────
+let cart = [];
+let allPosters = [];
+let currentGalleryCategory = 'all';
+let discoverCategory = 'aesthetic';
+let favorites = JSON.parse(localStorage.getItem('aura_favorites') || '[]');
+let recentlyViewed = JSON.parse(localStorage.getItem('aura_recents') || '[]');
+let currentModalPoster = null;
+let html5QrCode = null;
+
+// Touch state for pinch zoom in modal
+let touchState = { startDist: 0, scale: 1, lastScale: 1 };
+
+// ─── Dynamic Theme Color Engine ──────────────────────────
+function extractAndApplyColor(imgEl) {
+    try {
+        const canvas = document.createElement('canvas');
+        const size = 80;
+        canvas.width = canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(imgEl, 0, 0, size, size);
+        const data = ctx.getImageData(0, 0, size, size).data;
+
+        // Sample pixels and find dominant color (skip near-black/white)
+        let rSum = 0, gSum = 0, bSum = 0, count = 0;
+        for (let i = 0; i < data.length; i += 16) {
+            const r = data[i], g = data[i+1], b = data[i+2];
+            const brightness = (r + g + b) / 3;
+            const saturation = Math.max(r,g,b) - Math.min(r,g,b);
+            if (brightness > 40 && brightness < 220 && saturation > 30) {
+                rSum += r; gSum += g; bSum += b; count++;
+            }
+        }
+
+        if (count === 0) return; // keep default
+
+        const r = Math.round(rSum / count);
+        const g = Math.round(gSum / count);
+        const b = Math.round(bSum / count);
+
+        // Boost saturation a bit
+        const boost = 1.3;
+        const avg = (r + g + b) / 3;
+        const br = Math.min(255, Math.round(avg + (r - avg) * boost));
+        const bg = Math.min(255, Math.round(avg + (g - avg) * boost));
+        const bb = Math.min(255, Math.round(avg + (b - avg) * boost));
+
+        const primary = `rgb(${br}, ${bg}, ${bb})`;
+        const primaryGlow = `rgba(${br}, ${bg}, ${bb}, 0.35)`;
+        const accentGlow = `rgba(${br}, ${bg}, ${bb}, 0.2)`;
+
+        // Create a slightly offset accent
+        const ar = Math.min(255, Math.round(br * 0.75 + 60));
+        const ag = Math.min(255, Math.round(bg * 0.75 + 60));
+        const ab = Math.min(255, Math.round(bb * 0.75 + 80));
+        const accent = `rgb(${ar}, ${ag}, ${ab})`;
+
+        applyTheme(primary, accent, primaryGlow, accentGlow);
+    } catch(e) {
+        // Canvas tainted (CORS) — keep defaults
     }
+}
 
-    async function apiRequest(endpoint, options = {}) {
-        const response = await fetch(`${API_URL}${endpoint}`, {
-            ...options,
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, ...(options.headers || {}) }
-        });
-        if (response.status === 401) { localStorage.removeItem('wall_culture_token'); window.location.href = 'index.html'; }
-        return response.json();
+function applyTheme(primary, accent, primaryGlow, accentGlow) {
+    const root = document.documentElement;
+    root.style.setProperty('--primary', primary);
+    root.style.setProperty('--accent', accent);
+    root.style.setProperty('--primary-glow', primaryGlow);
+    root.style.setProperty('--accent-glow', accentGlow);
+    // Trigger ambient bg update
+    document.getElementById('ambientBg').style.background =
+        `radial-gradient(ellipse at 40% 50%, ${primaryGlow} 0%, ${accentGlow} 40%, transparent 70%)`;
+}
+
+// ─── Utility ─────────────────────────────────────────────
+function showToast(msg, duration = 3000) {
+    document.querySelectorAll('.toast').forEach(t => t.remove());
+    const el = document.createElement('div');
+    el.className = 'toast';
+    el.textContent = msg;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), duration);
+}
+
+async function apiRequest(endpoint, options = {}) {
+    const res = await fetch(`${API_URL}${endpoint}`, {
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+            ...(options.headers || {})
+        }
+    });
+    if (res.status === 401) {
+        localStorage.removeItem('wall_culture_token');
+        window.location.href = 'index.html';
     }
+    return res.json();
+}
 
-    // Load posters from DB
-    async function loadPosters() {
-        try {
-            const posters = await apiRequest('/posters');
-            if (posters && posters.length) allPosters = posters;
-            else allPosters = [];
+// ─── Screen Navigation ───────────────────────────────────
+function showScreen(name) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(`${name}Screen`).classList.add('active');
+    document.querySelectorAll('.tab-item').forEach(t => {
+        t.classList.toggle('active', t.dataset.tab === name);
+    });
+    document.getElementById('screenContainer').scrollTop = 0;
+    if (name === 'gallery') renderTonalGallery();
+    if (name === 'profile') loadProfile();
+    if (name === 'shop') renderCart();
+}
+
+document.querySelectorAll('.tab-item').forEach(tab => {
+    tab.addEventListener('click', () => showScreen(tab.dataset.tab));
+});
+
+// ─── Load Posters ────────────────────────────────────────
+async function loadPosters() {
+    try {
+        const posters = await apiRequest('/posters');
+        allPosters = Array.isArray(posters) ? posters : [];
+    } catch(e) { allPosters = []; }
+    renderDiscoverFeed();
+    renderTonalGallery();
+}
+
+function posterImg(poster) {
+    return poster.image_url || `https://picsum.photos/seed/${poster.id || Math.random()}/400/600`;
+}
+
+// ─── Recently Viewed ─────────────────────────────────────
+function addToRecents(poster) {
+    recentlyViewed = [poster, ...recentlyViewed.filter(p => p.id !== poster.id)].slice(0, 8);
+    localStorage.setItem('aura_recents', JSON.stringify(recentlyViewed));
+    renderRecents();
+}
+
+function renderRecents() {
+    const strip = document.getElementById('recentsStrip');
+    if (!recentlyViewed.length) {
+        strip.innerHTML = '<div style="color:var(--text-muted);font-size:0.8rem;padding:4px;">Browse gallery to see history</div>';
+        return;
+    }
+    strip.innerHTML = '';
+    recentlyViewed.forEach(p => {
+        const chip = document.createElement('div');
+        chip.className = 'recent-chip';
+        chip.innerHTML = `
+            <img class="recent-thumb" src="${posterImg(p)}" alt="">
+            <div class="recent-info">
+                <div class="name">${p.name}</div>
+                <div class="price">KSH ${p.price}</div>
+            </div>
+        `;
+        chip.onclick = () => openModal(p);
+        strip.appendChild(chip);
+    });
+    document.getElementById('homeFavCount').textContent = favorites.length;
+}
+
+// ─── DISCOVER FEED (Home screen horizontal) ──────────────
+function buildDiscoverTabs() {
+    const container = document.getElementById('discoverTabsContainer');
+    const cats = ['aesthetic', 'girlish', 'motivational', 'musical', 'theater', 'limited'];
+    container.innerHTML = '';
+    cats.forEach(cat => {
+        const pill = document.createElement('div');
+        pill.className = `discover-tab ${discoverCategory === cat ? 'active' : ''}`;
+        pill.textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
+        pill.onclick = () => {
+            document.querySelectorAll('.discover-tab').forEach(p => p.classList.remove('active'));
+            pill.classList.add('active');
+            discoverCategory = cat;
             renderDiscoverFeed();
-            renderTonalGallery();
-        } catch (error) { console.error(error); }
-    }
-
-    // ----- DISCOVER SECTION (retained original look, no "all" category) -----
-    function renderDiscoverFeed() {
-        const container = document.getElementById('feedContainer');
-        let data = allPosters;
-        if (discoverCategory !== 'all' && discoverCategory) {
-            data = data.filter(p => p.category === discoverCategory);
-        }
-        if (!data.length) { container.innerHTML = '<div class="loading">✨ No posters in this vibe</div>'; return; }
-        container.innerHTML = '';
-        data.slice(0, 12).forEach((poster, idx) => {
-            const isFav = favorites.includes(poster.id);
-            const card = document.createElement('div');
-            card.className = 'poster-feed-card';
-            if (idx === 0) card.classList.add('active');
-            card.innerHTML = `
-                <img class="poster-feed-image" src="${poster.image_url || 'https://picsum.photos/seed/' + poster.id + '/400/300'}">
-                <div class="poster-fav ${isFav ? 'active' : ''}"><i class="fas fa-heart"></i></div>
-                <div class="poster-add">+</div>
-                <div class="poster-overlay">
-                    <div class="poster-feed-name">${poster.name}</div>
-                    <div class="poster-feed-meta">KSH ${poster.price} · ⭐ ${poster.points} pts</div>
-                </div>
-            `;
-            card.querySelector('.poster-fav').onclick = (e) => {
-                e.stopPropagation();
-                if (favorites.includes(poster.id)) favorites = favorites.filter(id => id !== poster.id);
-                else favorites.push(poster.id);
-                localStorage.setItem('favorites', JSON.stringify(favorites));
-                renderDiscoverFeed();
-                renderTonalGallery();
-            };
-            card.querySelector('.poster-add').onclick = (e) => { e.stopPropagation(); addToCart(poster); };
-            card.onclick = () => addToCart(poster);
-            container.appendChild(card);
-        });
-        setupDiscoverScrollCenter();
-        startAutoScrollDiscover();
-    }
-
-    function setupDiscoverScrollCenter() {
-        const container = document.getElementById('feedContainer');
-        const cards = container.querySelectorAll('.poster-feed-card');
-        const updateActive = () => {
-            let center = container.scrollLeft + container.offsetWidth / 2;
-            cards.forEach(card => {
-                const cardCenter = card.offsetLeft + card.offsetWidth / 2;
-                if (Math.abs(center - cardCenter) < card.offsetWidth / 2) card.classList.add('active');
-                else card.classList.remove('active');
-            });
         };
-        container.addEventListener('scroll', updateActive);
-        setTimeout(updateActive, 100);
-    }
-    function startAutoScrollDiscover() {
-        const container = document.getElementById('feedContainer');
-        if (autoScrollInterval) clearInterval(autoScrollInterval);
-        autoScrollInterval = setInterval(() => { container.scrollBy({ left: 280, behavior: 'smooth' }); }, 4500);
-        container.addEventListener('touchstart', () => clearInterval(autoScrollInterval), { once: true });
-    }
+        container.appendChild(pill);
+    });
+    renderDiscoverFeed();
+}
 
-    // ----- GALLERY SECTION: Wall Culture App Style (matches screenshot) -----
-    let currentLightboxPoster = null;
+function renderDiscoverFeed() {
+    const container = document.getElementById('feedContainer');
+    let data = allPosters.filter(p => discoverCategory === 'all' || p.category === discoverCategory);
+    if (!data.length) {
+        container.innerHTML = '<div class="loading-state">✨ No posters in this vibe yet</div>';
+        return;
+    }
+    container.innerHTML = '';
+    data.slice(0, 10).forEach((poster, idx) => {
+        const isFav = favorites.includes(poster.id);
+        const card = document.createElement('div');
+        card.className = `poster-feed-card${idx === 0 ? ' active' : ''}`;
+        card.innerHTML = `
+            <img class="poster-feed-image" src="${posterImg(poster)}" alt="${poster.name}" loading="lazy" crossorigin="anonymous">
+            <button class="poster-fav ${isFav ? 'liked' : ''}"><i class="fas fa-heart"></i></button>
+            <button class="poster-add"><i class="fas fa-plus"></i></button>
+            <div class="poster-overlay">
+                <div class="poster-feed-name">${poster.name}</div>
+                <div class="poster-feed-meta">KSH ${poster.price} · ✦ ${poster.points || 0}</div>
+            </div>
+        `;
+        card.querySelector('.poster-fav').addEventListener('click', e => { e.stopPropagation(); toggleFav(poster.id); renderDiscoverFeed(); });
+        card.querySelector('.poster-add').addEventListener('click', e => { e.stopPropagation(); addToCart(poster); });
+        card.addEventListener('click', () => openModal(poster));
+        container.appendChild(card);
+    });
+    setupScrollCenter(container);
+    startAutoScroll(container);
+}
 
-    function openLightbox(poster) {
-        currentLightboxPoster = poster;
-        const lb = document.getElementById('imageLightbox');
-        document.getElementById('lightboxImg').src = poster.image_url || `https://picsum.photos/seed/${poster.id}/500/700`;
-        document.getElementById('lightboxTitle').textContent = poster.name;
-        document.getElementById('lightboxMeta').textContent = `KSH ${poster.price} · +${poster.points} pts`;
-        lb.classList.add('open');
-        lb.style.display = 'flex';
-    }
-    function closeLightbox() {
-        const lb = document.getElementById('imageLightbox');
-        lb.classList.remove('open');
-        lb.style.display = 'none';
-    }
-    function lightboxAddToCart() {
-        if (currentLightboxPoster) {
-            addToCart(currentLightboxPoster);
-            closeLightbox();
+function setupScrollCenter(container) {
+    const updateActive = () => {
+        const center = container.scrollLeft + container.offsetWidth / 2;
+        container.querySelectorAll('.poster-feed-card').forEach(card => {
+            const cc = card.offsetLeft + card.offsetWidth / 2;
+            card.classList.toggle('active', Math.abs(center - cc) < card.offsetWidth / 2);
+        });
+    };
+    container.addEventListener('scroll', updateActive, { passive: true });
+    setTimeout(updateActive, 100);
+}
+
+let autoScrollTimer = null;
+function startAutoScroll(container) {
+    if (autoScrollTimer) clearInterval(autoScrollTimer);
+    autoScrollTimer = setInterval(() => {
+        if (document.hidden) return;
+        const maxScroll = container.scrollWidth - container.clientWidth;
+        if (container.scrollLeft >= maxScroll - 4) {
+            container.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+            const active = container.querySelector('.poster-feed-card.active');
+            const next = active?.nextElementSibling;
+            if (next) next.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
         }
+    }, 4000);
+}
+
+// ─── GALLERY SCREEN (Tonal-inspired) ─────────────────────
+function renderTonalGallery() {
+    const container = document.getElementById('galleryGrid');
+    let data = currentGalleryCategory === 'all'
+        ? allPosters
+        : allPosters.filter(p => p.category === currentGalleryCategory);
+
+    if (!data.length) {
+        container.innerHTML = '<div class="loading-state" style="color:var(--text-muted)">No artwork in this category yet</div>';
+        return;
     }
-    document.getElementById('imageLightbox').addEventListener('click', function(e) {
-        if (e.target === this) closeLightbox();
+
+    container.innerHTML = '';
+
+    // ── Hero Card ──
+    const hero = data[0];
+    const heroCard = document.createElement('div');
+    heroCard.className = 'hero-card';
+    heroCard.style.margin = '0 16px 8px';
+    const isFavHero = favorites.includes(hero.id);
+
+    // Build thumbnail list (next 3 items after hero)
+    const thumbPreviews = data.slice(1, 4);
+    const thumbsHTML = thumbPreviews.map((p, i) => `
+        <img class="hero-thumb${i === 0 ? ' active-thumb' : ''}"
+             src="${posterImg(p)}" alt=""
+             loading="lazy"
+             onclick="event.stopPropagation(); switchHero(this, '${posterImg(p)}', '${escapeSafe(p.name)}')">
+    `).join('');
+
+    heroCard.innerHTML = `
+        <img class="hero-img" id="heroMainImg" src="${posterImg(hero)}" alt="${hero.name}" crossorigin="anonymous" loading="lazy">
+        <div class="hero-gradient"></div>
+        <div class="hero-badge">${hero.category || 'Featured'}</div>
+        <button class="hero-fav ${isFavHero ? 'liked' : ''}" id="heroFavBtn">
+            <i class="fas fa-heart"></i>
+        </button>
+        <div class="hero-info">
+            <div class="hero-info-main">
+                <div class="hero-title">${hero.name}</div>
+                <div class="hero-desc">${hero.description || 'Premium art print — limited edition'}</div>
+                <div class="hero-price">
+                    <span class="price-tag">KSH ${hero.price}</span>
+                    <span style="color:rgba(255,255,255,0.5); font-size:0.72rem;">✦ ${hero.points || 0} coins</span>
+                </div>
+            </div>
+            ${thumbsHTML ? `<div class="hero-thumbs">${thumbsHTML}</div>` : ''}
+        </div>
+    `;
+
+    heroCard.addEventListener('click', () => openModal(hero));
+    heroCard.querySelector('.hero-fav').addEventListener('click', e => {
+        e.stopPropagation();
+        toggleFav(hero.id);
+        heroCard.querySelector('.hero-fav').classList.toggle('liked', favorites.includes(hero.id));
     });
 
-    function renderTonalGallery() {
-        const container = document.getElementById('galleryGrid');
-        let filtered = allPosters;
-        if (currentGalleryCategory !== 'all') filtered = allPosters.filter(p => p.category === currentGalleryCategory);
-        if (!filtered.length) { container.innerHTML = '<div class="loading" style="color:rgba(255,255,255,0.5);background:#0a0a0a;padding:60px 0;">No posters in this category</div>'; return; }
-        container.innerHTML = '';
-        container.style.background = '#0a0a0a';
+    // Apply theme from hero image after load
+    const heroImg = heroCard.querySelector('.hero-img');
+    heroImg.onload = () => extractAndApplyColor(heroImg);
 
-        // Hero card (first poster)
-        const hero = filtered[0];
-        const heroWrap = document.createElement('div');
-        heroWrap.style.position = 'relative';
+    container.appendChild(heroCard);
 
-        const heroCard = document.createElement('div');
-        heroCard.className = 'gallery-card-hero';
-        heroCard.innerHTML = `
-            <img class="gallery-image" src="${hero.image_url || 'https://picsum.photos/seed/' + hero.id + '/700/500'}" onerror="this.src='https://picsum.photos/700/500'" style="width:100%;height:100%;object-fit:cover;">
-            <div class="gallery-badge">${(currentGalleryCategory !== 'all' ? currentGalleryCategory : (hero.category || 'featured')).toUpperCase()}</div>
-            <div class="gallery-overlay">
-                <div class="gallery-name">${hero.name}</div>
-                <div class="gallery-meta">KSH ${hero.price} · +${hero.points} pts</div>
-            </div>
+    // ── "More Like This" horizontal scroll ──
+    if (data.length > 1) {
+        const moreHeader = document.createElement('div');
+        moreHeader.className = 'section-header';
+        moreHeader.innerHTML = `
+            <span class="section-title">More Like This</span>
+            <span class="section-link">View All</span>
         `;
-        heroCard.onclick = () => openLightbox(hero);
-        heroWrap.appendChild(heroCard);
+        container.appendChild(moreHeader);
 
-        // Cart FAB on hero
-        const fab = document.createElement('button');
-        fab.className = 'gallery-cart-fab';
-        fab.innerHTML = '<i class="fas fa-cart-plus"></i>';
-        fab.onclick = (e) => { e.stopPropagation(); addToCart(hero); };
-        heroWrap.appendChild(fab);
+        const hScroll = document.createElement('div');
+        hScroll.className = 'h-scroll';
 
-        // Detail strip below hero
-        const strip = document.createElement('div');
-        strip.className = 'gallery-detail-strip';
-        const thumb1 = hero.image_url || `https://picsum.photos/seed/${hero.id}/200/200`;
-        const thumb2 = filtered[1] ? (filtered[1].image_url || `https://picsum.photos/seed/${filtered[1].id}/200/200`) : thumb1;
-        strip.innerHTML = `
-            <div class="gallery-detail-thumbs">
-                <img class="gallery-detail-thumb" src="${thumb1}" onerror="this.src='https://picsum.photos/200/200'">
-                <img class="gallery-detail-thumb" src="${thumb2}" onerror="this.src='https://picsum.photos/seed/2/200/200'">
-            </div>
-            <div class="gallery-detail-info">
-                <div class="gallery-detail-title">${hero.name} ›››</div>
-                <div class="gallery-detail-desc">${hero.description || 'A stunning wall art piece crafted for bold interiors. Premium print quality on every order.'}</div>
-                <div class="gallery-detail-price">KSH ${hero.price} &nbsp;·&nbsp; +${hero.points} pts</div>
-            </div>
-        `;
-        heroWrap.appendChild(strip);
-        container.appendChild(heroWrap);
-
-        // "More in [category]" grid section
-        const rest = filtered.slice(1);
-        if (rest.length) {
-            const moreSection = document.createElement('div');
-            moreSection.className = 'gallery-more-section';
-
-            const catLabel = currentGalleryCategory !== 'all' ? currentGalleryCategory : (hero.category || 'aesthetic');
-            moreSection.innerHTML = `<div class="gallery-more-title">More in ${catLabel}</div>`;
-
-            const grid = document.createElement('div');
-            grid.className = 'gallery-grid';
-
-            rest.slice(0, 9).forEach((poster, idx) => {
-                const card = document.createElement('div');
-                card.className = 'gallery-grid-card' + (idx === 0 ? ' selected' : '');
-                card.innerHTML = `
-                    <img class="gallery-grid-img" src="${poster.image_url || 'https://picsum.photos/seed/' + poster.id + '/300/400'}" onerror="this.src='https://picsum.photos/seed/${idx+10}/300/400'">
-                    <div class="gallery-grid-overlay">
-                        <span class="gallery-grid-name">${poster.name}</span>
-                        <span class="gallery-grid-price">KSH ${poster.price}</span>
-                    </div>
-                `;
-                card.onclick = () => openLightbox(poster);
-                grid.appendChild(card);
+        data.slice(1, 9).forEach(poster => {
+            const isFav = favorites.includes(poster.id);
+            const hCard = document.createElement('div');
+            hCard.className = 'h-card';
+            hCard.innerHTML = `
+                <div class="h-card-img-wrap">
+                    <img class="h-card-img" src="${posterImg(poster)}" alt="${poster.name}" loading="lazy">
+                    <div class="h-card-overlay"></div>
+                    <button class="h-card-fav ${isFav ? 'liked' : ''}"><i class="fas fa-heart"></i></button>
+                </div>
+                <div class="h-card-info">
+                    <div class="h-card-name">${poster.name}</div>
+                    <div class="h-card-price">KSH ${poster.price}</div>
+                </div>
+            `;
+            hCard.querySelector('.h-card-fav').addEventListener('click', e => {
+                e.stopPropagation();
+                toggleFav(poster.id);
+                hCard.querySelector('.h-card-fav').classList.toggle('liked', favorites.includes(poster.id));
             });
-
-            moreSection.appendChild(grid);
-            container.appendChild(moreSection);
-        }
-    }
-
-    // Cart & helper
-    function addToCart(poster) {
-        const existing = cart.find(i => i.id === poster.id);
-        if (existing) existing.qty++;
-        else cart.push({ ...poster, qty: 1 });
-        renderCart();
-        showToast(`✓ ${poster.name} added to cart`);
-    }
-    function renderCart() {
-        const container = document.getElementById('cartItems');
-        const count = cart.reduce((s,i) => s + i.qty, 0);
-        const total = cart.reduce((s,i) => s + (i.price * i.qty), 0);
-        document.getElementById('cartCount').innerText = `(${count})`;
-        document.getElementById('cartTotal').innerText = total;
-        if (!cart.length) { container.innerHTML = '<div style="padding:12px; text-align:center;">Cart is empty</div>'; return; }
-        container.innerHTML = '';
-        cart.forEach((item, idx) => {
-            const row = document.createElement('div');
-            row.className = 'cart-item';
-            row.innerHTML = `<div><strong>${item.name}</strong> x${item.qty}<br><span style="font-size:0.65rem;">KSH ${item.price} · +${item.points} pts</span></div>
-                             <div>KSH ${item.price * item.qty} <button class="remove-item" data-idx="${idx}"><i class="fas fa-trash"></i></button></div>`;
-            container.appendChild(row);
+            hCard.addEventListener('click', () => openModal(poster));
+            hScroll.appendChild(hCard);
         });
-        document.querySelectorAll('.remove-item').forEach(btn => { btn.onclick = () => { cart.splice(parseInt(btn.dataset.idx), 1); renderCart(); }; });
-    }
-    async function checkout() {
-        if (!cart.length) { showToast('Cart empty'); return; }
-        const totalPrice = cart.reduce((s,i) => s + (i.price * i.qty), 0);
-        if (confirm(`Total: KSH ${totalPrice}\nEarn points?`)) {
-            try {
-                const result = await apiRequest('/order/create', { method: 'POST', body: JSON.stringify({ items: cart, totalPrice }) });
-                if (result.success) { showToast(`✅ Payment successful! +${result.pointsEarned} points!`); cart = []; renderCart(); loadProfile(); }
-            } catch(e) { showToast('Error'); }
-        }
+
+        container.appendChild(hScroll);
     }
 
-    // QR & other features
-    async function startQRScanner() {
-        const scannerDiv = document.getElementById('qr-reader');
-        scannerDiv.classList.add('open');
-        html5QrCode = new Html5Qrcode("qr-reader");
-        try { await html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, async (decodedText) => {
-            await html5QrCode.stop(); scannerDiv.classList.remove('open'); await processQRCode(decodedText);
-        }, (error) => {}); } catch (err) { showToast('Camera error'); scannerDiv.classList.remove('open'); }
+    // ── Grid Section ──
+    if (data.length > 1) {
+        const gridHeader = document.createElement('div');
+        gridHeader.className = 'section-header';
+        gridHeader.innerHTML = `<span class="section-title">All Artworks</span>`;
+        container.appendChild(gridHeader);
+
+        const grid = document.createElement('div');
+        grid.className = 'gallery-grid';
+
+        data.slice(1).forEach(poster => {
+            const gc = document.createElement('div');
+            gc.className = 'grid-card';
+            const isFav = favorites.includes(poster.id);
+            gc.innerHTML = `
+                <img src="${posterImg(poster)}" alt="${poster.name}" loading="lazy">
+                <div class="grid-overlay"></div>
+                <div class="grid-info">
+                    <span class="grid-name">${poster.name}</span>
+                    <span class="grid-price">KSH ${poster.price}</span>
+                </div>
+            `;
+            gc.addEventListener('click', () => openModal(poster));
+            grid.appendChild(gc);
+        });
+
+        container.appendChild(grid);
     }
-    async function processQRCode(qrData) { try {
-        const result = await apiRequest('/scan/qr', { method: 'POST', body: JSON.stringify({ code: qrData }) });
-        if (result.success) { showToast(`🎉 +${result.earned} points!`); loadProfile(); } else showToast(result.error || 'Invalid');
-    } catch(e) { showToast('Network error'); } }
-    async function dailyCheckin() { const result = await apiRequest('/daily/checkin', { method: 'POST' }); if (result.success) { showToast(`☀️ +${result.earned} pts!`); loadProfile(); } else showToast(result.message || 'Already checked in'); }
-    function openStoryModal() { document.getElementById('storyModal').style.display = 'flex'; }
-    async function submitStory() { const link = document.getElementById('storyLink').value.trim(); if (!link) { showToast('Enter link'); return; } const result = await apiRequest('/social/story', { method: 'POST', body: JSON.stringify({ story_link: link }) }); if (result.success) { showToast(`📸 +${result.earned} pts`); document.getElementById('storyModal').style.display = 'none'; document.getElementById('storyLink').value = ''; loadProfile(); } else showToast(result.error); }
-    function openRoomTour() { const input = document.createElement('input'); input.type = 'file'; input.accept = 'image/*'; input.onchange = async (e) => { const file = e.target.files[0]; if (!file) return; const formData = new FormData(); formData.append('image', file); showToast('Uploading...'); const response = await fetch(`${API_URL}/social/roomtour`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData }); const result = await response.json(); if (result.success) { showToast(`🏠 +${result.earned} pts`); loadProfile(); } else showToast(result.error); }; input.click(); }
-    async function loadProfile() { try {
+}
+
+// Switch hero image from thumbnail click
+function switchHero(thumbEl, imgSrc, name) {
+    const heroImg = document.getElementById('heroMainImg');
+    if (!heroImg) return;
+    heroImg.src = imgSrc;
+    document.querySelectorAll('.hero-thumb').forEach(t => t.classList.remove('active-thumb'));
+    thumbEl.classList.add('active-thumb');
+}
+
+function escapeSafe(str) {
+    return (str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}
+
+// Category tabs in gallery
+document.getElementById('categoryTabs').addEventListener('click', e => {
+    const pill = e.target.closest('.cat-pill');
+    if (!pill) return;
+    document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+    currentGalleryCategory = pill.dataset.cat;
+    renderTonalGallery();
+});
+
+// ─── Fullscreen Modal ─────────────────────────────────────
+function openModal(poster) {
+    currentModalPoster = poster;
+    addToRecents(poster);
+
+    const modal = document.getElementById('imageModal');
+    const img = document.getElementById('modalImg');
+    const bg = document.getElementById('modalBg');
+    const src = posterImg(poster);
+
+    img.src = src;
+    bg.style.backgroundImage = `url(${src})`;
+    document.getElementById('modalTitleBar').textContent = poster.name;
+    document.getElementById('modalItemName').textContent = poster.name;
+    document.getElementById('modalItemMeta').textContent =
+        `${poster.category || 'Art Print'} · ✦ ${poster.points || 0} coins`;
+    document.getElementById('modalItemPrice').textContent = `KSH ${poster.price}`;
+    document.getElementById('modalAddBtn').onclick = () => { addToCart(poster); closeModal(); };
+
+    // Fav state
+    const isFav = favorites.includes(poster.id);
+    document.getElementById('modalFavBtn').classList.toggle('liked', isFav);
+
+    // Reset zoom
+    img.style.transform = 'scale(1)';
+    touchState.scale = 1; touchState.lastScale = 1;
+
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+
+    // Dynamic color from modal image
+    img.onload = () => extractAndApplyColor(img);
+}
+
+function closeModal() {
+    document.getElementById('imageModal').classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+function toggleModalFav() {
+    if (!currentModalPoster) return;
+    toggleFav(currentModalPoster.id);
+    document.getElementById('modalFavBtn').classList.toggle('liked', favorites.includes(currentModalPoster.id));
+    showToast(favorites.includes(currentModalPoster.id) ? '❤️ Added to favorites' : '🤍 Removed from favorites');
+}
+
+// Pinch-to-zoom
+const modalImg = document.getElementById('modalImg');
+const modalImgWrap = document.getElementById('modalImgWrap');
+
+modalImgWrap.addEventListener('touchstart', e => {
+    if (e.touches.length === 2) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        touchState.startDist = Math.hypot(dx, dy);
+    }
+}, { passive: true });
+
+modalImgWrap.addEventListener('touchmove', e => {
+    if (e.touches.length === 2) {
+        e.preventDefault();
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const dist = Math.hypot(dx, dy);
+        const ratio = dist / touchState.startDist;
+        touchState.scale = Math.min(4, Math.max(0.8, touchState.lastScale * ratio));
+        modalImg.style.transform = `scale(${touchState.scale})`;
+    }
+}, { passive: false });
+
+modalImgWrap.addEventListener('touchend', () => {
+    touchState.lastScale = touchState.scale;
+    if (touchState.scale < 1.05) {
+        touchState.scale = 1;
+        touchState.lastScale = 1;
+        modalImg.style.transform = 'scale(1)';
+    }
+});
+
+// Double-tap to zoom
+let lastTap = 0;
+modalImg.addEventListener('click', () => {
+    const now = Date.now();
+    if (now - lastTap < 300) {
+        touchState.scale = touchState.scale > 1.5 ? 1 : 2.5;
+        touchState.lastScale = touchState.scale;
+        modalImg.style.transition = 'transform 0.3s ease';
+        modalImg.style.transform = `scale(${touchState.scale})`;
+        setTimeout(() => modalImg.style.transition = '', 350);
+    }
+    lastTap = now;
+});
+
+// Swipe down to close modal
+let touchStartY = 0;
+document.getElementById('imageModal').addEventListener('touchstart', e => {
+    touchStartY = e.touches[0].clientY;
+}, { passive: true });
+
+document.getElementById('imageModal').addEventListener('touchend', e => {
+    const dy = e.changedTouches[0].clientY - touchStartY;
+    if (dy > 100 && touchState.scale <= 1.05) closeModal();
+}, { passive: true });
+
+// ─── Favorites ───────────────────────────────────────────
+function toggleFav(id) {
+    if (favorites.includes(id)) favorites = favorites.filter(f => f !== id);
+    else favorites.push(id);
+    localStorage.setItem('aura_favorites', JSON.stringify(favorites));
+    document.getElementById('homeFavCount').textContent = favorites.length;
+    if (document.getElementById('profileFavs'))
+        document.getElementById('profileFavs').textContent = favorites.length;
+}
+
+// ─── Cart ─────────────────────────────────────────────────
+function addToCart(poster) {
+    const existing = cart.find(i => i.id === poster.id);
+    if (existing) existing.qty++;
+    else cart.push({ ...poster, qty: 1 });
+    renderCart();
+    showToast(`✓ ${poster.name} added to cart`);
+}
+
+function renderCart() {
+    const container = document.getElementById('cartItems');
+    const count = cart.reduce((s, i) => s + i.qty, 0);
+    const total = cart.reduce((s, i) => s + (i.price * i.qty), 0);
+    document.getElementById('cartCount').textContent = `${count} item${count !== 1 ? 's' : ''}`;
+    document.getElementById('cartTotal').textContent = total;
+
+    if (!cart.length) {
+        container.innerHTML = '<div style="padding:16px 0;text-align:center;color:var(--text-muted);font-size:0.82rem;">Cart is empty</div>';
+        return;
+    }
+
+    container.innerHTML = '';
+    cart.forEach((item, idx) => {
+        const row = document.createElement('div');
+        row.className = 'cart-item-row';
+        row.innerHTML = `
+            <div>
+                <div class="cart-item-name">${item.name} ×${item.qty}</div>
+                <div class="cart-item-sub">✦ ${item.points || 0} coins</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+                <span class="cart-item-price">KSH ${item.price * item.qty}</span>
+                <button class="remove-btn" data-idx="${idx}"><i class="fas fa-trash-alt"></i></button>
+            </div>
+        `;
+        container.appendChild(row);
+    });
+
+    container.querySelectorAll('.remove-btn').forEach(btn => {
+        btn.onclick = () => { cart.splice(parseInt(btn.dataset.idx), 1); renderCart(); };
+    });
+}
+
+async function checkout() {
+    if (!cart.length) { showToast('Your cart is empty'); return; }
+    const total = cart.reduce((s, i) => s + (i.price * i.qty), 0);
+    if (!confirm(`Total: KSH ${total}\nProceed to payment?`)) return;
+    try {
+        const result = await apiRequest('/order/create', {
+            method: 'POST',
+            body: JSON.stringify({ items: cart, totalPrice: total })
+        });
+        if (result.success) {
+            showToast(`✅ Order placed! ✦ +${result.coinsEarned || result.pointsEarned || 0} coins!`);
+            cart = [];
+            renderCart();
+            loadProfile();
+        } else showToast('Payment failed. Try again.');
+    } catch(e) { showToast('Network error'); }
+}
+
+// ─── Profile ──────────────────────────────────────────────
+async function loadProfile() {
+    try {
         const data = await apiRequest('/user/profile');
         if (data.user) {
-            document.getElementById('globalPoints').innerText = data.user.points || 0;
-            document.getElementById('profilePoints').innerText = data.user.points || 0;
-            document.getElementById('homeStreak').innerText = data.user.streak || 0;
-            document.getElementById('homeWeekly').innerText = data.user.weekly_points || 0;
-            document.getElementById('homeUserName').innerText = (data.user.name || 'there').split(' ')[0];
-            document.getElementById('profileName').innerText = data.user.name || '—';
-            document.getElementById('profileEmail').innerText = data.user.email || '—';
-            document.getElementById('profileCode').innerText = data.user.referral_code || '—';
-            document.getElementById('modalCode').innerText = data.user.referral_code || '—';
-            document.getElementById('profileRank').innerText = data.rank || '—';
-            document.getElementById('userRank').innerText = data.rank || '—';
-            const pts = data.user.points || 0;
+            const u = data.user;
+            const coins = u.points || 0;
+            document.getElementById('globalCoins').textContent = coins;
+            document.getElementById('profilePoints').textContent = coins;
+            document.getElementById('homeStreak').textContent = u.streak || 0;
+            document.getElementById('homeWeekly').textContent = u.weekly_points || 0;
+            document.getElementById('homeUserName').textContent = (u.name || 'Curator').split(' ')[0];
+            document.getElementById('profileName').textContent = u.name || '—';
+            document.getElementById('profileEmail').textContent = u.email || '—';
+            document.getElementById('profileCode').textContent = u.referral_code || '—';
+            document.getElementById('modalCode').textContent = u.referral_code || '—';
+            document.getElementById('profileRank').textContent = data.rank || '—';
+            document.getElementById('userRank').textContent = data.rank || '—';
+            document.getElementById('profileFavs').textContent = favorites.length;
+
+            // Milestone
             const milestones = [120, 360, 500, 1000, 2500];
-            let next = milestones.find(m => pts < m) || 5000;
-            let prev = milestones.filter(m => m <= pts).pop() || 0;
-            let percent = next === prev ? 100 : ((pts - prev) / (next - prev)) * 100;
-            document.getElementById('milestoneFill').style.width = Math.min(100, percent) + '%';
-            const rewards = {120:'Free poster',360:'Free mystery pack',500:'15% off',1000:'Free mini poster + KSH 50',2500:'Wall of Honor'};
-            document.getElementById('nextMilestone').innerText = rewards[next] || 'Legend';
-            document.getElementById('nextPoints').innerText = next + ' pts';
-            if (data.auditLog) { const container = document.getElementById('auditLogContainer'); container.innerHTML = ''; data.auditLog.slice(0, 10).forEach(log => { const row = document.createElement('div'); row.className = 'audit-item'; row.innerHTML = `<span>${log.action}</span><span>+${log.earned} pts</span><span>${new Date(log.timestamp).toLocaleTimeString()}</span>`; container.appendChild(row); }); }
+            const next = milestones.find(m => coins < m) || 5000;
+            const prev = milestones.filter(m => m <= coins).pop() || 0;
+            const pct = next === prev ? 100 : ((coins - prev) / (next - prev)) * 100;
+            document.getElementById('milestoneFill').style.width = Math.min(100, pct) + '%';
+            const rewards = { 120:'Free poster', 360:'Mystery pack', 500:'15% off', 1000:'Mini poster + KSH 50', 2500:'Wall of Honor' };
+            document.getElementById('nextMilestone').textContent = rewards[next] || 'Legend status';
+            document.getElementById('nextPoints').textContent = next;
+
+            // Audit log
+            if (data.auditLog) {
+                const logContainer = document.getElementById('auditLogContainer');
+                logContainer.innerHTML = '';
+                data.auditLog.slice(0, 10).forEach(log => {
+                    const row = document.createElement('div');
+                    row.className = 'audit-row';
+                    row.innerHTML = `
+                        <span class="audit-action">${log.action}</span>
+                        <span class="audit-pts">+${log.earned}</span>
+                        <span class="audit-time">${new Date(log.timestamp).toLocaleTimeString()}</span>
+                    `;
+                    logContainer.appendChild(row);
+                });
+            }
         }
-    } catch(e) { console.error(e); } }
-    function addCustomToCart() { const file = document.getElementById('customImage').files[0]; if (!file) { showToast('Upload image first'); return; } const title = document.getElementById('customTitle').value.trim(); addToCart({ id: 'custom_' + Date.now(), name: title || 'Custom Poster', price: 50, points: 150 }); document.getElementById('customTitle').value = ''; document.getElementById('customImage').value = ''; document.getElementById('customPreview').innerHTML = ''; }
-    function addMysteryToCart() { addToCart({ id: 'mystery', name: 'Mystery Pack', price: 100, points: 350 }); }
-    function showScreen(screenName) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(`${screenName}Screen`).classList.add('active'); document.querySelectorAll('.tab-item').forEach(tab => { tab.classList.remove('active'); if (tab.dataset.tab === screenName) tab.classList.add('active'); }); if (screenName === 'gallery') renderTonalGallery(); if (screenName === 'profile') loadProfile(); if (screenName === 'shop') renderCart(); }
-    function logout() { localStorage.removeItem('wall_culture_token'); window.location.href = 'index.html'; }
-    function copyReferralCode() { const code = document.getElementById('profileCode').innerText; navigator.clipboard.writeText(code); showToast('Copied!'); }
+    } catch(e) { console.error(e); }
+}
 
-    // Event listeners
-    document.querySelectorAll('.tab-item').forEach(tab => tab.addEventListener('click', () => showScreen(tab.dataset.tab)));
-    document.querySelectorAll('.category-tab').forEach(tab => { tab.addEventListener('click', () => { document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active')); tab.classList.add('active'); currentGalleryCategory = tab.dataset.cat; renderTonalGallery(); }); });
-    document.getElementById('dailyBtn').onclick = dailyCheckin;
-    document.getElementById('referBtn').onclick = () => document.getElementById('referralModal').style.display = 'flex';
-    document.getElementById('storyBtn').onclick = openStoryModal;
-    document.getElementById('roomTourBtn').onclick = openRoomTour;
-    document.getElementById('copyCodeBtn').onclick = copyReferralCode;
-    document.getElementById('copyModalBtn').onclick = copyReferralCode;
-    document.getElementById('submitStoryBtn').onclick = submitStory;
-    document.getElementById('checkoutBtn').onclick = checkout;
-    document.getElementById('mysteryBtn').onclick = addMysteryToCart;
-    document.getElementById('addCustomBtn').onclick = addCustomToCart;
-    document.getElementById('logoutBtn').onclick = logout;
-    document.getElementById('closeModalBtn').onclick = () => document.getElementById('referralModal').style.display = 'none';
-    document.getElementById('closeStoryModal').onclick = () => document.getElementById('storyModal').style.display = 'none';
-    document.getElementById('scanBtn').onclick = startQRScanner;
-    document.getElementById('customImage').addEventListener('change', (e) => { if(e.target.files[0]) { const reader = new FileReader(); reader.onload = (ev) => { document.getElementById('customPreview').innerHTML = `<img src="${ev.target.result}" style="width:60px;height:60px;border-radius:12px;object-fit:cover;">`; }; reader.readAsDataURL(e.target.files[0]); } });
+// ─── QR Scanner ──────────────────────────────────────────
+async function startQRScanner() {
+    const div = document.getElementById('qr-reader');
+    div.classList.add('open');
+    html5QrCode = new Html5Qrcode('qr-reader');
+    try {
+        await html5QrCode.start(
+            { facingMode: 'environment' },
+            { fps: 10, qrbox: { width: 250, height: 250 } },
+            async decoded => {
+                await html5QrCode.stop();
+                div.classList.remove('open');
+                await processQRCode(decoded);
+            },
+            () => {}
+        );
+    } catch(e) { showToast('Camera error'); div.classList.remove('open'); }
+}
 
-    // Build discover tabs WITHOUT "all"
-    function buildDiscoverTabs() {
-        const container = document.getElementById('discoverTabsContainer');
-        const categories = ['aesthetic', 'girlish', 'motivational', 'musical', 'theater', 'limited'];
-        container.innerHTML = '';
-        categories.forEach(cat => {
-            const pill = document.createElement('div');
-            pill.className = `discover-tab ${discoverCategory === cat ? 'active' : ''}`;
-            pill.innerText = cat.charAt(0).toUpperCase() + cat.slice(1);
-            pill.onclick = () => {
-                document.querySelectorAll('.discover-tab').forEach(p => p.classList.remove('active'));
-                pill.classList.add('active');
-                discoverCategory = cat;
-                renderDiscoverFeed();
-            };
-            container.appendChild(pill);
-        });
-        // set default to aesthetic for richer start
-        if (discoverCategory === 'all') discoverCategory = 'aesthetic';
-        if (document.querySelector('.discover-tab')) document.querySelector('.discover-tab').classList.add('active');
-        renderDiscoverFeed();
-    }
+async function closeScanner() {
+    if (html5QrCode) try { await html5QrCode.stop(); } catch(e) {}
+    document.getElementById('qr-reader').classList.remove('open');
+}
 
-    // Initialization
-    loadPosters();
-    loadProfile();
-    buildDiscoverTabs();
-    renderCart();
+async function processQRCode(qrData) {
+    try {
+        const result = await apiRequest('/scan/qr', { method: 'POST', body: JSON.stringify({ code: qrData }) });
+        if (result.success) { showToast(`🎉 +${result.earned} coins!`); loadProfile(); }
+        else showToast(result.error || 'Invalid QR code');
+    } catch(e) { showToast('Network error'); }
+}
+
+// ─── Daily Check-in ───────────────────────────────────────
+async function dailyCheckin() {
+    try {
+        const result = await apiRequest('/daily/checkin', { method: 'POST' });
+        if (result.success) { showToast(`☀️ +${result.earned} coins!`); loadProfile(); }
+        else showToast(result.message || 'Already checked in today');
+    } catch(e) { showToast('Network error'); }
+}
+
+// ─── Story ────────────────────────────────────────────────
+function openStoryModal() {
+    document.getElementById('storyModal').classList.add('open');
+}
+
+async function submitStory() {
+    const link = document.getElementById('storyLink').value.trim();
+    if (!link) { showToast('Please paste your story link'); return; }
+    try {
+        const result = await apiRequest('/social/story', { method: 'POST', body: JSON.stringify({ story_link: link }) });
+        if (result.success) {
+            showToast(`📸 +${result.earned} coins earned!`);
+            document.getElementById('storyModal').classList.remove('open');
+            document.getElementById('storyLink').value = '';
+            loadProfile();
+        } else showToast(result.error || 'Error submitting story');
+    } catch(e) { showToast('Network error'); }
+}
+
+// ─── Misc Actions ─────────────────────────────────────────
+function shareItem() {
+    if (navigator.share && currentModalPoster) {
+        navigator.share({ title: currentModalPoster.name, text: `Check out this print on Aura Gallery!` })
+            .catch(() => {});
+    } else showToast('🔗 Link copied!');
+}
+
+function downloadItem() {
+    showToast('⬇️ Download started');
+}
+
+function addCustomToCart() {
+    const file = document.getElementById('customImage').files[0];
+    if (!file) { showToast('Please upload an image first'); return; }
+    const title = document.getElementById('customTitle').value.trim();
+    addToCart({ id: 'custom_' + Date.now(), name: title || 'Custom Poster', price: 50, points: 150 });
+    document.getElementById('customTitle').value = '';
+    document.getElementById('customImage').value = '';
+    document.getElementById('customPreview').innerHTML = '';
+}
+
+function addMysteryToCart() {
+    addToCart({ id: 'mystery', name: 'Mystery Pack', price: 100, points: 350 });
+}
+
+function copyReferralCode() {
+    const code = document.getElementById('profileCode').textContent;
+    navigator.clipboard.writeText(code).then(() => showToast('📋 Code copied!')).catch(() => showToast('Code: ' + code));
+}
+
+function logout() {
+    localStorage.removeItem('wall_culture_token');
+    window.location.href = 'index.html';
+}
+
+// ─── Custom image preview ─────────────────────────────────
+document.getElementById('customImage').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+        document.getElementById('customPreview').innerHTML =
+            `<img src="${ev.target.result}" style="width:70px;height:70px;border-radius:12px;object-fit:cover;margin-top:8px;">`;
+    };
+    reader.readAsDataURL(file);
+});
+
+// ─── Event bindings ───────────────────────────────────────
+document.getElementById('dailyBtn').onclick = dailyCheckin;
+document.getElementById('referBtn').onclick = () => document.getElementById('referralModal').classList.add('open');
+document.getElementById('storyBtn').onclick = openStoryModal;
+document.getElementById('copyCodeBtn').onclick = copyReferralCode;
+document.getElementById('copyModalBtn').onclick = copyReferralCode;
+document.getElementById('submitStoryBtn').onclick = submitStory;
+document.getElementById('checkoutBtn').onclick = checkout;
+document.getElementById('mysteryBtn').onclick = addMysteryToCart;
+document.getElementById('addCustomBtn').onclick = addCustomToCart;
+document.getElementById('logoutBtn').onclick = logout;
+document.getElementById('scanBtn').onclick = startQRScanner;
+document.getElementById('closeModalBtn').onclick = () => document.getElementById('referralModal').classList.remove('open');
+document.getElementById('closeStoryModal').onclick = () => document.getElementById('storyModal').classList.remove('open');
+
+// Close modals on overlay click
+document.getElementById('referralModal').onclick = e => { if (e.target === e.currentTarget) e.currentTarget.classList.remove('open'); };
+document.getElementById('storyModal').onclick = e => { if (e.target === e.currentTarget) e.currentTarget.classList.remove('open'); };
+
+// Close image modal on bg click
+document.getElementById('imageModal').addEventListener('click', e => {
+    if (e.target === document.getElementById('imageModal')) closeModal();
+});
+
+// Keyboard close
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+// ─── Init ─────────────────────────────────────────────────
+loadPosters();
+loadProfile();
+buildDiscoverTabs();
+renderCart();
+renderRecents();
 </script>
 </body>
 </html>
