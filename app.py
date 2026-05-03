@@ -1,4 +1,4 @@
-# app.py - Wall Culture Flask Backend (FULLY FUNCTIONAL)
+# app.py - Aura Flask Backend (FULLY FUNCTIONAL)
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from flask_limiter import Limiter
@@ -31,7 +31,7 @@ app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
 
 # CORS
 ALLOWED_ORIGINS = os.getenv('ALLOWED_ORIGINS', 
-    'http://localhost:5000,http://127.0.0.1:5000,https://wall-culture-3.onrender.com'
+    'http://localhost:5000,http://127.0.0.1:5000,https://aura-3.onrender.com'
 ).split(',')
 CORS(app, origins=[o.strip() for o in ALLOWED_ORIGINS])
 
@@ -64,6 +64,18 @@ POINTS = {
     'streak_14': 300,
     'streak_30': 1000,
     'referral_signup': 200,
+    'referral_first_purchase': 300,
+    'referral_friend_500': 500,
+    'referral_friend_1000': 800,
+    'large_order_bonus': 250,
+}
+
+# Multiplier durations by purchase type (days)
+MULTIPLIER_DURATIONS = {
+    'standard': 3,
+    'limited': 5,
+    'mystery': 5,
+    'bundle': 7,
 }
 
 # ==================== HELPERS ====================
@@ -307,25 +319,32 @@ def scan_qr():
     """REAL QR SCANNING - Validates against database QR codes"""
     try:
         data = request.get_json(silent=True) or {}
-        qr_data = data.get('qr_data', '').strip().upper()
+        qr_data = data.get('qr_data', data.get('code', '')).strip().upper()
 
         if not qr_data:
             return jsonify({'error': 'No QR code detected. Point camera at QR code.'}), 400
 
-        # Check daily limit
         today_start = int(datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0).timestamp() * 1000)
-        scans = supabase.table('point_logs').select('id', count='exact').eq('user_id', request.user_id).eq('action', 'QR Scan').gte('timestamp', today_start).execute()
-        
-        if scans.count and scans.count >= 5:
-            return jsonify({'error': 'Max 5 QR scans per day'}), 429
 
-        # Find QR code in database
+        # Find QR code in database first to know if it's golden
         qr_result = supabase.table('qr_codes').select('*').eq('code', qr_data).execute()
-        
         if not qr_result.data:
             return jsonify({'error': 'Invalid QR code. This code is not recognized.'}), 404
 
         qr = qr_result.data[0]
+        is_golden = qr.get('is_golden', 0) == 1
+
+        if is_golden:
+            # Golden QR: max 1x/day
+            golden_scans = supabase.table('point_logs').select('id', count='exact').eq('user_id', request.user_id).eq('action', 'Golden QR Scan').gte('timestamp', today_start).execute()
+            if golden_scans.count and golden_scans.count >= 1:
+                return jsonify({'error': 'You have already scanned a golden QR today'}), 429
+        else:
+            # Standard QR: max 5x/day
+            scans = supabase.table('point_logs').select('id', count='exact').eq('user_id', request.user_id).eq('action', 'QR Scan').gte('timestamp', today_start).execute()
+            if scans.count and scans.count >= 5:
+                return jsonify({'error': 'Max 5 QR scans per day'}), 429
+
         current_time = int(datetime.utcnow().timestamp() * 1000)
 
         # Check expiration
@@ -337,9 +356,9 @@ def scan_qr():
             return jsonify({'error': 'This QR code has already been used'}), 409
 
         # Award points
-        points_to_award = qr.get('points', 25)
-        is_golden = qr.get('is_golden', 0) == 1
-        earned = add_points_to_user(request.user_id, points_to_award, 'QR Scan')
+        points_to_award = qr.get('points', POINTS['qr_golden'] if is_golden else POINTS['qr_standard'])
+        action_label = 'Golden QR Scan' if is_golden else 'QR Scan'
+        earned = add_points_to_user(request.user_id, points_to_award, action_label)
 
         # Mark as scanned
         supabase.table('qr_codes').update({
@@ -413,11 +432,11 @@ def social_story():
 @app.route('/api/social/roomtour', methods=['POST'])
 @token_required
 def room_tour():
-    """Upload room tour photo with Wall Culture posters"""
+    """Upload room tour photo with Aura posters"""
     try:
         # Check if file was uploaded
         if 'image' not in request.files:
-            return jsonify({'error': 'Please upload a photo of your room with Wall Culture posters'}), 400
+            return jsonify({'error': 'Please upload a photo of your room with Aura posters'}), 400
         
         file = request.files['image']
         if file.filename == '':
@@ -487,6 +506,11 @@ def daily_checkin():
             'streak': new_streak
         }).eq('id', request.user_id).execute()
 
+        try:
+            check_referral_milestones(request.user_id)
+        except Exception as e:
+            print(f"Milestone check error: {e}")
+
         return jsonify({
             'success': True,
             'points': total_points,
@@ -513,17 +537,36 @@ def create_order():
             return jsonify({'error': 'No items in order'}), 400
 
         order_id = str(uuid.uuid4())
+
+        # ── Award base purchase points ──────────────────────────
         earned = add_points_to_user(request.user_id, total_base_points, 'Purchase order')
 
-        # Determine multiplier
-        new_multiplier = 1.2
-        for item in items:
-            if item.get('type') == 'mystery':
-                new_multiplier = max(new_multiplier, 1.5)
-            elif item.get('type') == 'limited':
-                new_multiplier = max(new_multiplier, 1.8)
+        # ── +250 bonus for orders ≥ 140 KSH ────────────────────
         if total_price >= 140:
-            new_multiplier = max(new_multiplier, 2.0)
+            bonus_earned = add_points_to_user(request.user_id, POINTS['large_order_bonus'], 'Large order bonus')
+            earned += bonus_earned
+
+        # ── Determine best multiplier and its duration ──────────
+        new_multiplier = 1.0
+        best_type = 'standard'
+        type_priority = {'bundle': 4, 'mystery': 3, 'limited': 2, 'standard': 1}
+        for item in items:
+            itype = item.get('type', item.get('itemType', 'standard'))
+            if type_priority.get(itype, 1) > type_priority.get(best_type, 1):
+                best_type = itype
+
+        if best_type == 'bundle' or total_price >= 140:
+            new_multiplier = 2.0
+            best_type = 'bundle'
+        elif best_type == 'mystery':
+            new_multiplier = 1.5
+        elif best_type == 'limited':
+            new_multiplier = 1.5
+        else:
+            new_multiplier = 1.2
+
+        duration_days = MULTIPLIER_DURATIONS.get(best_type, 3)
+        multiplier_expiry = int((datetime.utcnow() + timedelta(days=duration_days)).timestamp() * 1000)
 
         supabase.table('orders').insert({
             'id': order_id, 'user_id': request.user_id, 'items': json.dumps(items),
@@ -534,12 +577,60 @@ def create_order():
 
         supabase.table('users').update({
             'multiplier': new_multiplier,
-            'multiplier_expiry': int((datetime.utcnow() + timedelta(days=7)).timestamp() * 1000)
+            'multiplier_expiry': multiplier_expiry
         }).eq('id', request.user_id).execute()
 
-        return jsonify({'success': True, 'orderId': order_id, 'pointsEarned': earned, 'newMultiplier': new_multiplier})
+        # ── Award referral first-purchase bonus to referrer ─────
+        try:
+            user_res = supabase.table('users').select('referred_by').eq('id', request.user_id).execute()
+            referrer_code = user_res.data[0].get('referred_by') if user_res.data else None
+            if referrer_code:
+                # Check if this is the user's first purchase
+                prev_orders = supabase.table('orders').select('id', count='exact').eq('user_id', request.user_id).execute()
+                if prev_orders.count and prev_orders.count == 1:
+                    ref_res = supabase.table('users').select('id').eq('referral_code', referrer_code).execute()
+                    if ref_res.data:
+                        referrer_id = ref_res.data[0]['id']
+                        add_points_to_user(referrer_id, POINTS['referral_first_purchase'], 'Referral first purchase')
+        except Exception as ref_err:
+            print(f"Referral first-purchase bonus error: {ref_err}")
+
+        # ── Check referral milestone bonuses ────────────────────
+        try:
+            check_referral_milestones(request.user_id)
+        except Exception as milestone_err:
+            print(f"Milestone check error: {milestone_err}")
+
+        return jsonify({'success': True, 'orderId': order_id, 'pointsEarned': earned, 'newMultiplier': new_multiplier, 'multiplierDays': duration_days})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+def check_referral_milestones(user_id):
+    """Award milestone bonuses to referrer when this user hits 500 or 1000 points."""
+    user_res = supabase.table('users').select('points, referred_by').eq('id', user_id).execute()
+    if not user_res.data:
+        return
+    user = user_res.data[0]
+    referrer_code = user.get('referred_by')
+    current_points = user.get('points', 0)
+    if not referrer_code:
+        return
+
+    ref_res = supabase.table('users').select('id').eq('referral_code', referrer_code).execute()
+    if not ref_res.data:
+        return
+    referrer_id = ref_res.data[0]['id']
+
+    for threshold, action, points_key in [
+        (500, f'Friend milestone 500 ({user_id})', 'referral_friend_500'),
+        (1000, f'Friend milestone 1000 ({user_id})', 'referral_friend_1000'),
+    ]:
+        if current_points >= threshold:
+            # Check if already awarded
+            already = supabase.table('point_logs').select('id', count='exact').eq('user_id', referrer_id).eq('action', action).execute()
+            if not already.count or already.count == 0:
+                add_points_to_user(referrer_id, POINTS[points_key], action)
 
 
 # ==================== LEADERBOARDS ====================
@@ -611,17 +702,20 @@ def get_referral_info():
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
-    return jsonify({'status': 'healthy', 'app': 'Wall Culture', 'version': '1.5.0'})
+    return jsonify({'status': 'healthy', 'app': 'Aura', 'version': '2.0.0'})
 
 
 if __name__ == '__main__':
     print("\n" + "="*50)
-    print("🎨 WALL CULTURE BACKEND v1.5.0")
+    print("🎨 AURA BACKEND v2.0.0")
     print("="*50)
     print(f"📍 Running on: http://localhost:5000")
-    print("✅ REAL QR Scanning enabled")
-    print("✅ REAL Instagram verification")
+    print("✅ REAL QR Scanning (standard 5×/day, golden 1×/day)")
+    print("✅ REAL Instagram story verification")
     print("✅ REAL Room Tour uploads")
+    print("✅ Referral first-purchase + milestone bonuses")
+    print("✅ Correct multiplier values + durations")
+    print("✅ +250 large order bonus")
     print("✅ Posters from Supabase database")
     print("="*50 + "\n")
     app.run(debug=False, host='0.0.0.0', port=5000)

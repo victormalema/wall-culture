@@ -870,8 +870,8 @@
         /* Quick actions */
         .quick-actions {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
             padding: 0 20px 20px;
         }
 
@@ -908,6 +908,7 @@
         .qa-btn:nth-child(2)::after { background: linear-gradient(135deg, rgba(251,191,36,0.12), transparent); }
         .qa-btn:nth-child(3)::after { background: linear-gradient(135deg, rgba(52,211,153,0.12), transparent); }
         .qa-btn:nth-child(4)::after { background: linear-gradient(135deg, rgba(255,60,172,0.12), transparent); }
+        .qa-btn:nth-child(5)::after { background: linear-gradient(135deg, rgba(0,198,255,0.12), transparent); }
 
         .qa-btn:hover::after { opacity: 1; }
         .qa-btn:hover { transform: translateY(-3px) scale(1.04); }
@@ -916,6 +917,7 @@
         .qa-btn:nth-child(2):hover { border-color: rgba(251,191,36,0.4);  box-shadow: 0 8px 20px rgba(251,191,36,0.3); }
         .qa-btn:nth-child(3):hover { border-color: rgba(52,211,153,0.4);  box-shadow: 0 8px 20px rgba(52,211,153,0.3); }
         .qa-btn:nth-child(4):hover { border-color: rgba(255,60,172,0.4);  box-shadow: 0 8px 20px var(--accent-glow); }
+        .qa-btn:nth-child(5):hover { border-color: rgba(0,198,255,0.4);   box-shadow: 0 8px 20px var(--fourth-glow); }
 
         .qa-btn:active { transform: scale(0.91); }
 
@@ -936,6 +938,7 @@
         .qa-btn:nth-child(2) .qa-icon { background: linear-gradient(135deg, #FBBF24, #FF6B35);                color: white; box-shadow: 0 4px 12px rgba(251,191,36,0.35); }
         .qa-btn:nth-child(3) .qa-icon { background: linear-gradient(135deg, #34D399, #10B981);                color: white; box-shadow: 0 4px 12px rgba(52,211,153,0.35); }
         .qa-btn:nth-child(4) .qa-icon { background: linear-gradient(135deg, #FF3CAC, #7B2FFF);                color: white; box-shadow: 0 4px 12px var(--accent-glow); }
+        .qa-btn:nth-child(5) .qa-icon { background: linear-gradient(135deg, #00C6FF, #7B2FFF);                color: white; box-shadow: 0 4px 12px var(--fourth-glow); }
 
         /* ═══════════════════════════════════════════
            RECENTLY VIEWED
@@ -2017,6 +2020,10 @@
                     <div class="qa-icon"><i class="fab fa-instagram"></i></div>
                     Story
                 </button>
+                <button class="qa-btn" id="roomTourBtn">
+                    <div class="qa-icon"><i class="fas fa-home"></i></div>
+                    Room Tour
+                </button>
             </div>
 
             <!-- Recently Viewed -->
@@ -2104,6 +2111,14 @@
                 <div class="shop-section-title">🎁 Mystery Package</div>
                 <p style="font-size:0.78rem; color:var(--text-muted); margin-bottom:12px;">Get a surprise pack of curated prints — always a great deal.</p>
                 <button class="mystery-btn" id="mysteryBtn">Add Mystery Pack — KSH 100</button>
+            </div>
+
+            <!-- Room Bundle -->
+            <div class="shop-section-card" style="border-color: rgba(0,198,255,0.25); background: rgba(0,198,255,0.04);">
+                <div class="shop-section-title">📦 Room Bundle <span style="font-size:0.7rem; background: var(--grad-cosmos); -webkit-background-clip:text; background-clip:text; color:transparent; font-weight:800;">BEST VALUE</span></div>
+                <p style="font-size:0.78rem; color:var(--text-muted); margin-bottom:4px;">4 curated posters + 2.0× coin multiplier for 7 days.</p>
+                <p style="font-size:0.72rem; color:var(--primary); font-weight:700; margin-bottom:12px;">+600 coins · +250 bonus · 2.0× boost</p>
+                <button class="mystery-btn" id="bundleBtn" style="border-color:rgba(0,198,255,0.35); background:rgba(0,198,255,0.07);">Add Room Bundle — KSH 140</button>
             </div>
 
             <!-- Custom Poster -->
@@ -2251,6 +2266,22 @@
     </div>
 </div>
 
+<!-- ══ ROOM TOUR MODAL ══ -->
+<div class="modal-overlay" id="roomTourModal">
+    <div class="modal-box">
+        <h3>🏠 Room Tour</h3>
+        <p>Upload a photo of your room featuring Aura posters to earn <strong>+250 coins</strong> (once per month).</p>
+        <label class="custom-file-label" for="roomTourImage" style="display:flex; align-items:center; gap:8px; justify-content:center; margin:14px 0 8px; cursor:pointer;">
+            <i class="fas fa-cloud-upload-alt"></i> Choose photo
+        </label>
+        <input type="file" id="roomTourImage" accept="image/*" style="display:none">
+        <div id="roomTourPreview" style="text-align:center;"></div>
+        <p id="roomTourFilename" style="font-size:0.75rem; color:var(--text-muted); text-align:center; margin:4px 0 12px;"></p>
+        <button class="modal-btn-full primary" id="submitRoomTourBtn">Upload & Earn</button>
+        <button class="modal-btn-full ghost" id="closeRoomTourModal">Cancel</button>
+    </div>
+</div>
+
 <!-- ══ QR READER ══ -->
 <div id="qr-reader">
     <button class="close-scanner" onclick="closeScanner()"><i class="fas fa-times"></i></button>
@@ -2264,8 +2295,8 @@
    Premium dark gallery with dynamic color theming
 ═══════════════════════════════════════════════════════════ */
 
-const API_URL = 'https://wall-culture-3.onrender.com/api';
-let token = localStorage.getItem('wall_culture_token');
+const API_URL = 'https://aura-3.onrender.com/api';
+let token = localStorage.getItem('aura_token');
 if (!token) window.location.href = 'index.html';
 
 // ─── State ───────────────────────────────────────────────
@@ -2370,7 +2401,7 @@ async function apiRequest(endpoint, options = {}) {
         }
     });
     if (res.status === 401) {
-        localStorage.removeItem('wall_culture_token');
+        localStorage.removeItem('aura_token');
         window.location.href = 'index.html';
     }
     return res.json();
@@ -2479,7 +2510,7 @@ function renderDiscoverFeed() {
             </div>
         `;
         card.querySelector('.poster-fav').addEventListener('click', e => { e.stopPropagation(); toggleFav(poster.id); renderDiscoverFeed(); });
-        card.querySelector('.poster-add').addEventListener('click', e => { e.stopPropagation(); addToCart(poster); });
+        card.querySelector('.poster-add').addEventListener('click', e => { e.stopPropagation(); addToCart({ ...poster, itemType: poster.is_limited ? 'limited' : 'standard' }); });
         card.addEventListener('click', () => openModal(poster));
         container.appendChild(card);
     });
@@ -2688,7 +2719,7 @@ function openModal(poster) {
     document.getElementById('modalItemMeta').textContent =
         `${poster.category || 'Art Print'} · ✦ ${poster.points || 0} coins`;
     document.getElementById('modalItemPrice').textContent = `KSH ${poster.price}`;
-    document.getElementById('modalAddBtn').onclick = () => { addToCart(poster); closeModal(); };
+    document.getElementById('modalAddBtn').onclick = () => { addToCart({ ...poster, itemType: poster.is_limited ? 'limited' : 'standard' }); closeModal(); };
 
     // Fav state
     const isFav = favorites.includes(poster.id);
@@ -2831,11 +2862,16 @@ function renderCart() {
 async function checkout() {
     if (!cart.length) { showToast('Your cart is empty'); return; }
     const total = cart.reduce((s, i) => s + (i.price * i.qty), 0);
+    const totalBasePoints = cart.reduce((s, i) => s + ((i.points || 0) * i.qty), 0);
     if (!confirm(`Total: KSH ${total}\nProceed to payment?`)) return;
     try {
         const result = await apiRequest('/order/create', {
             method: 'POST',
-            body: JSON.stringify({ items: cart, totalPrice: total })
+            body: JSON.stringify({
+                items: cart.map(i => ({ ...i, type: i.itemType || 'standard' })),
+                totalPrice: total,
+                totalBasePoints: totalBasePoints
+            })
         });
         if (result.success) {
             showToast(`✅ Order placed! ✦ +${result.coinsEarned || result.pointsEarned || 0} coins!`);
@@ -2867,14 +2903,25 @@ async function loadProfile() {
             document.getElementById('profileFavs').textContent = favorites.length;
 
             // Milestone
-            const milestones = [120, 360, 500, 1000, 2500];
-            const next = milestones.find(m => coins < m) || 5000;
+            const milestones = [120, 360, 500, 1000, 2500, 5000, 10000, 25000, 50000, 100000];
+            const next = milestones.find(m => coins < m) || milestones[milestones.length - 1];
             const prev = milestones.filter(m => m <= coins).pop() || 0;
             const pct = next === prev ? 100 : ((coins - prev) / (next - prev)) * 100;
             document.getElementById('milestoneFill').style.width = Math.min(100, pct) + '%';
-            const rewards = { 120:'Free poster', 360:'Mystery pack', 500:'15% off', 1000:'Mini poster + KSH 50', 2500:'Wall of Honor' };
+            const rewards = {
+                120: 'Free poster',
+                360: 'Free mystery pack',
+                500: '15% off next purchase',
+                1000: 'Mini poster + KSH 50',
+                2500: 'Wall of Honor + KSH 100',
+                5000: 'Bronze card + KSH 200',
+                10000: 'Custom poster + KSH 300',
+                25000: 'Silver card + free shipping',
+                50000: 'Gold card + 30% off forever',
+                100000: 'Face on limited edition poster'
+            };
             document.getElementById('nextMilestone').textContent = rewards[next] || 'Legend status';
-            document.getElementById('nextPoints').textContent = next;
+            document.getElementById('nextPoints').textContent = next.toLocaleString();
 
             // Audit log
             if (data.auditLog) {
@@ -2978,7 +3025,11 @@ function addCustomToCart() {
 }
 
 function addMysteryToCart() {
-    addToCart({ id: 'mystery', name: 'Mystery Pack', price: 100, points: 350 });
+    addToCart({ id: 'mystery', name: 'Mystery Pack', price: 100, points: 350, itemType: 'mystery' });
+}
+
+function addBundleToCart() {
+    addToCart({ id: 'room_bundle', name: 'Room Bundle (4 Posters)', price: 140, points: 600, itemType: 'bundle' });
 }
 
 function copyReferralCode() {
@@ -2987,7 +3038,7 @@ function copyReferralCode() {
 }
 
 function logout() {
-    localStorage.removeItem('wall_culture_token');
+    localStorage.removeItem('aura_token');
     window.location.href = 'index.html';
 }
 
@@ -3003,24 +3054,76 @@ document.getElementById('customImage').addEventListener('change', e => {
     reader.readAsDataURL(file);
 });
 
+// ─── Room Tour image preview ──────────────────────────────
+document.getElementById('roomTourImage').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    document.getElementById('roomTourFilename').textContent = file.name;
+    const reader = new FileReader();
+    reader.onload = ev => {
+        document.getElementById('roomTourPreview').innerHTML =
+            `<img src="${ev.target.result}" style="width:100%;max-height:140px;border-radius:12px;object-fit:cover;margin-top:4px;">`;
+    };
+    reader.readAsDataURL(file);
+});
+
+// ─── Room Tour submit ─────────────────────────────────────
+function openRoomTourModal() {
+    document.getElementById('roomTourModal').classList.add('open');
+}
+
+async function submitRoomTour() {
+    const fileInput = document.getElementById('roomTourImage');
+    const file = fileInput.files[0];
+    if (!file) { showToast('Please choose a photo first'); return; }
+    const btn = document.getElementById('submitRoomTourBtn');
+    btn.textContent = 'Uploading…';
+    btn.disabled = true;
+    try {
+        const formData = new FormData();
+        formData.append('image', file);
+        const res = await fetch(`${API_URL}/social/roomtour`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: formData
+        });
+        const result = await res.json();
+        if (result.success) {
+            showToast(`🏠 +${result.earned} coins! Room tour submitted!`);
+            document.getElementById('roomTourModal').classList.remove('open');
+            document.getElementById('roomTourPreview').innerHTML = '';
+            document.getElementById('roomTourFilename').textContent = '';
+            fileInput.value = '';
+            loadProfile();
+        } else showToast(result.error || 'Upload failed');
+    } catch(e) { showToast('Network error'); }
+    btn.textContent = 'Upload & Earn';
+    btn.disabled = false;
+}
+
 // ─── Event bindings ───────────────────────────────────────
 document.getElementById('dailyBtn').onclick = dailyCheckin;
 document.getElementById('referBtn').onclick = () => document.getElementById('referralModal').classList.add('open');
 document.getElementById('storyBtn').onclick = openStoryModal;
+document.getElementById('roomTourBtn').onclick = openRoomTourModal;
 document.getElementById('copyCodeBtn').onclick = copyReferralCode;
 document.getElementById('copyModalBtn').onclick = copyReferralCode;
 document.getElementById('submitStoryBtn').onclick = submitStory;
+document.getElementById('submitRoomTourBtn').onclick = submitRoomTour;
 document.getElementById('checkoutBtn').onclick = checkout;
 document.getElementById('mysteryBtn').onclick = addMysteryToCart;
+document.getElementById('bundleBtn').onclick = addBundleToCart;
 document.getElementById('addCustomBtn').onclick = addCustomToCart;
 document.getElementById('logoutBtn').onclick = logout;
 document.getElementById('scanBtn').onclick = startQRScanner;
 document.getElementById('closeModalBtn').onclick = () => document.getElementById('referralModal').classList.remove('open');
 document.getElementById('closeStoryModal').onclick = () => document.getElementById('storyModal').classList.remove('open');
+document.getElementById('closeRoomTourModal').onclick = () => document.getElementById('roomTourModal').classList.remove('open');
 
 // Close modals on overlay click
 document.getElementById('referralModal').onclick = e => { if (e.target === e.currentTarget) e.currentTarget.classList.remove('open'); };
 document.getElementById('storyModal').onclick = e => { if (e.target === e.currentTarget) e.currentTarget.classList.remove('open'); };
+document.getElementById('roomTourModal').onclick = e => { if (e.target === e.currentTarget) e.currentTarget.classList.remove('open'); };
 
 // Close image modal on bg click
 document.getElementById('imageModal').addEventListener('click', e => {
