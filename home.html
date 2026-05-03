@@ -2601,6 +2601,8 @@
    Premium dark gallery with dynamic color theming
 ═══════════════════════════════════════════════════════════ */
 
+window.onerror = function(msg, src, line, col, err) { document.body.style.cssText = 'background:#07070F;color:#fff;padding:20px;font-family:monospace;font-size:13px;'; document.body.innerHTML = '<h3 style="color:#FF6B35">JS Error</h3><b>' + msg + '</b><br><br>Line: ' + line + '<br><br>' + (err ? err.stack : ''); };
+
 const API_URL = '/api';
 let token = localStorage.getItem('aura_token');
 if (!token) window.location.href = 'index.html';
