@@ -1749,33 +1749,133 @@
         }
         .audit-time   { color: var(--text-muted); }
 
-        /* QR reader */
-        #qr-reader {
+        /* ═══ QR SCANNER — FULLSCREEN CAMERA ═══ */
+        #qr-scanner-overlay {
             display: none;
             position: fixed;
             inset: 0;
             z-index: 9500;
             background: #000;
+            flex-direction: column;
+        }
+        #qr-scanner-overlay.open { display: flex; }
+
+        #qr-video {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
-        #qr-reader.open { display: flex; flex-direction: column; justify-content: center; }
-
-        .close-scanner {
+        .scanner-ui {
             position: absolute;
-            top: 24px;
-            right: 20px;
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.15);
-            border: none;
-            color: white;
-            font-size: 1.1rem;
+            inset: 0;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
+            pointer-events: none;
         }
+
+        .scanner-header {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            padding: 20px;
+            padding-top: max(20px, env(safe-area-inset-top, 20px));
+            background: linear-gradient(to bottom, rgba(0,0,0,0.65), transparent);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            pointer-events: all;
+        }
+
+        .scanner-title {
+            color: white;
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .scanner-close {
+            width: 44px; height: 44px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.18);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.25);
+            color: white;
+            font-size: 1.1rem;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            pointer-events: all;
+        }
+        .scanner-close:active { background: rgba(255,255,255,0.3); }
+
+        .scanner-cutout {
+            width: 260px; height: 260px;
+            position: relative;
+            box-shadow: 0 0 0 9999px rgba(0,0,0,0.5);
+            border-radius: 20px;
+        }
+
+        .scanner-cutout::before, .scanner-cutout::after,
+        .scanner-corner-bl, .scanner-corner-br {
+            content: '';
+            position: absolute;
+            width: 36px; height: 36px;
+            border-color: #FF6B35;
+            border-style: solid;
+        }
+        .scanner-cutout::before { top:-2px; left:-2px; border-width:4px 0 0 4px; border-radius:12px 0 0 0; }
+        .scanner-cutout::after  { top:-2px; right:-2px; border-width:4px 4px 0 0; border-radius:0 12px 0 0; }
+        .scanner-corner-bl { bottom:-2px; left:-2px; border-width:0 0 4px 4px; border-radius:0 0 0 12px; }
+        .scanner-corner-br { bottom:-2px; right:-2px; border-width:0 4px 4px 0; border-radius:0 0 12px 0; }
+
+        .scan-line {
+            position: absolute;
+            left: 8px; right: 8px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #FF6B35, #FF3CAC, transparent);
+            border-radius: 2px;
+            box-shadow: 0 0 8px rgba(255,107,53,0.8);
+            animation: scanMove 2s ease-in-out infinite;
+        }
+        @keyframes scanMove {
+            0%   { top: 12px;  opacity: 0; }
+            10%  { opacity: 1; }
+            90%  { opacity: 1; }
+            100% { top: 238px; opacity: 0; }
+        }
+
+        .scanner-hint {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            padding: 32px 20px;
+            padding-bottom: max(32px, env(safe-area-inset-bottom, 32px));
+            background: linear-gradient(to top, rgba(0,0,0,0.65), transparent);
+            text-align: center;
+            pointer-events: none;
+        }
+        .scanner-hint p { color: rgba(255,255,255,0.85); font-size: 0.85rem; font-weight: 500; }
+        .scanner-hint small { color: rgba(255,255,255,0.45); font-size: 0.72rem; display: block; margin-top:4px; }
+
+        #qrScanStatus {
+            position: absolute;
+            bottom: 120px;
+            left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 40px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        #qrScanStatus.visible { opacity: 1; }
 
         /* Loading state */
         .loading-state {
@@ -2259,14 +2359,9 @@
 <div class="modal-overlay" id="storyModal">
     <div class="modal-box">
         <h3>📸 Instagram Story</h3>
-        <p>Post a story tagging <strong>@auragallery</strong>, then paste the story link below. An admin will verify and award your <strong>+150 coins</strong>.</p>
-        <div style="background:rgba(255,107,53,0.08);border:1px solid rgba(255,107,53,0.2);border-radius:12px;padding:10px 14px;margin:12px 0;font-size:0.78rem;color:var(--text-secondary);display:flex;gap:8px;align-items:center;">
-            <i class="fas fa-clock" style="color:var(--primary);"></i>
-            Points are awarded after admin review (usually within 24h)
-        </div>
-        <input type="url" id="storyLink" class="modal-input" placeholder="https://www.instagram.com/stories/…">
-        <div id="storyStatus" style="display:none;margin:8px 0;padding:10px 14px;border-radius:12px;font-size:0.8rem;font-weight:600;text-align:center;"></div>
-        <button class="modal-btn-full primary" id="submitStoryBtn">Submit for Review</button>
+        <p>Post a story tagging <strong>@auragallery</strong> and paste your story link to earn coins.</p>
+        <input type="text" id="storyLink" class="modal-input" placeholder="Paste Instagram story URL…">
+        <button class="modal-btn-full primary" id="submitStoryBtn">Submit & Earn</button>
         <button class="modal-btn-full ghost" id="closeStoryModal">Cancel</button>
     </div>
 </div>
@@ -2275,24 +2370,51 @@
 <div class="modal-overlay" id="roomTourModal">
     <div class="modal-box">
         <h3>🏠 Room Tour</h3>
-        <p>Post a photo of your room featuring Aura posters on Instagram or any platform, then paste the link below to earn <strong>+250 coins</strong> (once per month).</p>
-        <div style="background:rgba(255,107,53,0.08);border:1px solid rgba(255,107,53,0.2);border-radius:12px;padding:10px 14px;margin:12px 0;font-size:0.78rem;color:var(--text-secondary);display:flex;gap:8px;align-items:center;">
-            <i class="fas fa-clock" style="color:var(--primary);"></i>
-            Points are awarded after admin review (usually within 24h)
-        </div>
-        <input type="url" id="roomTourUrl" class="modal-input" placeholder="https://www.instagram.com/p/… or any public link">
-        <div id="roomTourStatus" style="display:none;margin:8px 0;padding:10px 14px;border-radius:12px;font-size:0.8rem;font-weight:600;text-align:center;"></div>
-        <button class="modal-btn-full primary" id="submitRoomTourBtn">Submit for Review</button>
+        <p>Upload a photo of your room featuring Aura posters to earn <strong>+250 coins</strong> (once per month).</p>
+        <label class="custom-file-label" for="roomTourImage" style="display:flex; align-items:center; gap:8px; justify-content:center; margin:14px 0 8px; cursor:pointer;">
+            <i class="fas fa-cloud-upload-alt"></i> Choose photo
+        </label>
+        <input type="file" id="roomTourImage" accept="image/*" style="display:none">
+        <div id="roomTourPreview" style="text-align:center;"></div>
+        <p id="roomTourFilename" style="font-size:0.75rem; color:var(--text-muted); text-align:center; margin:4px 0 12px;"></p>
+        <button class="modal-btn-full primary" id="submitRoomTourBtn">Upload & Earn</button>
         <button class="modal-btn-full ghost" id="closeRoomTourModal">Cancel</button>
     </div>
 </div>
 
-<!-- ══ QR READER ══ -->
-<div id="qr-reader">
-    <button class="close-scanner" onclick="closeScanner()"><i class="fas fa-times"></i></button>
+<!-- ══ QR SCANNER — FULLSCREEN CAMERA ══ -->
+<div id="qr-scanner-overlay">
+    <video id="qr-video" autoplay playsinline muted></video>
+    <canvas id="qr-canvas" style="display:none"></canvas>
+
+    <div class="scanner-ui">
+        <!-- Header -->
+        <div class="scanner-header">
+            <span class="scanner-title">📷 Scan QR Code</span>
+            <button class="scanner-close" onclick="closeScanner()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <!-- Aim box -->
+        <div class="scanner-cutout">
+            <div class="scanner-corner-bl"></div>
+            <div class="scanner-corner-br"></div>
+            <div class="scan-line"></div>
+        </div>
+
+        <!-- Status pill -->
+        <div id="qrScanStatus"></div>
+
+        <!-- Bottom hint -->
+        <div class="scanner-hint">
+            <p>Point your camera at the QR code</p>
+            <small>Standard QR · 5×/day &nbsp;|&nbsp; Golden QR · 1×/day</small>
+        </div>
+    </div>
 </div>
 
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 
 <script>
 /* ═══════════════════════════════════════════════════════════
@@ -2300,7 +2422,7 @@
    Premium dark gallery with dynamic color theming
 ═══════════════════════════════════════════════════════════ */
 
-const API_URL = '/api';
+const API_URL = 'https://aura-3.onrender.com/api';
 let token = localStorage.getItem('aura_token');
 if (!token) window.location.href = 'index.html';
 
@@ -2312,7 +2434,6 @@ let discoverCategory = 'aesthetic';
 let favorites = JSON.parse(localStorage.getItem('aura_favorites') || '[]');
 let recentlyViewed = JSON.parse(localStorage.getItem('aura_recents') || '[]');
 let currentModalPoster = null;
-let html5QrCode = null;
 
 // Touch state for pinch zoom in modal
 let touchState = { startDist: 0, scale: 1, lastScale: 1 };
@@ -2947,35 +3068,98 @@ async function loadProfile() {
     } catch(e) { console.error(e); }
 }
 
-// ─── QR Scanner ──────────────────────────────────────────
+// ─── QR Scanner (native camera + jsQR) ───────────────────
+let qrStream = null;
+let qrAnimFrame = null;
+let qrScanning = false;
+
 async function startQRScanner() {
-    const div = document.getElementById('qr-reader');
-    div.classList.add('open');
-    html5QrCode = new Html5Qrcode('qr-reader');
+    const overlay = document.getElementById('qr-scanner-overlay');
+    const video   = document.getElementById('qr-video');
+
+    overlay.classList.add('open');
+    setQRStatus('Starting camera…', false);
+
     try {
-        await html5QrCode.start(
-            { facingMode: 'environment' },
-            { fps: 10, qrbox: { width: 250, height: 250 } },
-            async decoded => {
-                await html5QrCode.stop();
-                div.classList.remove('open');
-                await processQRCode(decoded);
-            },
-            () => {}
-        );
-    } catch(e) { showToast('Camera error'); div.classList.remove('open'); }
+        qrStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+        });
+        video.srcObject = qrStream;
+        await video.play();
+        setQRStatus('', false);
+        qrScanning = true;
+        scanFrame();
+    } catch (err) {
+        console.error('Camera error:', err);
+        if (err.name === 'NotAllowedError') {
+            setQRStatus('Camera permission denied', true);
+        } else {
+            setQRStatus('Could not open camera', true);
+        }
+    }
+}
+
+function scanFrame() {
+    if (!qrScanning) return;
+    const video  = document.getElementById('qr-video');
+    const canvas = document.getElementById('qr-canvas');
+
+    if (video.readyState === video.HAVE_ENOUGH_DATA) {
+        canvas.width  = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height, {
+            inversionAttempts: 'dontInvert'
+        });
+
+        if (code && code.data) {
+            qrScanning = false;
+            cancelAnimationFrame(qrAnimFrame);
+            // Flash feedback
+            setQRStatus('QR detected! Processing…', false);
+            // Short vibration if supported
+            if (navigator.vibrate) navigator.vibrate(80);
+            setTimeout(async () => {
+                await closeScanner();
+                await processQRCode(code.data);
+            }, 400);
+            return;
+        }
+    }
+    qrAnimFrame = requestAnimationFrame(scanFrame);
+}
+
+function setQRStatus(msg, sticky) {
+    const el = document.getElementById('qrScanStatus');
+    if (!msg) { el.classList.remove('visible'); return; }
+    el.textContent = msg;
+    el.classList.add('visible');
+    if (!sticky) setTimeout(() => el.classList.remove('visible'), 2500);
 }
 
 async function closeScanner() {
-    if (html5QrCode) try { await html5QrCode.stop(); } catch(e) {}
-    document.getElementById('qr-reader').classList.remove('open');
+    qrScanning = false;
+    cancelAnimationFrame(qrAnimFrame);
+    if (qrStream) {
+        qrStream.getTracks().forEach(t => t.stop());
+        qrStream = null;
+    }
+    const video = document.getElementById('qr-video');
+    video.srcObject = null;
+    document.getElementById('qr-scanner-overlay').classList.remove('open');
 }
 
 async function processQRCode(qrData) {
     try {
         const result = await apiRequest('/scan/qr', { method: 'POST', body: JSON.stringify({ code: qrData }) });
-        if (result.success) { showToast(`🎉 +${result.earned} coins!`); loadProfile(); }
-        else showToast(result.error || 'Invalid QR code');
+        if (result.success) {
+            showToast(result.is_golden ? `✨ GOLDEN QR! +${result.earned} coins!` : `🎉 +${result.earned} coins!`);
+            loadProfile();
+        } else {
+            showToast(result.error || 'Invalid QR code');
+        }
     } catch(e) { showToast('Network error'); }
 }
 
@@ -2995,38 +3179,16 @@ function openStoryModal() {
 
 async function submitStory() {
     const link = document.getElementById('storyLink').value.trim();
-    const statusEl = document.getElementById('storyStatus');
-    if (!link) { showToast('Please paste your Instagram story link'); return; }
-    if (!link.includes('instagram.com')) { showToast('Please enter a valid Instagram link'); return; }
-
-    const btn = document.getElementById('submitStoryBtn');
-    btn.textContent = 'Submitting…';
-    btn.disabled = true;
-    statusEl.style.display = 'none';
-
+    if (!link) { showToast('Please paste your story link'); return; }
     try {
-        const result = await apiRequest('/social/story', {
-            method: 'POST',
-            body: JSON.stringify({ story_link: link })
-        });
+        const result = await apiRequest('/social/story', { method: 'POST', body: JSON.stringify({ story_link: link }) });
         if (result.success) {
-            statusEl.style.display = 'block';
-            statusEl.style.background = 'rgba(52,211,153,0.12)';
-            statusEl.style.border = '1px solid rgba(52,211,153,0.3)';
-            statusEl.style.color = '#34D399';
-            statusEl.innerHTML = '⏳ Submitted! Awaiting admin approval — coins will be added once verified.';
+            showToast(`📸 +${result.earned} coins earned!`);
+            document.getElementById('storyModal').classList.remove('open');
             document.getElementById('storyLink').value = '';
-            setTimeout(() => document.getElementById('storyModal').classList.remove('open'), 3000);
-        } else {
-            statusEl.style.display = 'block';
-            statusEl.style.background = 'rgba(255,80,80,0.1)';
-            statusEl.style.border = '1px solid rgba(255,80,80,0.3)';
-            statusEl.style.color = '#FF6B6B';
-            statusEl.textContent = result.error || 'Submission failed';
-        }
+            loadProfile();
+        } else showToast(result.error || 'Error submitting story');
     } catch(e) { showToast('Network error'); }
-    btn.textContent = 'Submit for Review';
-    btn.disabled = false;
 }
 
 // ─── Misc Actions ─────────────────────────────────────────
@@ -3070,19 +3232,29 @@ function logout() {
 }
 
 // ─── Custom image preview ─────────────────────────────────
-const customImageInput = document.getElementById('customImage');
-if (customImageInput) {
-    customImageInput.addEventListener('change', e => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = ev => {
-            document.getElementById('customPreview').innerHTML =
-                `<img src="${ev.target.result}" style="width:70px;height:70px;border-radius:12px;object-fit:cover;margin-top:8px;">`;
-        };
-        reader.readAsDataURL(file);
-    });
-}
+document.getElementById('customImage').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+        document.getElementById('customPreview').innerHTML =
+            `<img src="${ev.target.result}" style="width:70px;height:70px;border-radius:12px;object-fit:cover;margin-top:8px;">`;
+    };
+    reader.readAsDataURL(file);
+});
+
+// ─── Room Tour image preview ──────────────────────────────
+document.getElementById('roomTourImage').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    document.getElementById('roomTourFilename').textContent = file.name;
+    const reader = new FileReader();
+    reader.onload = ev => {
+        document.getElementById('roomTourPreview').innerHTML =
+            `<img src="${ev.target.result}" style="width:100%;max-height:140px;border-radius:12px;object-fit:cover;margin-top:4px;">`;
+    };
+    reader.readAsDataURL(file);
+});
 
 // ─── Room Tour submit ─────────────────────────────────────
 function openRoomTourModal() {
@@ -3090,37 +3262,31 @@ function openRoomTourModal() {
 }
 
 async function submitRoomTour() {
-    const url = document.getElementById('roomTourUrl').value.trim();
-    const statusEl = document.getElementById('roomTourStatus');
-    if (!url) { showToast('Please paste a link to your room tour post'); return; }
-
+    const fileInput = document.getElementById('roomTourImage');
+    const file = fileInput.files[0];
+    if (!file) { showToast('Please choose a photo first'); return; }
     const btn = document.getElementById('submitRoomTourBtn');
-    btn.textContent = 'Submitting…';
+    btn.textContent = 'Uploading…';
     btn.disabled = true;
-    statusEl.style.display = 'none';
-
     try {
-        const result = await apiRequest('/social/roomtour', {
+        const formData = new FormData();
+        formData.append('image', file);
+        const res = await fetch(`${API_URL}/social/roomtour`, {
             method: 'POST',
-            body: JSON.stringify({ url })
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: formData
         });
+        const result = await res.json();
         if (result.success) {
-            statusEl.style.display = 'block';
-            statusEl.style.background = 'rgba(52,211,153,0.12)';
-            statusEl.style.border = '1px solid rgba(52,211,153,0.3)';
-            statusEl.style.color = '#34D399';
-            statusEl.innerHTML = '⏳ Submitted! Awaiting admin approval — coins will be added once verified.';
-            document.getElementById('roomTourUrl').value = '';
-            setTimeout(() => document.getElementById('roomTourModal').classList.remove('open'), 3000);
-        } else {
-            statusEl.style.display = 'block';
-            statusEl.style.background = 'rgba(255,80,80,0.1)';
-            statusEl.style.border = '1px solid rgba(255,80,80,0.3)';
-            statusEl.style.color = '#FF6B6B';
-            statusEl.textContent = result.error || 'Submission failed';
-        }
+            showToast(`🏠 +${result.earned} coins! Room tour submitted!`);
+            document.getElementById('roomTourModal').classList.remove('open');
+            document.getElementById('roomTourPreview').innerHTML = '';
+            document.getElementById('roomTourFilename').textContent = '';
+            fileInput.value = '';
+            loadProfile();
+        } else showToast(result.error || 'Upload failed');
     } catch(e) { showToast('Network error'); }
-    btn.textContent = 'Submit for Review';
+    btn.textContent = 'Upload & Earn';
     btn.disabled = false;
 }
 
