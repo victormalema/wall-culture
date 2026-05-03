@@ -390,12 +390,12 @@ def list_qr_codes():
         return jsonify({'error': str(e)}), 500
 
 
-# ==================== REAL INSTAGRAM STORY ====================
+# ==================== INSTAGRAM STORY (PENDING APPROVAL) ====================
 
 @app.route('/api/social/story', methods=['POST'])
 @token_required
 def social_story():
-    """Submit Instagram story link for verification"""
+    """Submit Instagram story link — queued for admin approval"""
     try:
         data = request.get_json(silent=True) or {}
         story_link = data.get('story_link', '').strip()
@@ -403,69 +403,215 @@ def social_story():
         if not story_link:
             return jsonify({'error': 'Please provide your Instagram story link'}), 400
 
-        # Basic Instagram URL validation
         if 'instagram.com' not in story_link:
             return jsonify({'error': 'Please provide a valid Instagram story link'}), 400
 
-        # Check weekly limit
-        week_start = int((datetime.utcnow() - timedelta(days=7)).timestamp() * 1000)
-        shares = supabase.table('point_logs').select('id', count='exact').eq('user_id', request.user_id).eq('action', 'Instagram Story').gte('timestamp', week_start).execute()
-        
-        if shares.count and shares.count >= 3:
-            return jsonify({'error': 'Max 3 story shares per week'}), 429
+        # Check if user already has a pending story submission
+        pending = supabase.table('pending_submissions') \
+            .select('id', count='exact') \
+            .eq('user_id', request.user_id) \
+            .eq('type', 'story') \
+            .eq('status', 'pending') \
+            .execute()
+        if pending.count and pending.count >= 1:
+            return jsonify({'error': 'You already have a story pending review. Please wait for approval.'}), 429
 
-        # Store pending verification (in production, admin would approve)
-        # For now, auto-approve but track
-        earned = add_points_to_user(request.user_id, POINTS['story_share'], 'Instagram Story')
-        
+        # Check weekly limit (approved submissions)
+        week_start = int((datetime.utcnow() - timedelta(days=7)).timestamp() * 1000)
+        approved = supabase.table('point_logs').select('id', count='exact') \
+            .eq('user_id', request.user_id) \
+            .eq('action', 'Instagram Story') \
+            .gte('timestamp', week_start) \
+            .execute()
+        if approved.count and approved.count >= 3:
+            return jsonify({'error': 'Max 3 approved story shares per week'}), 429
+
+        # Queue for admin approval
+        sub_id = str(uuid.uuid4())
+        supabase.table('pending_submissions').insert({
+            'id': sub_id,
+            'user_id': request.user_id,
+            'type': 'story',
+            'url': story_link,
+            'status': 'pending',
+            'points': POINTS['story_share'],
+            'submitted_at': int(datetime.utcnow().timestamp() * 1000)
+        }).execute()
+
         return jsonify({
-            'success': True, 
-            'earned': earned,
-            'message': f"✅ +{earned} points! Thanks for sharing!"
+            'success': True,
+            'pending': True,
+            'message': '⏳ Story submitted! You\'ll receive your coins once an admin approves it.'
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 
-# ==================== REAL ROOM TOUR ====================
+# ==================== ROOM TOUR (PENDING APPROVAL) ====================
 
 @app.route('/api/social/roomtour', methods=['POST'])
 @token_required
 def room_tour():
-    """Upload room tour photo with Aura posters"""
+    """Submit room tour URL — queued for admin approval"""
     try:
-        # Check if file was uploaded
-        if 'image' not in request.files:
-            return jsonify({'error': 'Please upload a photo of your room with Aura posters'}), 400
-        
-        file = request.files['image']
-        if file.filename == '':
-            return jsonify({'error': 'No file selected'}), 400
-        
-        if not allowed_file(file.filename):
-            return jsonify({'error': 'File type not allowed. Use JPG, PNG, or MP4'}), 400
+        data = request.get_json(silent=True) or {}
+        tour_url = data.get('url', '').strip()
 
-        # Check monthly limit
+        if not tour_url:
+            return jsonify({'error': 'Please provide a link to your room tour post'}), 400
+
+        # Check if user already has a pending room tour submission
+        pending = supabase.table('pending_submissions') \
+            .select('id', count='exact') \
+            .eq('user_id', request.user_id) \
+            .eq('type', 'roomtour') \
+            .eq('status', 'pending') \
+            .execute()
+        if pending.count and pending.count >= 1:
+            return jsonify({'error': 'You already have a room tour pending review.'}), 429
+
+        # Check monthly limit (approved)
         month_start = int(datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0).timestamp() * 1000)
-        tours = supabase.table('point_logs').select('id', count='exact').eq('user_id', request.user_id).eq('action', 'Room Tour').gte('timestamp', month_start).execute()
-        
-        if tours.count and tours.count >= 1:
-            return jsonify({'error': 'Room tour already submitted this month'}), 429
+        approved = supabase.table('point_logs').select('id', count='exact') \
+            .eq('user_id', request.user_id) \
+            .eq('action', 'Room Tour') \
+            .gte('timestamp', month_start) \
+            .execute()
+        if approved.count and approved.count >= 1:
+            return jsonify({'error': 'Room tour already approved this month'}), 429
 
-        # Save file
-        filename = secure_filename(f"{uuid.uuid4()}_{file.filename}")
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        file.save(filepath)
-
-        # Award points
-        earned = add_points_to_user(request.user_id, POINTS['room_tour'], 'Room Tour')
+        # Queue for admin approval
+        sub_id = str(uuid.uuid4())
+        supabase.table('pending_submissions').insert({
+            'id': sub_id,
+            'user_id': request.user_id,
+            'type': 'roomtour',
+            'url': tour_url,
+            'status': 'pending',
+            'points': POINTS['room_tour'],
+            'submitted_at': int(datetime.utcnow().timestamp() * 1000)
+        }).execute()
 
         return jsonify({
             'success': True,
-            'earned': earned,
-            'image_url': f'/uploads/{filename}',
-            'message': f"✅ +{earned} points! Your room tour has been submitted!"
+            'pending': True,
+            'message': '⏳ Room tour submitted! You\'ll receive your coins once an admin approves it.'
         })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# ==================== USER: MY SUBMISSIONS ====================
+
+@app.route('/api/social/submissions', methods=['GET'])
+@token_required
+def my_submissions():
+    """Get current user's submission history"""
+    try:
+        result = supabase.table('pending_submissions') \
+            .select('id, type, url, status, points, submitted_at, reviewed_at') \
+            .eq('user_id', request.user_id) \
+            .order('submitted_at', desc=True) \
+            .limit(20) \
+            .execute()
+        return jsonify(result.data or [])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# ==================== ADMIN ROUTES ====================
+
+ADMIN_SECRET = os.getenv('ADMIN_SECRET', 'aura-admin-secret')
+
+def admin_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        secret = request.headers.get('X-Admin-Secret', '')
+        if secret != ADMIN_SECRET:
+            return jsonify({'error': 'Unauthorized'}), 401
+        return f(*args, **kwargs)
+    return decorated
+
+@app.route('/api/admin/submissions', methods=['GET'])
+@admin_required
+def admin_list_submissions():
+    """List all pending submissions"""
+    try:
+        status_filter = request.args.get('status', 'pending')
+        query = supabase.table('pending_submissions').select(
+            'id, user_id, type, url, status, points, submitted_at, reviewed_at'
+        ).order('submitted_at', desc=True)
+        if status_filter != 'all':
+            query = query.eq('status', status_filter)
+        result = query.limit(100).execute()
+
+        # Enrich with user names
+        submissions = result.data or []
+        user_ids = list({s['user_id'] for s in submissions})
+        users_map = {}
+        if user_ids:
+            users_res = supabase.table('users').select('id, name, email').in_('id', user_ids).execute()
+            users_map = {u['id']: u for u in (users_res.data or [])}
+
+        for s in submissions:
+            u = users_map.get(s['user_id'], {})
+            s['user_name'] = u.get('name', 'Unknown')
+            s['user_email'] = u.get('email', '')
+
+        return jsonify(submissions)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/admin/submissions/<sub_id>/approve', methods=['POST'])
+@admin_required
+def admin_approve_submission(sub_id):
+    """Approve a pending submission and award points"""
+    try:
+        result = supabase.table('pending_submissions').select('*').eq('id', sub_id).execute()
+        if not result.data:
+            return jsonify({'error': 'Submission not found'}), 404
+
+        sub = result.data[0]
+        if sub['status'] != 'pending':
+            return jsonify({'error': f'Submission is already {sub["status"]}'}), 400
+
+        action_label = 'Instagram Story' if sub['type'] == 'story' else 'Room Tour'
+        earned = add_points_to_user(sub['user_id'], sub['points'], action_label)
+
+        supabase.table('pending_submissions').update({
+            'status': 'approved',
+            'reviewed_at': int(datetime.utcnow().timestamp() * 1000)
+        }).eq('id', sub_id).execute()
+
+        return jsonify({'success': True, 'earned': earned, 'message': f'Approved! +{earned} points awarded.'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/admin/submissions/<sub_id>/reject', methods=['POST'])
+@admin_required
+def admin_reject_submission(sub_id):
+    """Reject a pending submission"""
+    try:
+        result = supabase.table('pending_submissions').select('*').eq('id', sub_id).execute()
+        if not result.data:
+            return jsonify({'error': 'Submission not found'}), 404
+
+        sub = result.data[0]
+        if sub['status'] != 'pending':
+            return jsonify({'error': f'Submission is already {sub["status"]}'}), 400
+
+        data = request.get_json(silent=True) or {}
+        reason = data.get('reason', 'Did not meet requirements')
+
+        supabase.table('pending_submissions').update({
+            'status': 'rejected',
+            'reject_reason': reason,
+            'reviewed_at': int(datetime.utcnow().timestamp() * 1000)
+        }).eq('id', sub_id).execute()
+
+        return jsonify({'success': True, 'message': 'Submission rejected.'})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

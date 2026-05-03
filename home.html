@@ -2259,9 +2259,14 @@
 <div class="modal-overlay" id="storyModal">
     <div class="modal-box">
         <h3>📸 Instagram Story</h3>
-        <p>Post a story tagging <strong>@auragallery</strong> and paste your story link to earn coins.</p>
-        <input type="text" id="storyLink" class="modal-input" placeholder="Paste Instagram story URL…">
-        <button class="modal-btn-full primary" id="submitStoryBtn">Submit & Earn</button>
+        <p>Post a story tagging <strong>@auragallery</strong>, then paste the story link below. An admin will verify and award your <strong>+150 coins</strong>.</p>
+        <div style="background:rgba(255,107,53,0.08);border:1px solid rgba(255,107,53,0.2);border-radius:12px;padding:10px 14px;margin:12px 0;font-size:0.78rem;color:var(--text-secondary);display:flex;gap:8px;align-items:center;">
+            <i class="fas fa-clock" style="color:var(--primary);"></i>
+            Points are awarded after admin review (usually within 24h)
+        </div>
+        <input type="url" id="storyLink" class="modal-input" placeholder="https://www.instagram.com/stories/…">
+        <div id="storyStatus" style="display:none;margin:8px 0;padding:10px 14px;border-radius:12px;font-size:0.8rem;font-weight:600;text-align:center;"></div>
+        <button class="modal-btn-full primary" id="submitStoryBtn">Submit for Review</button>
         <button class="modal-btn-full ghost" id="closeStoryModal">Cancel</button>
     </div>
 </div>
@@ -2270,14 +2275,14 @@
 <div class="modal-overlay" id="roomTourModal">
     <div class="modal-box">
         <h3>🏠 Room Tour</h3>
-        <p>Upload a photo of your room featuring Aura posters to earn <strong>+250 coins</strong> (once per month).</p>
-        <label class="custom-file-label" for="roomTourImage" style="display:flex; align-items:center; gap:8px; justify-content:center; margin:14px 0 8px; cursor:pointer;">
-            <i class="fas fa-cloud-upload-alt"></i> Choose photo
-        </label>
-        <input type="file" id="roomTourImage" accept="image/*" style="display:none">
-        <div id="roomTourPreview" style="text-align:center;"></div>
-        <p id="roomTourFilename" style="font-size:0.75rem; color:var(--text-muted); text-align:center; margin:4px 0 12px;"></p>
-        <button class="modal-btn-full primary" id="submitRoomTourBtn">Upload & Earn</button>
+        <p>Post a photo of your room featuring Aura posters on Instagram or any platform, then paste the link below to earn <strong>+250 coins</strong> (once per month).</p>
+        <div style="background:rgba(255,107,53,0.08);border:1px solid rgba(255,107,53,0.2);border-radius:12px;padding:10px 14px;margin:12px 0;font-size:0.78rem;color:var(--text-secondary);display:flex;gap:8px;align-items:center;">
+            <i class="fas fa-clock" style="color:var(--primary);"></i>
+            Points are awarded after admin review (usually within 24h)
+        </div>
+        <input type="url" id="roomTourUrl" class="modal-input" placeholder="https://www.instagram.com/p/… or any public link">
+        <div id="roomTourStatus" style="display:none;margin:8px 0;padding:10px 14px;border-radius:12px;font-size:0.8rem;font-weight:600;text-align:center;"></div>
+        <button class="modal-btn-full primary" id="submitRoomTourBtn">Submit for Review</button>
         <button class="modal-btn-full ghost" id="closeRoomTourModal">Cancel</button>
     </div>
 </div>
@@ -2990,16 +2995,38 @@ function openStoryModal() {
 
 async function submitStory() {
     const link = document.getElementById('storyLink').value.trim();
-    if (!link) { showToast('Please paste your story link'); return; }
+    const statusEl = document.getElementById('storyStatus');
+    if (!link) { showToast('Please paste your Instagram story link'); return; }
+    if (!link.includes('instagram.com')) { showToast('Please enter a valid Instagram link'); return; }
+
+    const btn = document.getElementById('submitStoryBtn');
+    btn.textContent = 'Submitting…';
+    btn.disabled = true;
+    statusEl.style.display = 'none';
+
     try {
-        const result = await apiRequest('/social/story', { method: 'POST', body: JSON.stringify({ story_link: link }) });
+        const result = await apiRequest('/social/story', {
+            method: 'POST',
+            body: JSON.stringify({ story_link: link })
+        });
         if (result.success) {
-            showToast(`📸 +${result.earned} coins earned!`);
-            document.getElementById('storyModal').classList.remove('open');
+            statusEl.style.display = 'block';
+            statusEl.style.background = 'rgba(52,211,153,0.12)';
+            statusEl.style.border = '1px solid rgba(52,211,153,0.3)';
+            statusEl.style.color = '#34D399';
+            statusEl.innerHTML = '⏳ Submitted! Awaiting admin approval — coins will be added once verified.';
             document.getElementById('storyLink').value = '';
-            loadProfile();
-        } else showToast(result.error || 'Error submitting story');
+            setTimeout(() => document.getElementById('storyModal').classList.remove('open'), 3000);
+        } else {
+            statusEl.style.display = 'block';
+            statusEl.style.background = 'rgba(255,80,80,0.1)';
+            statusEl.style.border = '1px solid rgba(255,80,80,0.3)';
+            statusEl.style.color = '#FF6B6B';
+            statusEl.textContent = result.error || 'Submission failed';
+        }
     } catch(e) { showToast('Network error'); }
+    btn.textContent = 'Submit for Review';
+    btn.disabled = false;
 }
 
 // ─── Misc Actions ─────────────────────────────────────────
@@ -3043,29 +3070,19 @@ function logout() {
 }
 
 // ─── Custom image preview ─────────────────────────────────
-document.getElementById('customImage').addEventListener('change', e => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-        document.getElementById('customPreview').innerHTML =
-            `<img src="${ev.target.result}" style="width:70px;height:70px;border-radius:12px;object-fit:cover;margin-top:8px;">`;
-    };
-    reader.readAsDataURL(file);
-});
-
-// ─── Room Tour image preview ──────────────────────────────
-document.getElementById('roomTourImage').addEventListener('change', e => {
-    const file = e.target.files[0];
-    if (!file) return;
-    document.getElementById('roomTourFilename').textContent = file.name;
-    const reader = new FileReader();
-    reader.onload = ev => {
-        document.getElementById('roomTourPreview').innerHTML =
-            `<img src="${ev.target.result}" style="width:100%;max-height:140px;border-radius:12px;object-fit:cover;margin-top:4px;">`;
-    };
-    reader.readAsDataURL(file);
-});
+const customImageInput = document.getElementById('customImage');
+if (customImageInput) {
+    customImageInput.addEventListener('change', e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = ev => {
+            document.getElementById('customPreview').innerHTML =
+                `<img src="${ev.target.result}" style="width:70px;height:70px;border-radius:12px;object-fit:cover;margin-top:8px;">`;
+        };
+        reader.readAsDataURL(file);
+    });
+}
 
 // ─── Room Tour submit ─────────────────────────────────────
 function openRoomTourModal() {
@@ -3073,31 +3090,37 @@ function openRoomTourModal() {
 }
 
 async function submitRoomTour() {
-    const fileInput = document.getElementById('roomTourImage');
-    const file = fileInput.files[0];
-    if (!file) { showToast('Please choose a photo first'); return; }
+    const url = document.getElementById('roomTourUrl').value.trim();
+    const statusEl = document.getElementById('roomTourStatus');
+    if (!url) { showToast('Please paste a link to your room tour post'); return; }
+
     const btn = document.getElementById('submitRoomTourBtn');
-    btn.textContent = 'Uploading…';
+    btn.textContent = 'Submitting…';
     btn.disabled = true;
+    statusEl.style.display = 'none';
+
     try {
-        const formData = new FormData();
-        formData.append('image', file);
-        const res = await fetch(`${API_URL}/social/roomtour`, {
+        const result = await apiRequest('/social/roomtour', {
             method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}` },
-            body: formData
+            body: JSON.stringify({ url })
         });
-        const result = await res.json();
         if (result.success) {
-            showToast(`🏠 +${result.earned} coins! Room tour submitted!`);
-            document.getElementById('roomTourModal').classList.remove('open');
-            document.getElementById('roomTourPreview').innerHTML = '';
-            document.getElementById('roomTourFilename').textContent = '';
-            fileInput.value = '';
-            loadProfile();
-        } else showToast(result.error || 'Upload failed');
+            statusEl.style.display = 'block';
+            statusEl.style.background = 'rgba(52,211,153,0.12)';
+            statusEl.style.border = '1px solid rgba(52,211,153,0.3)';
+            statusEl.style.color = '#34D399';
+            statusEl.innerHTML = '⏳ Submitted! Awaiting admin approval — coins will be added once verified.';
+            document.getElementById('roomTourUrl').value = '';
+            setTimeout(() => document.getElementById('roomTourModal').classList.remove('open'), 3000);
+        } else {
+            statusEl.style.display = 'block';
+            statusEl.style.background = 'rgba(255,80,80,0.1)';
+            statusEl.style.border = '1px solid rgba(255,80,80,0.3)';
+            statusEl.style.color = '#FF6B6B';
+            statusEl.textContent = result.error || 'Submission failed';
+        }
     } catch(e) { showToast('Network error'); }
-    btn.textContent = 'Upload & Earn';
+    btn.textContent = 'Submit for Review';
     btn.disabled = false;
 }
 
