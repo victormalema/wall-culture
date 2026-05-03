@@ -2027,15 +2027,151 @@
             transform: scale(1.04);
         }
 
-        .discover-tab.active {
-            background: var(--grad-fire);
-            border-color: transparent;
-            color: white;
-            font-weight: 700;
-            box-shadow: 0 4px 16px var(--primary-glow);
-            transform: scale(1.05);
+        /* ═══════════════════════════════════════════
+           PRIZES SECTION
+        ═══════════════════════════════════════════ */
+        .prizes-section {
+            padding: 0 20px 4px;
         }
-    </style>
+
+        .prizes-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .prize-card {
+            position: relative;
+            border-radius: var(--radius-lg);
+            padding: 16px 14px 14px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s;
+        }
+
+        .prize-card:active { transform: scale(0.96); }
+
+        .prize-card.weekly {
+            background: linear-gradient(135deg, rgba(255,107,53,0.18), rgba(255,60,172,0.12));
+            border: 1px solid rgba(255,107,53,0.3);
+            box-shadow: 0 8px 24px rgba(255,107,53,0.12);
+        }
+
+        .prize-card.monthly {
+            background: linear-gradient(135deg, rgba(123,47,255,0.18), rgba(0,198,255,0.12));
+            border: 1px solid rgba(123,47,255,0.3);
+            box-shadow: 0 8px 24px rgba(123,47,255,0.12);
+        }
+
+        .prize-card:hover { transform: translateY(-3px) scale(1.02); }
+        .prize-card.weekly:hover  { box-shadow: 0 12px 32px rgba(255,107,53,0.22); }
+        .prize-card.monthly:hover { box-shadow: 0 12px 32px rgba(123,47,255,0.22); }
+
+        .prize-card::before {
+            content: '';
+            position: absolute;
+            top: -30px; right: -30px;
+            width: 90px; height: 90px;
+            border-radius: 50%;
+            opacity: 0.12;
+        }
+
+        .prize-card.weekly::before  { background: radial-gradient(circle, #FF6B35, transparent); }
+        .prize-card.monthly::before { background: radial-gradient(circle, #7B2FFF, transparent); }
+
+        .prize-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.6rem;
+            font-weight: 800;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            padding: 3px 8px;
+            border-radius: 20px;
+            margin-bottom: 10px;
+        }
+
+        .prize-card.weekly  .prize-badge { background: rgba(255,107,53,0.2); color: #FF6B35; border: 1px solid rgba(255,107,53,0.3); }
+        .prize-card.monthly .prize-badge { background: rgba(123,47,255,0.2); color: #A78BFA; border: 1px solid rgba(123,47,255,0.3); }
+
+        .prize-icon {
+            font-size: 1.8rem;
+            margin-bottom: 6px;
+            display: block;
+            filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
+        }
+
+        .prize-name {
+            font-family: var(--font-display);
+            font-size: 0.88rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            line-height: 1.2;
+            margin-bottom: 4px;
+        }
+
+        .prize-value {
+            font-size: 0.72rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .prize-card.weekly  .prize-value { color: #FF6B35; }
+        .prize-card.monthly .prize-value { color: #A78BFA; }
+
+        .prize-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .prize-countdown {
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .prize-countdown span {
+            color: var(--text-secondary);
+        }
+
+        .prize-entries {
+            font-size: 0.6rem;
+            font-weight: 700;
+            padding: 3px 7px;
+            border-radius: 20px;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,0.04);
+        }
+
+        .prize-leader {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(255,255,255,0.06);
+            font-size: 0.68rem;
+            color: var(--text-muted);
+        }
+
+        .prize-leader-avatar {
+            width: 18px; height: 18px;
+            border-radius: 50%;
+            background: var(--grad-fire);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.55rem;
+            font-weight: 800;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .prize-leader strong {
+            color: var(--text-secondary);
+        }
 </head>
 <body>
 
@@ -2124,6 +2260,49 @@
                     <div class="qa-icon"><i class="fas fa-home"></i></div>
                     Room Tour
                 </button>
+            </div>
+
+            <!-- ══ PRIZES ══ -->
+            <div class="section-header" style="padding-top:4px;">
+                <span class="section-title">🏆 Win Prizes</span>
+                <span class="section-link" onclick="showToast('Leaderboard coming soon!')">Leaderboard →</span>
+            </div>
+            <div class="prizes-section">
+                <div class="prizes-row">
+
+                    <!-- Weekly Prize -->
+                    <div class="prize-card weekly">
+                        <div class="prize-badge">⚡ Weekly</div>
+                        <span class="prize-icon">🖼️</span>
+                        <div class="prize-name" id="weeklyPrizeName">Free Poster</div>
+                        <div class="prize-value" id="weeklyPrizeValue">Worth KSH 200</div>
+                        <div class="prize-footer">
+                            <div class="prize-countdown">Ends in <span id="weeklyCountdown">—</span></div>
+                            <div class="prize-entries" id="weeklyEntries">— pts needed</div>
+                        </div>
+                        <div class="prize-leader">
+                            <div class="prize-leader-avatar" id="weeklyLeaderAvatar">?</div>
+                            <span>Leading: <strong id="weeklyLeaderName">—</strong> &nbsp;<span id="weeklyLeaderPts" style="color:var(--primary)"></span></span>
+                        </div>
+                    </div>
+
+                    <!-- Monthly Prize -->
+                    <div class="prize-card monthly">
+                        <div class="prize-badge">🌙 Monthly</div>
+                        <span class="prize-icon">🎁</span>
+                        <div class="prize-name" id="monthlyPrizeName">Room Bundle</div>
+                        <div class="prize-value" id="monthlyPrizeValue">Worth KSH 600</div>
+                        <div class="prize-footer">
+                            <div class="prize-countdown">Ends in <span id="monthlyCountdown">—</span></div>
+                            <div class="prize-entries" id="monthlyEntries">— pts needed</div>
+                        </div>
+                        <div class="prize-leader">
+                            <div class="prize-leader-avatar" id="monthlyLeaderAvatar">?</div>
+                            <span>Leading: <strong id="monthlyLeaderName">—</strong> &nbsp;<span id="monthlyLeaderPts" style="color:#A78BFA"></span></span>
+                        </div>
+                    </div>
+
+                </div>
             </div>
 
             <!-- Recently Viewed -->
@@ -3177,7 +3356,74 @@ async function processQRCode(qrData) {
     } catch(e) { showToast('Network error'); }
 }
 
-// ─── Daily Check-in ───────────────────────────────────────
+// ─── Prizes Section ──────────────────────────────────────
+function getWeeklyDeadline() {
+    // Next Sunday midnight UTC
+    const now = new Date();
+    const day = now.getUTCDay(); // 0=Sun
+    const daysUntilSunday = day === 0 ? 7 : 7 - day;
+    const deadline = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + daysUntilSunday));
+    return deadline;
+}
+
+function getMonthlyDeadline() {
+    const now = new Date();
+    return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
+}
+
+function formatCountdown(ms) {
+    if (ms <= 0) return '0d 0h 0m';
+    const totalSec = Math.floor(ms / 1000);
+    const d = Math.floor(totalSec / 86400);
+    const h = Math.floor((totalSec % 86400) / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    if (d > 0) return `${d}d ${h}h`;
+    if (h > 0) return `${h}h ${m}m`;
+    return `${m}m`;
+}
+
+function updatePrizeCountdowns() {
+    const wDeadline = getWeeklyDeadline();
+    const mDeadline = getMonthlyDeadline();
+    const now = Date.now();
+    document.getElementById('weeklyCountdown').textContent  = formatCountdown(wDeadline - now);
+    document.getElementById('monthlyCountdown').textContent = formatCountdown(mDeadline - now);
+}
+
+async function loadPrizeLeaderboards() {
+    try {
+        // Weekly leaderboard
+        const weekly = await apiRequest('/leaderboard/weekly');
+        if (Array.isArray(weekly) && weekly.length > 0) {
+            const top = weekly[0];
+            document.getElementById('weeklyLeaderName').textContent    = top.name || 'Anonymous';
+            document.getElementById('weeklyLeaderAvatar').textContent  = (top.name || '?')[0].toUpperCase();
+            document.getElementById('weeklyLeaderPts').textContent     = `${top.weekly_points || 0} pts`;
+            // Show how many pts #2 needs to beat leader
+            const myPts = parseInt(document.getElementById('homeWeekly').textContent) || 0;
+            const gap = (top.weekly_points || 0) - myPts;
+            document.getElementById('weeklyEntries').textContent = gap > 0 ? `+${gap} to lead` : '🏆 You lead!';
+        }
+    } catch(e) {}
+
+    try {
+        // Monthly (all-time) leaderboard
+        const alltime = await apiRequest('/leaderboard/alltime');
+        if (Array.isArray(alltime) && alltime.length > 0) {
+            const top = alltime[0];
+            document.getElementById('monthlyLeaderName').textContent    = top.name || 'Anonymous';
+            document.getElementById('monthlyLeaderAvatar').textContent  = (top.name || '?')[0].toUpperCase();
+            document.getElementById('monthlyLeaderPts').textContent     = `${top.points || 0} pts`;
+            const myPts = parseInt(document.getElementById('globalCoins').textContent) || 0;
+            const gap = (top.points || 0) - myPts;
+            document.getElementById('monthlyEntries').textContent = gap > 0 ? `+${gap} to lead` : '🏆 You lead!';
+        }
+    } catch(e) {}
+}
+
+// Start countdown ticking every minute
+updatePrizeCountdowns();
+setInterval(updatePrizeCountdowns, 60000);
 async function dailyCheckin() {
     try {
         const result = await apiRequest('/daily/checkin', { method: 'POST' });
@@ -3338,7 +3584,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal()
 
 // ─── Init ─────────────────────────────────────────────────
 loadPosters();
-loadProfile();
+loadProfile().then(() => loadPrizeLeaderboards());
 buildDiscoverTabs();
 renderCart();
 renderRecents();
