@@ -2422,7 +2422,7 @@
    Premium dark gallery with dynamic color theming
 ═══════════════════════════════════════════════════════════ */
 
-const API_URL = 'https://aura-3.onrender.com/api';
+const API_URL = '/api';
 let token = localStorage.getItem('aura_token');
 if (!token) window.location.href = 'index.html';
 
@@ -2430,7 +2430,7 @@ if (!token) window.location.href = 'index.html';
 let cart = [];
 let allPosters = [];
 let currentGalleryCategory = 'all';
-let discoverCategory = 'aesthetic';
+let discoverCategory = 'all';
 let favorites = JSON.parse(localStorage.getItem('aura_favorites') || '[]');
 let recentlyViewed = JSON.parse(localStorage.getItem('aura_recents') || '[]');
 let currentModalPoster = null;
@@ -2554,8 +2554,19 @@ document.querySelectorAll('.tab-item').forEach(tab => {
 async function loadPosters() {
     try {
         const posters = await apiRequest('/posters');
-        allPosters = Array.isArray(posters) ? posters : [];
-    } catch(e) { allPosters = []; }
+        if (Array.isArray(posters) && posters.length > 0) {
+            allPosters = posters;
+        } else if (posters && posters.error) {
+            console.error('Posters API error:', posters.error);
+            allPosters = [];
+        } else {
+            // API returned empty array — show placeholders so UI isn't blank
+            allPosters = [];
+        }
+    } catch(e) {
+        console.error('loadPosters failed:', e);
+        allPosters = [];
+    }
     renderDiscoverFeed();
     renderTonalGallery();
 }
@@ -2597,12 +2608,12 @@ function renderRecents() {
 // ─── DISCOVER FEED (Home screen horizontal) ──────────────
 function buildDiscoverTabs() {
     const container = document.getElementById('discoverTabsContainer');
-    const cats = ['aesthetic', 'girlish', 'motivational', 'musical', 'theater', 'limited'];
+    const cats = ['all', 'aesthetic', 'girlish', 'motivational', 'musical', 'theater', 'limited'];
     container.innerHTML = '';
     cats.forEach(cat => {
         const pill = document.createElement('div');
         pill.className = `discover-tab ${discoverCategory === cat ? 'active' : ''}`;
-        pill.textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
+        pill.textContent = cat === 'all' ? 'All' : cat.charAt(0).toUpperCase() + cat.slice(1);
         pill.onclick = () => {
             document.querySelectorAll('.discover-tab').forEach(p => p.classList.remove('active'));
             pill.classList.add('active');
@@ -2616,7 +2627,10 @@ function buildDiscoverTabs() {
 
 function renderDiscoverFeed() {
     const container = document.getElementById('feedContainer');
-    let data = allPosters.filter(p => discoverCategory === 'all' || p.category === discoverCategory);
+    let data = (discoverCategory === 'all')
+        ? allPosters
+        : allPosters.filter(p => (p.category || '').toLowerCase() === discoverCategory.toLowerCase());
+
     if (!data.length) {
         container.innerHTML = '<div class="loading-state">✨ No posters in this vibe yet</div>';
         return;
