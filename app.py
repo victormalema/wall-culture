@@ -31,7 +31,7 @@ app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
 
 # CORS
 ALLOWED_ORIGINS = os.getenv('ALLOWED_ORIGINS', 
-    'http://localhost:5000,http://127.0.0.1:5000,https://aura-3.onrender.com'
+    'http://localhost:5000,http://127.0.0.1:5000,https://aura-api.onrender.com'
 ).split(',')
 CORS(app, origins=[o.strip() for o in ALLOWED_ORIGINS])
 

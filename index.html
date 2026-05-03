@@ -546,7 +546,7 @@
 </div>
 
 <script>
-    const API_URL = 'https://aura-3.onrender.com/api';
+    const API_URL = 'https://aura-api.onrender.com/api';
 
     // ── Redirect if already logged in ────────────────────────
     (function checkExistingSession() {
@@ -682,8 +682,7 @@
         forgotModal.classList.remove('open');
         document.getElementById('resetEmail').value = '';
     }
-    // Warm up the server on page load
-      fetch('https://aura-3.onrender.com/api/health').catch(() => {});
+    
 
     document.getElementById('sendResetBtn').addEventListener('click', async () => {
         const email = document.getElementById('resetEmail').value.trim();
