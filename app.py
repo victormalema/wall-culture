@@ -18,10 +18,12 @@ from werkzeug.utils import secure_filename
 
 load_dotenv()
 
-app = Flask(__name__, static_folder='.')
+import os
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+app = Flask(__name__, static_folder=BASE_DIR)
 
 # Configuration
-UPLOAD_FOLDER = 'uploads'
+UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'webp'}
 MAX_CONTENT_LENGTH = 10 * 1024 * 1024  # 10MB
 
@@ -140,15 +142,15 @@ def token_required(f):
 
 @app.route('/')
 def serve_index():
-    return send_from_directory('.', 'index.html')
+    return send_from_directory(BASE_DIR, 'index.html')
 
 @app.route('/home.html')
 def serve_home():
-    return send_from_directory('.', 'home.html')
+    return send_from_directory(BASE_DIR, 'home.html')
 
 @app.route('/<path:path>')
 def serve_static(path):
-    return send_from_directory('.', path)
+    return send_from_directory(BASE_DIR, path)
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
