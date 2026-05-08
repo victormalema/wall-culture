@@ -141,49 +141,32 @@ def token_required(f):
 
 # ==================== STATIC FILE SERVING ====================
 
-import os
+from flask import Response
+
+def serve_file(filename):
+    filepath = os.path.join(BASE_DIR, filename)
+    if not os.path.exists(filepath):
+        return f"File not found: {filepath}", 404
+    with open(filepath, 'rb') as f:
+        content = f.read()
+    mimetype = 'text/html' if filename.endswith('.html') else 'application/octet-stream'
+    return Response(content, mimetype=mimetype)
 
 @app.route('/')
 def serve_index():
-    path = os.path.join(BASE_DIR, 'index.html')
-    exists = os.path.exists(path)
-    size = os.path.getsize(path) if exists else 0
-    app.logger.info(f"INDEX: BASE_DIR={BASE_DIR}, exists={exists}, size={size}")
-    if not exists:
-        return f"NOT FOUND: {path}", 404
-    return send_from_directory(BASE_DIR, 'index.html')
+    return serve_file('index.html')
 
 @app.route('/home.html')
 def serve_home():
-    path = os.path.join(BASE_DIR, 'home.html')
-    exists = os.path.exists(path)
-    size = os.path.getsize(path) if exists else 0
-    app.logger.info(f"HOME: BASE_DIR={BASE_DIR}, exists={exists}, size={size}")
-    if not exists:
-        return f"NOT FOUND: {path}", 404
-    return send_from_directory(BASE_DIR, 'home.html')
+    return serve_file('home.html')
 
 @app.route('/<path:path>')
 def serve_static(path):
-    return send_from_directory(BASE_DIR, path)
+    return serve_file(path)
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(os.path.join(BASE_DIR, 'uploads'), filename)
-
-@app.route('/debug')
-def debug_files():
-    files = os.listdir(BASE_DIR)
-    return jsonify({
-        'BASE_DIR': BASE_DIR,
-        'cwd': os.getcwd(),
-        'files': files,
-        'index_exists': os.path.exists(os.path.join(BASE_DIR, 'index.html')),
-        'home_exists': os.path.exists(os.path.join(BASE_DIR, 'home.html')),
-        'index_size': os.path.getsize(os.path.join(BASE_DIR, 'index.html')) if os.path.exists(os.path.join(BASE_DIR, 'index.html')) else 0,
-        'home_size': os.path.getsize(os.path.join(BASE_DIR, 'home.html')) if os.path.exists(os.path.join(BASE_DIR, 'home.html')) else 0,
-    })
-
 # ==================== AUTH ROUTES ====================
 
 @app.route("/api/auth/register", methods=["POST"])
