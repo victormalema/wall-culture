@@ -259,7 +259,6 @@
             height: calc(100dvh - 60px - var(--nav-height));
             overflow-y: auto;
             overflow-x: hidden;
-            scroll-behavior: smooth;
             padding-bottom: calc(var(--nav-height) + 16px + var(--safe-bottom));
             -webkit-overflow-scrolling: touch;
         }
@@ -2172,8 +2171,277 @@
         .prize-leader strong {
             color: var(--text-secondary);
         }
+        /* ═══════════════════════════════════════════
+           DAILY CHALLENGE
+        ═══════════════════════════════════════════ */
+        .daily-challenge-section {
+            padding: 0 20px 4px;
+        }
+
+        .challenge-card {
+            background: linear-gradient(135deg, rgba(0,198,255,0.10), rgba(123,47,255,0.12));
+            border: 1px solid rgba(0,198,255,0.28);
+            border-radius: var(--radius-lg);
+            padding: 18px 16px 14px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s;
+            box-shadow: 0 8px 24px rgba(0,198,255,0.10);
+        }
+
+        .challenge-card::before {
+            content: '';
+            position: absolute;
+            top: -40px; right: -40px;
+            width: 120px; height: 120px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0,198,255,0.12), transparent);
+        }
+
+        .challenge-card:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(0,198,255,0.18); }
+
+        .challenge-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .challenge-badge {
+            font-size: 0.6rem;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            padding: 3px 9px;
+            border-radius: 20px;
+            background: rgba(0,198,255,0.18);
+            color: #00C6FF;
+            border: 1px solid rgba(0,198,255,0.3);
+        }
+
+        .challenge-reward {
+            font-size: 0.75rem;
+            font-weight: 800;
+            background: var(--grad-cosmos);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .challenge-icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+            display: block;
+            filter: drop-shadow(0 2px 8px rgba(0,198,255,0.3));
+        }
+
+        .challenge-title {
+            font-family: var(--font-display);
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+            line-height: 1.2;
+        }
+
+        .challenge-desc {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        .challenge-progress-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .challenge-progress-bar {
+            flex: 1;
+            height: 6px;
+            background: rgba(255,255,255,0.07);
+            border-radius: 40px;
+            overflow: hidden;
+        }
+
+        .challenge-progress-fill {
+            height: 100%;
+            background: var(--grad-cosmos);
+            background-size: 200% 200%;
+            border-radius: 40px;
+            transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 0 10px rgba(0,198,255,0.4);
+            animation: gradientShift 2.5s ease infinite;
+        }
+
+        .challenge-progress-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .challenge-cta {
+            width: 100%;
+            padding: 12px;
+            border-radius: var(--radius-md);
+            border: none;
+            background: linear-gradient(135deg, #00C6FF, #7B2FFF);
+            color: white;
+            font-weight: 800;
+            font-size: 0.82rem;
+            cursor: pointer;
+            font-family: var(--font-body);
+            box-shadow: 0 4px 16px rgba(0,198,255,0.3);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            letter-spacing: 0.2px;
+        }
+
+        .challenge-cta:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 24px rgba(0,198,255,0.4);
+        }
+
+        .challenge-cta:active { transform: scale(0.96); }
+
+        /* ═══════════════════════════════════════════
+           PRIZE EDITOR MODAL & CHALLENGE EDITOR MODAL
+        ═══════════════════════════════════════════ */
+        .editor-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(10px);
+            z-index: 8000;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        .editor-modal.open { display: flex; }
+
+        .editor-sheet {
+            background: #0D0918;
+            border: 1px solid rgba(255,107,53,0.2);
+            border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+            padding: 24px 20px;
+            padding-bottom: max(28px, calc(env(safe-area-inset-bottom, 0px) + 20px));
+            width: 100%;
+            max-width: 430px;
+            animation: sheetUp 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes sheetUp {
+            from { transform: translateY(100%); }
+            to   { transform: translateY(0); }
+        }
+
+        .editor-sheet h3 {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+
+        .editor-field {
+            margin-bottom: 14px;
+        }
+
+        .editor-field label {
+            display: block;
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 6px;
+        }
+
+        .editor-field input, .editor-field textarea {
+            width: 100%;
+            padding: 11px 16px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-bright);
+            background: rgba(255,255,255,0.05);
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            font-family: var(--font-body);
+            outline: none;
+            transition: all 0.25s;
+            resize: none;
+        }
+
+        .editor-field input:focus, .editor-field textarea:focus {
+            border-color: var(--border-glow);
+            box-shadow: 0 0 0 3px rgba(255,107,53,0.15);
+            background: rgba(255,107,53,0.03);
+        }
+
+        .editor-field input::placeholder, .editor-field textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        .editor-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .editor-save {
+            flex: 1;
+            padding: 13px;
+            border-radius: var(--radius-md);
+            border: none;
+            background: var(--grad-fire);
+            color: white;
+            font-weight: 800;
+            font-size: 0.85rem;
+            cursor: pointer;
+            font-family: var(--font-body);
+            box-shadow: 0 4px 16px var(--primary-glow);
+            transition: all 0.25s;
+        }
+
+        .editor-save:hover { transform: scale(1.02); }
+        .editor-save:active { transform: scale(0.97); }
+
+        .editor-cancel {
+            padding: 13px 20px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-bright);
+            background: transparent;
+            color: var(--text-secondary);
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            font-family: var(--font-body);
+            transition: all 0.25s;
+        }
+
+        .editor-cancel:hover { background: rgba(255,255,255,0.06); }
+
+        /* Google OAuth button */
+        .btn-google {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 13px;
+            border-radius: 60px;
+            border: 1px solid rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.06);
+            color: var(--text-primary);
+            font-weight: 700;
+            font-size: 0.88rem;
+            cursor: pointer;
+            font-family: var(--font-body);
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            backdrop-filter: blur(10px);
+        }
     </style>
-</head>
 <body>
 
 <!-- Ambient background -->
@@ -2271,10 +2539,10 @@
             <div class="prizes-section">
                 <div class="prizes-row">
 
-                    <!-- Weekly Prize -->
-                    <div class="prize-card weekly">
-                        <div class="prize-badge">⚡ Weekly</div>
-                        <span class="prize-icon">🖼️</span>
+                    <!-- This Week Prize -->
+                    <div class="prize-card weekly" onclick="openPrizeEditor('weekly')">
+                        <div class="prize-badge">⚡ This Week</div>
+                        <span class="prize-icon" id="weeklyPrizeIcon">🖼️</span>
                         <div class="prize-name" id="weeklyPrizeName">Free Poster</div>
                         <div class="prize-value" id="weeklyPrizeValue">Worth KSH 200</div>
                         <div class="prize-footer">
@@ -2285,12 +2553,13 @@
                             <div class="prize-leader-avatar" id="weeklyLeaderAvatar">?</div>
                             <span>Leading: <strong id="weeklyLeaderName">—</strong> &nbsp;<span id="weeklyLeaderPts" style="color:var(--primary)"></span></span>
                         </div>
+                        <div style="position:absolute;top:10px;right:10px;opacity:0.4;font-size:0.6rem;"><i class="fas fa-pen"></i></div>
                     </div>
 
-                    <!-- Monthly Prize -->
-                    <div class="prize-card monthly">
-                        <div class="prize-badge">🌙 Monthly</div>
-                        <span class="prize-icon">🎁</span>
+                    <!-- This Month Prize -->
+                    <div class="prize-card monthly" onclick="openPrizeEditor('monthly')">
+                        <div class="prize-badge">🌙 This Month</div>
+                        <span class="prize-icon" id="monthlyPrizeIcon">🎁</span>
                         <div class="prize-name" id="monthlyPrizeName">Room Bundle</div>
                         <div class="prize-value" id="monthlyPrizeValue">Worth KSH 600</div>
                         <div class="prize-footer">
@@ -2301,8 +2570,35 @@
                             <div class="prize-leader-avatar" id="monthlyLeaderAvatar">?</div>
                             <span>Leading: <strong id="monthlyLeaderName">—</strong> &nbsp;<span id="monthlyLeaderPts" style="color:#A78BFA"></span></span>
                         </div>
+                        <div style="position:absolute;top:10px;right:10px;opacity:0.4;font-size:0.6rem;"><i class="fas fa-pen"></i></div>
                     </div>
 
+                </div>
+            </div>
+
+            <!-- ══ DAILY CHALLENGE ══ -->
+            <div class="section-header" style="padding-top:4px;">
+                <span class="section-title">⚡ Daily Challenge</span>
+                <span class="section-link" onclick="openChallengeEditor()">Edit →</span>
+            </div>
+            <div class="daily-challenge-section" id="dailyChallengeSection">
+                <div class="challenge-card" id="challengeCard">
+                    <div class="challenge-header">
+                        <div class="challenge-badge">TODAY</div>
+                        <div class="challenge-reward" id="challengeReward">+50 coins</div>
+                    </div>
+                    <div class="challenge-icon" id="challengeIcon">🎯</div>
+                    <div class="challenge-title" id="challengeTitle">Complete Your Daily Check-In</div>
+                    <div class="challenge-desc" id="challengeDesc">Check in every day to build your streak and earn bonus coins. The longer the streak, the bigger the reward!</div>
+                    <div class="challenge-progress-wrap">
+                        <div class="challenge-progress-bar">
+                            <div class="challenge-progress-fill" id="challengeProgressFill" style="width:0%"></div>
+                        </div>
+                        <span class="challenge-progress-label" id="challengeProgressLabel">0 / 1 done</span>
+                    </div>
+                    <button class="challenge-cta" id="challengeCtaBtn" onclick="dailyCheckin()">
+                        <i class="fas fa-bolt"></i> Claim Reward
+                    </button>
                 </div>
             </div>
 
@@ -2594,6 +2890,61 @@
     </div>
 </div>
 
+<!-- ══ PRIZE EDITOR MODAL ══ -->
+<div class="editor-modal" id="prizeEditorModal">
+    <div class="editor-sheet">
+        <h3 id="prizeEditorTitle">✏️ Edit This Week Prize</h3>
+        <input type="hidden" id="prizeEditorType" value="weekly">
+        <div class="editor-field">
+            <label>Icon (emoji)</label>
+            <input type="text" id="prizeEditorIcon" placeholder="🖼️" maxlength="4">
+        </div>
+        <div class="editor-field">
+            <label>Prize Name</label>
+            <input type="text" id="prizeEditorName" placeholder="e.g. Free Poster">
+        </div>
+        <div class="editor-field">
+            <label>Value / Description</label>
+            <input type="text" id="prizeEditorValue" placeholder="e.g. Worth KSH 200">
+        </div>
+        <div class="editor-actions">
+            <button class="editor-cancel" onclick="closePrizeEditor()">Cancel</button>
+            <button class="editor-save" onclick="savePrize()">Save Prize</button>
+        </div>
+    </div>
+</div>
+
+<!-- ══ CHALLENGE EDITOR MODAL ══ -->
+<div class="editor-modal" id="challengeEditorModal">
+    <div class="editor-sheet">
+        <h3>⚡ Edit Daily Challenge</h3>
+        <div class="editor-field">
+            <label>Icon (emoji)</label>
+            <input type="text" id="challengeEditorIcon" placeholder="🎯" maxlength="4">
+        </div>
+        <div class="editor-field">
+            <label>Challenge Title</label>
+            <input type="text" id="challengeEditorTitle" placeholder="e.g. Complete Your Daily Check-In">
+        </div>
+        <div class="editor-field">
+            <label>Description</label>
+            <textarea id="challengeEditorDesc" rows="3" placeholder="Describe what users need to do…"></textarea>
+        </div>
+        <div class="editor-field">
+            <label>Reward (coins)</label>
+            <input type="text" id="challengeEditorReward" placeholder="e.g. +50 coins">
+        </div>
+        <div class="editor-field">
+            <label>Action Button Label</label>
+            <input type="text" id="challengeEditorBtn" placeholder="e.g. Claim Reward">
+        </div>
+        <div class="editor-actions">
+            <button class="editor-cancel" onclick="closeChallengeEditor()">Cancel</button>
+            <button class="editor-save" onclick="saveChallenge()">Save Challenge</button>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 
 <script>
@@ -2722,7 +3073,6 @@ function showScreen(name) {
     document.querySelectorAll('.tab-item').forEach(t => {
         t.classList.toggle('active', t.dataset.tab === name);
     });
-    document.getElementById('screenContainer').scrollTop = 0;
     if (name === 'gallery') renderTonalGallery();
     if (name === 'profile') loadProfile();
     if (name === 'shop') renderCart();
@@ -3575,6 +3925,104 @@ document.getElementById('imageModal').addEventListener('click', e => {
 
 // Keyboard close
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+// ─── Prize Editor ─────────────────────────────────────────
+function openPrizeEditor(type) {
+    const modal = document.getElementById('prizeEditorModal');
+    document.getElementById('prizeEditorType').value = type;
+    document.getElementById('prizeEditorTitle').textContent = type === 'weekly' ? '✏️ Edit This Week Prize' : '✏️ Edit This Month Prize';
+    const saved = JSON.parse(localStorage.getItem('aura_prize_' + type) || '{}');
+    document.getElementById('prizeEditorIcon').value  = saved.icon  || (type === 'weekly' ? '🖼️' : '🎁');
+    document.getElementById('prizeEditorName').value  = saved.name  || (type === 'weekly' ? 'Free Poster' : 'Room Bundle');
+    document.getElementById('prizeEditorValue').value = saved.value || (type === 'weekly' ? 'Worth KSH 200' : 'Worth KSH 600');
+    modal.classList.add('open');
+}
+
+function closePrizeEditor() {
+    document.getElementById('prizeEditorModal').classList.remove('open');
+}
+
+function savePrize() {
+    const type  = document.getElementById('prizeEditorType').value;
+    const icon  = document.getElementById('prizeEditorIcon').value.trim()  || (type === 'weekly' ? '🖼️' : '🎁');
+    const name  = document.getElementById('prizeEditorName').value.trim()  || (type === 'weekly' ? 'Free Poster' : 'Room Bundle');
+    const value = document.getElementById('prizeEditorValue').value.trim() || (type === 'weekly' ? 'Worth KSH 200' : 'Worth KSH 600');
+    localStorage.setItem('aura_prize_' + type, JSON.stringify({ icon, name, value }));
+    applyPrize(type, { icon, name, value });
+    closePrizeEditor();
+    showToast('✅ Prize updated!');
+}
+
+function applyPrize(type, data) {
+    const prefix = type === 'weekly' ? 'weekly' : 'monthly';
+    const iconEl = document.getElementById(prefix + 'PrizeIcon');
+    if (iconEl) iconEl.textContent = data.icon;
+    document.getElementById(prefix + 'PrizeName').textContent  = data.name;
+    document.getElementById(prefix + 'PrizeValue').textContent = data.value;
+}
+
+function loadSavedPrizes() {
+    ['weekly', 'monthly'].forEach(type => {
+        const saved = JSON.parse(localStorage.getItem('aura_prize_' + type) || '{}');
+        if (saved.name) applyPrize(type, saved);
+    });
+}
+
+// Close prize editor on backdrop click
+document.getElementById('prizeEditorModal').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closePrizeEditor();
+});
+
+// ─── Challenge Editor ─────────────────────────────────────
+function openChallengeEditor() {
+    const saved = JSON.parse(localStorage.getItem('aura_daily_challenge') || '{}');
+    document.getElementById('challengeEditorIcon').value   = saved.icon   || '🎯';
+    document.getElementById('challengeEditorTitle').value  = saved.title  || 'Complete Your Daily Check-In';
+    document.getElementById('challengeEditorDesc').value   = saved.desc   || 'Check in every day to build your streak and earn bonus coins. The longer the streak, the bigger the reward!';
+    document.getElementById('challengeEditorReward').value = saved.reward || '+50 coins';
+    document.getElementById('challengeEditorBtn').value    = saved.btn    || 'Claim Reward';
+    document.getElementById('challengeEditorModal').classList.add('open');
+}
+
+function closeChallengeEditor() {
+    document.getElementById('challengeEditorModal').classList.remove('open');
+}
+
+function saveChallenge() {
+    const data = {
+        icon:   document.getElementById('challengeEditorIcon').value.trim()   || '🎯',
+        title:  document.getElementById('challengeEditorTitle').value.trim()  || 'Complete Your Daily Check-In',
+        desc:   document.getElementById('challengeEditorDesc').value.trim()   || '',
+        reward: document.getElementById('challengeEditorReward').value.trim() || '+50 coins',
+        btn:    document.getElementById('challengeEditorBtn').value.trim()    || 'Claim Reward',
+    };
+    localStorage.setItem('aura_daily_challenge', JSON.stringify(data));
+    applyChallenge(data);
+    closeChallengeEditor();
+    showToast('✅ Challenge updated!');
+}
+
+function applyChallenge(data) {
+    document.getElementById('challengeIcon').textContent        = data.icon;
+    document.getElementById('challengeTitle').textContent       = data.title;
+    document.getElementById('challengeDesc').textContent        = data.desc;
+    document.getElementById('challengeReward').textContent      = data.reward;
+    document.getElementById('challengeCtaBtn').innerHTML        = `<i class="fas fa-bolt"></i> ${data.btn}`;
+}
+
+function loadSavedChallenge() {
+    const saved = JSON.parse(localStorage.getItem('aura_daily_challenge') || '{}');
+    if (saved.title) applyChallenge(saved);
+}
+
+// Close challenge editor on backdrop click
+document.getElementById('challengeEditorModal').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeChallengeEditor();
+});
+
+// Load all saved custom data on page start
+loadSavedPrizes();
+loadSavedChallenge();
 
 // ─── Init ─────────────────────────────────────────────────
 loadPosters();
