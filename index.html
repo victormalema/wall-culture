@@ -655,20 +655,39 @@
 
     // ── Google / Social Auth ──────────────────────────────
     function handleGoogleAuth() {
-        // This initiates the Google OAuth flow via your backend.
-        // Replace the URL below with your actual Google OAuth endpoint.
-        // Example for Flask/FastAPI: window.location.href = `${API_URL}/auth/google`;
+        // Show loading state on buttons
+        document.querySelectorAll('.btn-social.google').forEach(btn => {
+            btn.disabled = true;
+            btn.innerHTML = btn.innerHTML.replace('Continue with Google', 'Redirecting…').replace('Sign up with Google', 'Redirecting…');
+        });
         showMessage('Redirecting to Google sign-in…', 'success');
         setTimeout(() => {
             window.location.href = `${API_URL}/auth/google`;
-        }, 800);
+        }, 600);
     }
 
-    // Handle OAuth callback token in URL (e.g. ?token=xxx&user=yyy after redirect)
+    // Handle OAuth callback errors or token-in-URL (fallback)
     (function handleOAuthRedirect() {
         const params = new URLSearchParams(window.location.search);
-        const token  = params.get('token');
-        const user   = params.get('user');
+
+        // Show error if returned from callback with ?error=
+        const error = params.get('error');
+        if (error) {
+            const messages = {
+                'oauth_failed':    'Google sign-in failed. Please try again.',
+                'no_token':        'Sign-in was cancelled or token was missing.',
+                'exchange_failed': 'Could not complete sign-in. Please try again.',
+                'network':         'Network error during sign-in. Please try again.',
+            };
+            showMessage(messages[error] || 'Sign-in failed: ' + error);
+            // Clean the URL
+            window.history.replaceState({}, '', window.location.pathname);
+            return;
+        }
+
+        // Legacy / fallback: token passed directly in query string
+        const token = params.get('token');
+        const user  = params.get('user');
         if (token) {
             try {
                 const userData = user ? JSON.parse(decodeURIComponent(user)) : {};

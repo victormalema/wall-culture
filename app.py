@@ -224,6 +224,178 @@ def register():
         return jsonify({"error": str(e)}), 500
 
 
+# ==================== GOOGLE OAUTH (via Supabase) ====================
+
+@app.route("/api/auth/google", methods=["GET"])
+def google_oauth_start():
+    """Redirect user to Supabase Google OAuth consent screen."""
+    try:
+        # Build the redirect_to URL — where Supabase will send the user after consent.
+        # Must also be listed in Supabase Dashboard → Authentication → URL Configuration → Redirect URLs.
+        base_url = os.getenv('APP_URL', 'https://wall-culture-3.onrender.com')
+        redirect_to = f"{base_url}/api/auth/google/callback"
+
+        # Ask Supabase for the OAuth URL
+        res = supabase.auth.sign_in_with_oauth({
+            "provider": "google",
+            "options": {
+                "redirect_to": redirect_to,
+                "scopes": "email profile",
+            }
+        })
+        # res.url is the Google consent URL
+        from flask import redirect as flask_redirect
+        return flask_redirect(res.url)
+    except Exception as e:
+        print(f"Google OAuth start error: {e}")
+        base_url = os.getenv('APP_URL', 'https://wall-culture-3.onrender.com')
+        return flask_redirect(f"{base_url}/index.html?error=oauth_failed")
+
+
+@app.route("/api/auth/google/callback", methods=["GET"])
+def google_oauth_callback():
+    """
+    Supabase redirects here after Google consent.
+    Supabase uses a URL fragment (#access_token=...) which is not visible server-side,
+    so we serve a tiny HTML page that reads the fragment and POSTs it back to us.
+    """
+    from flask import redirect as flask_redirect
+    base_url = os.getenv('APP_URL', 'https://wall-culture-3.onrender.com')
+    # Serve an intermediate page that extracts the fragment and calls our token exchange endpoint
+    html = f"""<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Signing you in…</title>
+  <style>
+    body {{ background:#07070F; color:#FFF8F5; font-family:sans-serif;
+           display:flex; align-items:center; justify-content:center; height:100vh; margin:0; }}
+    .msg {{ text-align:center; }}
+    .spinner {{ width:36px; height:36px; border:3px solid rgba(255,107,53,0.2);
+               border-top-color:#FF6B35; border-radius:50%; animation:spin .7s linear infinite; margin:0 auto 16px; }}
+    @keyframes spin {{ to {{ transform:rotate(360deg); }} }}
+  </style>
+</head>
+<body>
+<div class="msg">
+  <div class="spinner"></div>
+  <p>Completing sign-in…</p>
+</div>
+<script>
+  // Supabase puts the session in the URL fragment after OAuth redirect
+  const hash = window.location.hash.substring(1);
+  const params = new URLSearchParams(hash);
+  const accessToken  = params.get('access_token');
+  const refreshToken = params.get('refresh_token');
+
+  if (!accessToken) {{
+    window.location.href = '{base_url}/index.html?error=no_token';
+  }} else {{
+    fetch('/api/auth/google/exchange', {{
+      method: 'POST',
+      headers: {{ 'Content-Type': 'application/json' }},
+      body: JSON.stringify({{ access_token: accessToken, refresh_token: refreshToken }})
+    }})
+    .then(r => r.json())
+    .then(data => {{
+      if (data.token) {{
+        localStorage.setItem('aura_token', data.token);
+        localStorage.setItem('aura_user', JSON.stringify(data.user));
+        window.location.href = '{base_url}/home.html';
+      }} else {{
+        window.location.href = '{base_url}/index.html?error=' + encodeURIComponent(data.error || 'exchange_failed');
+      }}
+    }})
+    .catch(() => {{
+      window.location.href = '{base_url}/index.html?error=network';
+    }});
+  }}
+</script>
+</body>
+</html>"""
+    from flask import Response
+    return Response(html, mimetype='text/html')
+
+
+@app.route("/api/auth/google/exchange", methods=["POST"])
+def google_oauth_exchange():
+    """
+    Receives the Supabase access_token from the browser, validates it,
+    upserts the user in our own users table, then returns our own JWT.
+    """
+    try:
+        data = request.get_json(silent=True) or {}
+        access_token  = data.get('access_token', '').strip()
+        refresh_token = data.get('refresh_token', '').strip()
+
+        if not access_token:
+            return jsonify({'error': 'Missing access token'}), 400
+
+        # Validate the Supabase session and get the user
+        session_res = supabase.auth.set_session(access_token, refresh_token)
+        sb_user = session_res.user
+        if not sb_user:
+            return jsonify({'error': 'Invalid Supabase session'}), 401
+
+        email = (sb_user.email or '').lower().strip()
+        name  = (sb_user.user_metadata or {}).get('full_name') or \
+                (sb_user.user_metadata or {}).get('name') or \
+                email.split('@')[0].title()
+
+        if not email:
+            return jsonify({'error': 'No email returned from Google'}), 400
+
+        # Upsert user in our custom users table
+        existing = supabase.table('users').select('*').eq('email', email).execute()
+
+        if existing.data:
+            user_row = existing.data[0]
+            user_id = user_row['id']
+        else:
+            # New Google user — create account (no password needed)
+            user_id = str(uuid.uuid4())
+            user_referral_code = generate_referral_code(name)
+            supabase.table('users').insert({
+                'id': user_id,
+                'name': name,
+                'email': email,
+                'password': '',          # no password for OAuth users
+                'referral_code': user_referral_code,
+                'referred_by': None,
+                'points': 100,
+                'streak': 0,
+                'weekly_points': 0,
+                'created_at': datetime.utcnow().isoformat() + 'Z'
+            }).execute()
+            user_row = {
+                'id': user_id, 'name': name, 'email': email,
+                'points': 100, 'streak': 0, 'weekly_points': 0,
+                'referral_code': user_referral_code
+            }
+
+        # Issue our own JWT (same format as email/password login)
+        token = jwt.encode(
+            {'user_id': user_id, 'exp': datetime.utcnow() + timedelta(days=7)},
+            app.config['SECRET_KEY']
+        )
+
+        return jsonify({
+            'token': token,
+            'user': {
+                'id': user_row['id'],
+                'name': user_row.get('name', name),
+                'email': email,
+                'points': user_row.get('points', 0),
+                'streak': user_row.get('streak', 0),
+                'weekly_points': user_row.get('weekly_points', 0),
+                'referralCode': user_row.get('referral_code', '')
+            }
+        })
+    except Exception as e:
+        print(f"Google OAuth exchange error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
 @app.route("/api/auth/login", methods=["POST"])
 def login():
     try:
