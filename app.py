@@ -236,12 +236,13 @@ def google_oauth_start():
         base_url = os.getenv('APP_URL', 'https://wall-culture-3.onrender.com')
         redirect_to = f"{base_url}/api/auth/google/callback"
 
-        # Ask Supabase for the OAuth URL
+        # Ask Supabase for the OAuth URL — use implicit flow (no PKCE code verifier needed)
         res = supabase.auth.sign_in_with_oauth({
             "provider": "google",
             "options": {
                 "redirect_to": redirect_to,
                 "scopes": "email profile",
+                "flow_type": "implicit",
             }
         })
         # res.url is the Google consent URL
@@ -256,58 +257,103 @@ def google_oauth_start():
 @app.route("/api/auth/google/callback", methods=["GET"])
 def google_oauth_callback():
     """
-    Supabase redirects here with ?code=... (PKCE flow).
-    We exchange the code server-side using the Supabase REST API,
-    get the user's email/name, upsert them in our users table,
-    then issue our own JWT and redirect to home.html.
+    Implicit flow: Supabase redirects here with #access_token=... in the fragment.
+    Fragments are invisible to the server, so we serve a small page that reads
+    the fragment in the browser and POSTs the token to /api/auth/google/exchange.
     """
-    from flask import redirect as flask_redirect
     from flask import Response
+    base_url = os.getenv('APP_URL', 'https://wall-culture-3.onrender.com')
 
-    base_url  = os.getenv('APP_URL', 'https://wall-culture-3.onrender.com')
-    code      = request.args.get('code', '').strip()
+    html = f"""<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Signing you in…</title>
+  <style>
+    body {{ background:#07070F; color:#FFF8F5; font-family:sans-serif;
+           display:flex; align-items:center; justify-content:center; height:100vh; margin:0; }}
+    .msg {{ text-align:center; }}
+    .spinner {{ width:40px; height:40px; border:3px solid rgba(255,107,53,0.2);
+               border-top-color:#FF6B35; border-radius:50%;
+               animation:spin .7s linear infinite; margin:0 auto 16px; }}
+    @keyframes spin {{ to {{ transform:rotate(360deg); }} }}
+    p {{ font-size:0.9rem; opacity:0.6; margin:0; }}
+  </style>
+</head>
+<body>
+<div class="msg">
+  <div class="spinner"></div>
+  <p>Signing you in with Google…</p>
+</div>
+<script>
+  // Implicit flow: token is in the URL hash (#access_token=...)
+  const hash   = window.location.hash.substring(1);
+  const params = new URLSearchParams(hash);
+  const accessToken  = params.get('access_token');
+  const refreshToken = params.get('refresh_token') || '';
 
-    if not code:
-        print("Google callback: no code in request")
-        return flask_redirect(f"{base_url}/index.html?error=no_token")
+  if (!accessToken) {{
+    // Maybe it came as a query param error
+    const qp = new URLSearchParams(window.location.search);
+    const err = qp.get('error') || qp.get('error_description') || 'no_token';
+    window.location.replace('{base_url}/index.html?error=' + encodeURIComponent(err));
+  }} else {{
+    fetch('/api/auth/google/exchange', {{
+      method: 'POST',
+      headers: {{ 'Content-Type': 'application/json' }},
+      body: JSON.stringify({{ access_token: accessToken, refresh_token: refreshToken }})
+    }})
+    .then(r => r.json())
+    .then(data => {{
+      if (data.token) {{
+        localStorage.setItem('aura_token', data.token);
+        localStorage.setItem('aura_user', JSON.stringify(data.user));
+        window.location.replace('{base_url}/home.html');
+      }} else {{
+        window.location.replace('{base_url}/index.html?error=' + encodeURIComponent(data.error || 'exchange_failed'));
+      }}
+    }})
+    .catch(() => window.location.replace('{base_url}/index.html?error=network'));
+  }}
+</script>
+</body>
+</html>"""
+    return Response(html, mimetype='text/html')
 
+
+@app.route("/api/auth/google/exchange", methods=["POST"])
+def google_oauth_exchange():
+    """
+    Receives access_token from the browser (implicit flow),
+    calls Supabase to get the user's profile, upserts them
+    in our users table, then returns our own JWT.
+    """
     try:
-        # ── Exchange the code for a Supabase session via REST ──────────────
-        supabase_url = os.getenv('SUPABASE_URL', '').rstrip('/')
-        supabase_key = os.getenv('SUPABASE_KEY', '')
+        data         = request.get_json(silent=True) or {}
+        access_token = data.get('access_token', '').strip()
 
-        exchange_res = http_requests.post(
-            f"{supabase_url}/auth/v1/token?grant_type=pkce",
-            headers={
-                "apikey":       supabase_key,
-                "Content-Type": "application/json",
-            },
-            json={"auth_code": code},
-            timeout=10,
-        )
+        if not access_token:
+            return jsonify({'error': 'Missing access token'}), 400
 
-        if exchange_res.status_code != 200:
-            print(f"Supabase code exchange failed: {exchange_res.status_code} {exchange_res.text}")
-            return flask_redirect(f"{base_url}/index.html?error=exchange_failed")
+        # Ask Supabase who this token belongs to
+        user_res = supabase.auth.get_user(access_token)
+        sb_user  = user_res.user if user_res else None
 
-        session_data = exchange_res.json()
-        sb_user      = session_data.get('user') or {}
-        access_token = session_data.get('access_token', '')
+        if not sb_user:
+            return jsonify({'error': 'Invalid token'}), 401
 
-        email = (sb_user.get('email') or '').lower().strip()
-        meta  = sb_user.get('user_metadata') or {}
+        email = (sb_user.email or '').lower().strip()
+        meta  = sb_user.user_metadata or {}
         name  = meta.get('full_name') or meta.get('name') or email.split('@')[0].title()
 
         if not email:
-            print("Google callback: no email in Supabase response")
-            return flask_redirect(f"{base_url}/index.html?error=no_email")
+            return jsonify({'error': 'No email from Google'}), 400
 
-        # ── Upsert the user in our own users table ─────────────────────────
+        # Upsert in our own users table
         existing = supabase.table('users').select('*').eq('email', email).execute()
 
         if existing.data:
             user_row = existing.data[0]
-            user_id  = user_row['id']
         else:
             user_id            = str(uuid.uuid4())
             user_referral_code = generate_referral_code(name)
@@ -315,7 +361,7 @@ def google_oauth_callback():
                 'id':            user_id,
                 'name':          name,
                 'email':         email,
-                'password':      '',   # no password for OAuth users
+                'password':      '',
                 'referral_code': user_referral_code,
                 'referred_by':   None,
                 'points':        100,
@@ -329,59 +375,28 @@ def google_oauth_callback():
                 'referral_code': user_referral_code,
             }
 
-        # ── Issue our own JWT ──────────────────────────────────────────────
+        # Issue our own JWT
         token = jwt.encode(
             {'user_id': user_row['id'], 'exp': datetime.utcnow() + timedelta(days=7)},
             app.config['SECRET_KEY']
         )
 
-        user_json = {
-            'id':           user_row['id'],
-            'name':         user_row.get('name', name),
-            'email':        email,
-            'points':       user_row.get('points', 0),
-            'streak':       user_row.get('streak', 0),
-            'weekly_points':user_row.get('weekly_points', 0),
-            'referralCode': user_row.get('referral_code', ''),
-        }
-
-        # ── Return a tiny page that saves the token and redirects ──────────
-        import json as json_lib
-        html = f"""<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>Signing you in…</title>
-  <style>
-    body {{ background:#07070F; color:#FFF8F5; font-family:sans-serif;
-           display:flex; align-items:center; justify-content:center; height:100vh; margin:0; }}
-    .msg {{ text-align:center; }}
-    .spinner {{ width:36px; height:36px; border:3px solid rgba(255,107,53,0.2);
-               border-top-color:#FF6B35; border-radius:50%;
-               animation:spin .7s linear infinite; margin:0 auto 16px; }}
-    @keyframes spin {{ to {{ transform:rotate(360deg); }} }}
-    p {{ font-size:0.9rem; opacity:0.7; }}
-  </style>
-</head>
-<body>
-<div class="msg">
-  <div class="spinner"></div>
-  <p>Signing you in…</p>
-</div>
-<script>
-  try {{
-    localStorage.setItem('aura_token', {json_lib.dumps(token)});
-    localStorage.setItem('aura_user',  {json_lib.dumps(json_lib.dumps(user_json))});
-  }} catch(e) {{}}
-  window.location.replace('{base_url}/home.html');
-</script>
-</body>
-</html>"""
-        return Response(html, mimetype='text/html')
+        return jsonify({
+            'token': token,
+            'user': {
+                'id':            user_row['id'],
+                'name':          user_row.get('name', name),
+                'email':         email,
+                'points':        user_row.get('points', 0),
+                'streak':        user_row.get('streak', 0),
+                'weekly_points': user_row.get('weekly_points', 0),
+                'referralCode':  user_row.get('referral_code', ''),
+            }
+        })
 
     except Exception as e:
-        print(f"Google OAuth callback error: {e}")
-        return flask_redirect(f"{base_url}/index.html?error=server_error")
+        print(f"Google exchange error: {e}")
+        return jsonify({'error': str(e)}), 500
 
 
 @app.route("/api/auth/login", methods=["POST"])
