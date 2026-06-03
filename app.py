@@ -413,7 +413,19 @@ def login():
             return jsonify({"error": "Invalid email or password"}), 401
         
         user = result.data[0]
-        if not bcrypt.checkpw(password.encode(), user["password"].encode()):
+
+        # Guard: Google OAuth users have no password — block password login for them
+        stored_password = user.get("password") or ""
+        if not stored_password:
+            return jsonify({"error": "This account uses Google sign-in. Please log in with Google."}), 401
+
+        try:
+            password_matches = bcrypt.checkpw(password.encode(), stored_password.encode())
+        except Exception as bcrypt_err:
+            print(f"LOGIN BCRYPT ERROR for {email}: {bcrypt_err}")
+            return jsonify({"error": "Invalid email or password"}), 401
+
+        if not password_matches:
             return jsonify({"error": "Invalid email or password"}), 401
         
         token = jwt.encode({"user_id": user["id"], "exp": datetime.utcnow() + timedelta(days=7)}, app.config["SECRET_KEY"])
@@ -427,6 +439,7 @@ def login():
             }
         })
     except Exception as e:
+        print(f"LOGIN ERROR for {data.get('email', 'unknown')}: {e}")
         return jsonify({"error": str(e)}), 500
 
 
