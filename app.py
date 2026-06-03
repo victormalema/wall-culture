@@ -1059,7 +1059,7 @@ if __name__ == '__main__':
     print(f"📍 Running on: http://localhost:5000")
     print("✅ REAL QR Scanning (standard 5×/day, golden 1×/day)")
     print("✅ REAL Instagram story verification")
-    print("✅ REAL Room Tour uploads")
+    print("✅ REAL Room Tour upload")
     print("✅ Referral first-purchase + milestone bonuses")
     print("✅ Correct multiplier values + durations")
     print("✅ +250 large order bonus")
