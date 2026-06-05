@@ -2441,6 +2441,47 @@
             transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
             backdrop-filter: blur(10px);
         }
+
+        /* ── Shop Type Pills ── */
+        .shop-type-pill {
+            flex-shrink: 0;
+            padding: 8px 16px;
+            border-radius: 40px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: var(--bg-surface);
+            color: var(--text-secondary);
+            transition: all 0.25s;
+            white-space: nowrap;
+        }
+        .shop-type-pill.active {
+            background: var(--grad-fire);
+            border-color: transparent;
+            color: #fff;
+            box-shadow: 0 4px 14px var(--primary-glow);
+        }
+
+        /* ── Variant picker buttons ── */
+        .variant-btn {
+            padding: 8px 18px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.05);
+            color: var(--text-primary);
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: var(--font-body);
+            transition: all 0.2s;
+        }
+        .variant-btn.selected {
+            background: var(--grad-fire);
+            border-color: transparent;
+            color: #fff;
+            box-shadow: 0 2px 10px var(--primary-glow);
+        }
     </style>
 <body>
 
@@ -2636,6 +2677,10 @@
                 <p>Tap any artwork to explore</p>
             </div>
 
+            <!-- Shop type pills (loaded dynamically from /api/shop/config) -->
+            <div class="category-rail" id="shopTypePills"></div>
+
+            <!-- Category sub-filter pills -->
             <div class="category-rail" id="categoryTabs">
                 <div class="cat-pill active" data-cat="all">All</div>
                 <div class="cat-pill" data-cat="aesthetic">✦ Aesthetic</div>
@@ -3082,25 +3127,72 @@ document.querySelectorAll('.tab-item').forEach(tab => {
     tab.addEventListener('click', () => showScreen(tab.dataset.tab));
 });
 
-// ─── Load Posters ────────────────────────────────────────
-async function loadPosters() {
+// ─── Load Products (unified catalog) ─────────────────────
+async function loadPosters(productType = null) {
     try {
-        const posters = await apiRequest('/posters');
-        if (Array.isArray(posters) && posters.length > 0) {
-            allPosters = posters;
-        } else if (posters && posters.error) {
-            console.error('Posters API error:', posters.error);
+        const endpoint = productType ? `/products?type=${productType}` : '/products';
+        const products = await apiRequest(endpoint);
+        if (Array.isArray(products) && products.length > 0) {
+            allPosters = products;
+        } else if (products && products.error) {
+            console.error('Products API error:', products.error);
             allPosters = [];
         } else {
-            // API returned empty array — show placeholders so UI isn't blank
             allPosters = [];
         }
     } catch(e) {
-        console.error('loadPosters failed:', e);
+        console.error('loadProducts failed:', e);
         allPosters = [];
     }
     renderDiscoverFeed();
     renderTonalGallery();
+}
+
+// Active shop type filter (null = all types)
+let activeShopType = null;
+
+// Load shop config and build type pills dynamically
+async function loadShopConfig() {
+    try {
+        const config = await fetch('/api/shop/config').then(r => r.json());
+        buildShopTypePills(config);
+    } catch(e) {
+        console.error('loadShopConfig failed:', e);
+    }
+}
+
+function buildShopTypePills(config) {
+    const rail = document.getElementById('shopTypePills');
+    if (!rail) return;
+    rail.innerHTML = '';
+
+    // "All" pill
+    const allPill = document.createElement('div');
+    allPill.className = 'shop-type-pill active';
+    allPill.textContent = '🛍️ All';
+    allPill.dataset.type = '';
+    allPill.onclick = () => selectShopType(null, allPill);
+    rail.appendChild(allPill);
+
+    // One pill per product type
+    Object.entries(config).forEach(([type, cfg]) => {
+        const pill = document.createElement('div');
+        pill.className = 'shop-type-pill';
+        pill.textContent = `${cfg.emoji} ${cfg.label}`;
+        pill.dataset.type = type;
+        pill.onclick = () => selectShopType(type, pill);
+        rail.appendChild(pill);
+    });
+}
+
+function selectShopType(type, pillEl) {
+    document.querySelectorAll('.shop-type-pill').forEach(p => p.classList.remove('active'));
+    pillEl.classList.add('active');
+    activeShopType = type || null;
+    loadPosters(activeShopType);
+    // Also update gallery category filter to show all when switching type
+    currentGalleryCategory = 'all';
+    document.querySelectorAll('.cat-pill').forEach(p => p.classList.toggle('active', p.dataset.cat === 'all'));
 }
 
 function posterImg(poster) {
@@ -3489,12 +3581,84 @@ function toggleFav(id) {
 }
 
 // ─── Cart ─────────────────────────────────────────────────
-function addToCart(poster) {
-    const existing = cart.find(i => i.id === poster.id);
-    if (existing) existing.qty++;
-    else cart.push({ ...poster, qty: 1 });
+// ─── Cart ─────────────────────────────────────────────────
+function addToCart(product, selectedVariant = null) {
+    const ptype = product.product_type || 'poster';
+    const variants = product.variants || {};
+    const hasSizes = variants.sizes && variants.sizes.length > 0;
+
+    // If clothing/item has sizes and no variant selected yet, show size picker
+    if (hasSizes && !selectedVariant) {
+        showVariantPicker(product);
+        return;
+    }
+
+    // Unique cart key: id + variant (same item in diff sizes = different rows)
+    const cartKey = selectedVariant ? `${product.id}__${JSON.stringify(selectedVariant)}` : product.id;
+    const existing = cart.find(i => i._cartKey === cartKey);
+
+    if (existing) {
+        existing.qty++;
+    } else {
+        cart.push({
+            ...product,
+            _cartKey: cartKey,
+            qty: 1,
+            product_type: ptype,
+            itemType: product.is_limited ? 'limited' : 'standard',
+            selectedVariant: selectedVariant || null,
+        });
+    }
     renderCart();
-    showToast(`✓ ${poster.name} added to cart`);
+    const variantLabel = selectedVariant ? ` (${Object.values(selectedVariant).join(', ')})` : '';
+    showToast(`✓ ${product.name}${variantLabel} added to cart`);
+}
+
+function showVariantPicker(product) {
+    const variants = product.variants || {};
+    const sizes  = variants.sizes  || [];
+    const colors = variants.colors || [];
+
+    const existing = document.getElementById('variantPickerSheet');
+    if (existing) existing.remove();
+
+    let selectedSize  = sizes[0]  || null;
+    let selectedColor = colors[0] || null;
+
+    const sheet = document.createElement('div');
+    sheet.id = 'variantPickerSheet';
+    sheet.style.cssText = 'position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.7);backdrop-filter:blur(10px);display:flex;align-items:flex-end;justify-content:center;';
+
+    const sizeBtns  = sizes.map(s  => `<button class="variant-btn size-btn${s === selectedSize ? ' selected' : ''}" data-size="${s}">${s}</button>`).join('');
+    const colorBtns = colors.map(c => `<button class="variant-btn color-btn${c === selectedColor ? ' selected' : ''}" data-color="${c}">${c}</button>`).join('');
+
+    sheet.innerHTML = `
+        <div style="background:#0D0918;border:1px solid rgba(255,107,53,0.2);border-radius:28px 28px 0 0;padding:24px 20px 36px;width:100%;max-width:430px;">
+            <div style="font-family:var(--font-display);font-size:1rem;font-weight:800;margin-bottom:4px;">${product.name}</div>
+            <div style="color:var(--text-muted);font-size:0.8rem;margin-bottom:16px;">KSH ${product.price}</div>
+            ${sizes.length  ? `<div style="margin-bottom:14px;"><div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);margin-bottom:8px;">Size</div><div id="sizeRow" style="display:flex;gap:8px;flex-wrap:wrap;">${sizeBtns}</div></div>` : ''}
+            ${colors.length ? `<div style="margin-bottom:18px;"><div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);margin-bottom:8px;">Color</div><div id="colorRow" style="display:flex;gap:8px;flex-wrap:wrap;">${colorBtns}</div></div>` : ''}
+            <button id="variantAddBtn" style="width:100%;padding:14px;border-radius:20px;border:none;background:var(--grad-fire);color:#fff;font-weight:800;font-size:0.9rem;cursor:pointer;font-family:var(--font-body);">Add to Cart</button>
+            <button id="variantCancelBtn" style="width:100%;padding:12px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:var(--text-muted);font-size:0.85rem;cursor:pointer;font-family:var(--font-body);margin-top:8px;">Cancel</button>
+        </div>`;
+
+    document.body.appendChild(sheet);
+
+    sheet.querySelectorAll('.size-btn').forEach(btn => {
+        btn.onclick = () => { sheet.querySelectorAll('.size-btn').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); selectedSize = btn.dataset.size; };
+    });
+    sheet.querySelectorAll('.color-btn').forEach(btn => {
+        btn.onclick = () => { sheet.querySelectorAll('.color-btn').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); selectedColor = btn.dataset.color; };
+    });
+    sheet.querySelector('#variantAddBtn').onclick = () => {
+        const variant = {};
+        if (selectedSize)  variant.size  = selectedSize;
+        if (selectedColor) variant.color = selectedColor;
+        sheet.remove();
+        addToCart(product, Object.keys(variant).length ? variant : null);
+    };
+    sheet.querySelector('#variantCancelBtn').onclick = () => sheet.remove();
+    sheet.onclick = e => { if (e.target === sheet) sheet.remove(); };
 }
 
 function renderCart() {
@@ -3516,7 +3680,7 @@ function renderCart() {
         row.innerHTML = `
             <div>
                 <div class="cart-item-name">${item.name} ×${item.qty}</div>
-                <div class="cart-item-sub">✦ ${item.points || 0} coins</div>
+                <div class="cart-item-sub">${item.selectedVariant ? Object.values(item.selectedVariant).join(' · ') + ' · ' : ''}${item.product_type || 'poster'} · ✦ ${item.points || 0} coins</div>
             </div>
             <div style="display:flex; align-items:center; gap:8px;">
                 <span class="cart-item-price">KSH ${item.price * item.qty}</span>
@@ -3540,9 +3704,17 @@ async function checkout() {
         const result = await apiRequest('/order/create', {
             method: 'POST',
             body: JSON.stringify({
-                items: cart.map(i => ({ ...i, type: i.itemType || 'standard' })),
+                items: cart.map(i => ({
+                    id: i.id,
+                    name: i.name,
+                    price: i.price,
+                    qty: i.qty,
+                    product_type: i.product_type || 'poster',
+                    points_rate: i.points_rate || null,
+                    type: i.itemType || 'standard',
+                    selectedVariant: i.selectedVariant || null,
+                })),
                 totalPrice: total,
-                totalBasePoints: totalBasePoints
             })
         });
         if (result.success) {
@@ -4025,7 +4197,8 @@ loadSavedPrizes();
 loadSavedChallenge();
 
 // ─── Init ─────────────────────────────────────────────────
-loadPosters();
+loadShopConfig();       // loads shop type pills + triggers loadPosters()
+loadPosters();          // initial full load
 loadProfile().then(() => loadPrizeLeaderboards());
 buildDiscoverTabs();
 renderCart();
