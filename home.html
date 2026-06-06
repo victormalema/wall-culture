@@ -2441,6 +2441,13 @@
             transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
             backdrop-filter: blur(10px);
         }
+
+        /* ── Search input ── */
+        #storeSearch:focus {
+            border-color: rgba(255,107,53,0.4);
+            box-shadow: 0 0 0 3px rgba(255,107,53,0.12);
+        }
+        #storeSearch::placeholder { color: var(--text-muted); }
     </style>
 <body>
 
@@ -2631,24 +2638,36 @@
 
         <!-- ════ GALLERY SCREEN ════ -->
         <div id="galleryScreen" class="screen">
-            <div class="gallery-header">
-                <h2>Gallery</h2>
-                <p>Tap any artwork to explore</p>
+
+            <!-- Store header -->
+            <div class="gallery-header" style="padding-bottom:4px;">
+                <h2>Store</h2>
+                <p>Browse everything we carry</p>
             </div>
 
-            <div class="category-rail" id="categoryTabs">
-                <div class="cat-pill active" data-cat="all">All</div>
-                <div class="cat-pill" data-cat="aesthetic">✦ Aesthetic</div>
-                <div class="cat-pill" data-cat="girlish">🌸 Girlish</div>
-                <div class="cat-pill" data-cat="motivational">⚡ Motivational</div>
-                <div class="cat-pill" data-cat="musical">🎵 Musical</div>
-                <div class="cat-pill" data-cat="theater">🎭 Theater</div>
-                <div class="cat-pill" data-cat="limited">🔥 Limited</div>
+            <!-- Search bar -->
+            <div style="padding:0 16px 10px;">
+                <div style="position:relative;">
+                    <i class="fas fa-search" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);
+                        color:var(--text-muted);font-size:0.8rem;pointer-events:none;"></i>
+                    <input id="storeSearch" type="text" placeholder="Search products..."
+                        style="width:100%;padding:11px 14px 11px 38px;border-radius:16px;
+                        border:1px solid var(--border);background:var(--bg-card);
+                        color:var(--text-primary);font-family:var(--font-body);font-size:0.85rem;
+                        outline:none;"
+                        oninput="filterGallery()">
+                </div>
             </div>
 
+            <!-- Product type pills (built dynamically from /api/shop/config) -->
+            <div class="category-rail" id="shopTypePills" style="padding-bottom:4px;"></div>
+
+            <!-- Category sub-filter pills (updated per type) -->
+            <div class="category-rail" id="categoryTabs" style="padding-top:0;"></div>
+
+            <!-- Product grid -->
             <div id="galleryGrid">
-                <!-- Hero + grid rendered dynamically -->
-                <div class="loading-state" style="color:var(--text-muted)">Loading gallery...</div>
+                <div class="loading-state" style="color:var(--text-muted)">Loading store...</div>
             </div>
         </div>
 
@@ -2756,8 +2775,8 @@
             <span>Home</span>
         </button>
         <button class="tab-item" data-tab="gallery">
-            <i class="fas fa-images"></i>
-            <span>Gallery</span>
+            <i class="fas fa-store"></i>
+            <span>Store</span>
         </button>
         <button class="tab-item" data-tab="shop">
             <i class="fas fa-bag-shopping"></i>
@@ -2816,122 +2835,6 @@
             </div>
         </div>
     </div>
-</div>
-
-<!-- ══ CLOTHING VIEWER MODAL ══ -->
-<div id="clothingModal" style="
-    display:none; position:fixed; inset:0; z-index:1000;
-    background:rgba(7,7,15,0.97); backdrop-filter:blur(20px);
-    flex-direction:column; overflow-y:auto;
-    animation:modalIn 0.35s ease;
-">
-  <!-- Header -->
-  <div style="display:flex;align-items:center;justify-content:space-between;
-              padding:16px 20px;padding-top:max(16px,env(safe-area-inset-top,16px));
-              position:sticky;top:0;background:rgba(7,7,15,0.9);backdrop-filter:blur(20px);
-              border-bottom:1px solid rgba(255,255,255,0.06);z-index:10;">
-    <button onclick="closeClothingModal()" style="width:38px;height:38px;border-radius:12px;
-      border:1px solid rgba(255,255,255,0.14);background:rgba(255,255,255,0.07);
-      color:#FFF8F5;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;">←</button>
-    <span style="font-family:var(--font-display);font-size:0.9rem;font-weight:700;
-      background:var(--grad-fire);-webkit-background-clip:text;background-clip:text;color:transparent;">
-      Virtual Fitting Room
-    </span>
-    <button onclick="toggleClothingWish()" id="clothingWishBtn" style="width:38px;height:38px;border-radius:12px;
-      border:1px solid rgba(255,255,255,0.14);background:rgba(255,255,255,0.07);
-      color:var(--text-secondary);font-size:18px;cursor:pointer;
-      display:flex;align-items:center;justify-content:center;transition:all 0.25s;">♡</button>
-  </div>
-
-  <!-- Stage -->
-  <div style="position:relative;margin:16px 16px 0;height:370px;border-radius:24px;
-    background:radial-gradient(ellipse at 50% 30%,rgba(123,47,255,0.14) 0%,rgba(7,7,15,0.97) 70%);
-    border:1px solid rgba(255,255,255,0.07);overflow:hidden;cursor:grab;" id="cvStage">
-
-    <div id="cvTrack" style="display:flex;height:100%;transition:transform 0.5s cubic-bezier(0.4,0,0.2,1);will-change:transform;"></div>
-
-    <!-- Angle label -->
-    <div id="cvLabel" style="position:absolute;top:14px;left:50%;transform:translateX(-50%);
-      background:rgba(7,7,15,0.75);backdrop-filter:blur(12px);
-      border:1px solid rgba(255,255,255,0.12);border-radius:20px;
-      padding:5px 14px;font-size:0.62rem;font-weight:800;letter-spacing:1.5px;
-      color:rgba(255,248,245,0.4);pointer-events:none;text-transform:uppercase;"></div>
-
-    <!-- Arrows -->
-    <div style="position:absolute;top:50%;transform:translateY(-50%);
-                width:100%;display:flex;justify-content:space-between;padding:0 12px;z-index:5;pointer-events:none;">
-      <button onclick="cvPrev()" style="pointer-events:all;width:36px;height:36px;border-radius:50%;
-        border:1px solid rgba(255,255,255,0.14);background:rgba(7,7,15,0.7);
-        color:rgba(255,248,245,0.6);font-size:14px;cursor:pointer;
-        display:flex;align-items:center;justify-content:center;">‹</button>
-      <button onclick="cvNext()" style="pointer-events:all;width:36px;height:36px;border-radius:50%;
-        border:1px solid rgba(255,255,255,0.14);background:rgba(7,7,15,0.7);
-        color:rgba(255,248,245,0.6);font-size:14px;cursor:pointer;
-        display:flex;align-items:center;justify-content:center;">›</button>
-    </div>
-
-    <!-- Auto badge -->
-    <div id="cvAutoBadge" onclick="cvToggleAuto()" style="position:absolute;bottom:42px;right:14px;
-      padding:5px 10px;border-radius:20px;border:1px solid rgba(255,107,53,0.4);
-      background:rgba(7,7,15,0.75);font-size:0.6rem;font-weight:800;letter-spacing:0.5px;
-      color:var(--primary);cursor:pointer;z-index:5;">⟳ AUTO</div>
-
-    <!-- Dots -->
-    <div id="cvDots" style="position:absolute;bottom:14px;left:0;right:0;
-      display:flex;align-items:center;justify-content:center;gap:7px;z-index:5;"></div>
-  </div>
-
-  <!-- Thumbnails -->
-  <div id="cvThumbs" style="display:flex;gap:8px;padding:12px 16px;overflow-x:auto;scrollbar-width:none;"></div>
-
-  <!-- Product info -->
-  <div style="padding:4px 20px 0;">
-    <div style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;
-      background:rgba(123,47,255,0.15);border:1px solid rgba(123,47,255,0.3);
-      font-size:0.62rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;
-      color:#A78BFA;margin-bottom:8px;" id="cvTypeBadge">👕 Clothing</div>
-    <div style="font-family:var(--font-display);font-size:1.2rem;font-weight:800;margin-bottom:6px;" id="cvName">—</div>
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
-      <span style="font-family:var(--font-display);font-size:1.05rem;font-weight:800;
-        background:var(--grad-fire);-webkit-background-clip:text;background-clip:text;color:transparent;" id="cvPrice">—</span>
-      <span style="background:rgba(255,107,53,0.12);border:1px solid rgba(255,107,53,0.25);
-        border-radius:12px;padding:3px 10px;font-size:0.72rem;font-weight:700;color:var(--primary);" id="cvCoins">—</span>
-      <span style="font-size:0.72rem;color:#4ade80;" id="cvStock">● In stock</span>
-    </div>
-  </div>
-
-  <!-- Color -->
-  <div style="padding:0 20px;margin-bottom:4px;">
-    <div style="font-size:0.62rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;
-      color:rgba(255,248,245,0.32);margin-bottom:8px;">
-      Color — <span id="cvColorName" style="color:#FFF8F5;text-transform:none;letter-spacing:0;font-weight:700;"></span>
-    </div>
-    <div id="cvColorRow" style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;"></div>
-  </div>
-
-  <!-- Size -->
-  <div style="padding:0 20px;margin-bottom:4px;">
-    <div style="font-size:0.62rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;
-      color:rgba(255,248,245,0.32);margin-bottom:8px;">
-      Size — <span id="cvSizeName" style="color:#FFF8F5;text-transform:none;letter-spacing:0;font-weight:700;"></span>
-    </div>
-    <div id="cvSizeRow" style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;"></div>
-  </div>
-
-  <!-- Spec chips -->
-  <div id="cvSpecs" style="display:flex;gap:8px;padding:0 20px 16px;overflow-x:auto;scrollbar-width:none;"></div>
-
-  <!-- CTA -->
-  <div style="padding:0 20px 40px;display:flex;gap:10px;margin-top:auto;">
-    <button class="modal-btn modal-btn-secondary" onclick="closeClothingModal()" style="flex:0 0 auto;padding:14px 18px;">
-      <i class="fas fa-chevron-left"></i> Back
-    </button>
-    <button id="cvAddBtn" onclick="cvAddToCart()" style="flex:1;padding:15px;border-radius:16px;border:none;
-      background:var(--grad-fire);color:#fff;font-family:var(--font-display);font-size:0.9rem;
-      font-weight:800;cursor:pointer;box-shadow:0 6px 24px rgba(255,107,53,0.4);">
-      <i class="fas fa-cart-plus"></i> Add to Cart
-    </button>
-  </div>
 </div>
 
 <!-- ══ REFERRAL MODAL ══ -->
@@ -3199,28 +3102,107 @@ document.querySelectorAll('.tab-item').forEach(tab => {
 });
 
 // ─── Load Posters ────────────────────────────────────────
-async function loadPosters() {
+// ─── Active filters ──────────────────────────────────────
+let activeShopType = null;   // null = all types
+let activeCategory = 'all';
+let shopConfig     = {};     // loaded from /api/shop/config
+
+// ─── Load shop config and build type pills ────────────────
+async function loadShopConfig() {
     try {
-        const posters = await apiRequest('/posters');
-        if (Array.isArray(posters) && posters.length > 0) {
-            allPosters = posters;
-        } else if (posters && posters.error) {
-            console.error('Posters API error:', posters.error);
-            allPosters = [];
-        } else {
-            // API returned empty array — show placeholders so UI isn't blank
-            allPosters = [];
-        }
+        const cfg = await fetch('/api/shop/config').then(r => r.json());
+        shopConfig = cfg;
+        buildShopTypePills(cfg);
+    } catch(e) { console.error('loadShopConfig failed:', e); }
+}
+
+function buildShopTypePills(cfg) {
+    const rail = document.getElementById('shopTypePills');
+    if (!rail) return;
+    rail.innerHTML = '';
+
+    const allPill = document.createElement('div');
+    allPill.className = 'cat-pill active';
+    allPill.textContent = '🛍️ All';
+    allPill.dataset.type = '';
+    allPill.onclick = () => selectShopType(null, allPill);
+    rail.appendChild(allPill);
+
+    Object.entries(cfg).forEach(([type, info]) => {
+        const pill = document.createElement('div');
+        pill.className = 'cat-pill';
+        pill.textContent = `${info.emoji} ${info.label}`;
+        pill.dataset.type = type;
+        pill.onclick = () => selectShopType(type, pill);
+        rail.appendChild(pill);
+    });
+}
+
+function selectShopType(type, el) {
+    document.querySelectorAll('#shopTypePills .cat-pill').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+    activeShopType = type || null;
+    activeCategory = 'all';
+    buildCategoryPills();
+    loadPosters();
+}
+
+// Build category sub-filter based on current products
+function buildCategoryPills() {
+    const rail = document.getElementById('categoryTabs');
+    if (!rail) return;
+    // Get unique categories from current data
+    const cats = ['all', ...new Set(allPosters.map(p => p.category).filter(Boolean))];
+    rail.innerHTML = '';
+    cats.forEach(cat => {
+        const pill = document.createElement('div');
+        pill.className = `cat-pill${cat === activeCategory ? ' active' : ''}`;
+        pill.textContent = cat === 'all' ? 'All' : cat.charAt(0).toUpperCase() + cat.slice(1);
+        pill.dataset.cat = cat;
+        pill.onclick = () => {
+            document.querySelectorAll('#categoryTabs .cat-pill').forEach(p => p.classList.remove('active'));
+            pill.classList.add('active');
+            activeCategory = cat;
+            renderTonalGallery();
+        };
+        rail.appendChild(pill);
+    });
+}
+
+// ─── Load Products (universal) ───────────────────────────
+async function loadPosters() {
+    const grid = document.getElementById('galleryGrid');
+    if (grid) grid.innerHTML = '<div class="loading-state" style="color:var(--text-muted)">Loading store...</div>';
+    try {
+        const url = activeShopType ? `/products?type=${activeShopType}` : '/products';
+        const products = await apiRequest(url);
+        allPosters = Array.isArray(products) ? products : [];
     } catch(e) {
-        console.error('loadPosters failed:', e);
+        console.error('loadProducts failed:', e);
         allPosters = [];
     }
+    buildCategoryPills();
     renderDiscoverFeed();
     renderTonalGallery();
 }
 
-function posterImg(poster) {
-    return poster.image_url || `https://picsum.photos/seed/${poster.id || Math.random()}/400/600`;
+// ─── Search filter ────────────────────────────────────────
+function filterGallery() {
+    renderTonalGallery();
+}
+
+function productImg(product) {
+    return product.image_url || `https://picsum.photos/seed/${product.id || Math.random()}/400/600`;
+}
+
+// backwards compat alias
+function posterImg(poster) { return productImg(poster); }
+
+// ─── Product type badge ───────────────────────────────────
+function productTypeBadge(product) {
+    const ptype  = product.product_type || 'poster';
+    const config = shopConfig[ptype] || { emoji: '🛍️', label: ptype };
+    return `${config.emoji} ${config.label}`;
 }
 
 // ─── Recently Viewed ─────────────────────────────────────
@@ -3256,16 +3238,23 @@ function renderRecents() {
 // ─── DISCOVER FEED (Home screen horizontal) ──────────────
 function buildDiscoverTabs() {
     const container = document.getElementById('discoverTabsContainer');
-    const cats = ['all', 'aesthetic', 'girlish', 'motivational', 'musical', 'theater', 'limited'];
+    if (!container) return;
+    // Build from loaded product types + all
+    const types = ['all', ...new Set(allPosters.map(p => p.product_type).filter(Boolean))];
     container.innerHTML = '';
-    cats.forEach(cat => {
+    types.forEach(type => {
         const pill = document.createElement('div');
-        pill.className = `discover-tab ${discoverCategory === cat ? 'active' : ''}`;
-        pill.textContent = cat === 'all' ? 'All' : cat.charAt(0).toUpperCase() + cat.slice(1);
+        pill.className = `discover-tab ${discoverCategory === type ? 'active' : ''}`;
+        if (type === 'all') {
+            pill.textContent = '🛍️ All';
+        } else {
+            const cfg = shopConfig[type] || { emoji: '', label: type };
+            pill.textContent = `${cfg.emoji} ${cfg.label}`;
+        }
         pill.onclick = () => {
             document.querySelectorAll('.discover-tab').forEach(p => p.classList.remove('active'));
             pill.classList.add('active');
-            discoverCategory = cat;
+            discoverCategory = type;
             renderDiscoverFeed();
         };
         container.appendChild(pill);
@@ -3277,29 +3266,37 @@ function renderDiscoverFeed() {
     const container = document.getElementById('feedContainer');
     let data = (discoverCategory === 'all')
         ? allPosters
-        : allPosters.filter(p => (p.category || '').toLowerCase() === discoverCategory.toLowerCase());
+        : allPosters.filter(p =>
+            (p.product_type || '').toLowerCase() === discoverCategory.toLowerCase() ||
+            (p.category || '').toLowerCase() === discoverCategory.toLowerCase()
+          );
 
     if (!data.length) {
-        container.innerHTML = '<div class="loading-state">✨ No posters in this vibe yet</div>';
+        container.innerHTML = '<div class="loading-state">✨ No products in this section yet</div>';
         return;
     }
     container.innerHTML = '';
-    data.slice(0, 10).forEach((poster, idx) => {
-        const isFav = favorites.includes(poster.id);
+    data.slice(0, 10).forEach((product, idx) => {
+        const isFav = favorites.includes(product.id);
         const card = document.createElement('div');
         card.className = `poster-feed-card${idx === 0 ? ' active' : ''}`;
         card.innerHTML = `
-            <img class="poster-feed-image" src="${posterImg(poster)}" alt="${poster.name}" loading="lazy" crossorigin="anonymous">
+            <img class="poster-feed-image" src="${productImg(product)}" alt="${product.name}" loading="lazy" crossorigin="anonymous">
             <button class="poster-fav ${isFav ? 'liked' : ''}"><i class="fas fa-heart"></i></button>
             <button class="poster-add"><i class="fas fa-plus"></i></button>
+            <div style="position:absolute;top:10px;left:10px;background:rgba(7,7,15,0.75);
+                backdrop-filter:blur(8px);border-radius:8px;padding:3px 8px;
+                font-size:0.6rem;font-weight:800;color:rgba(255,248,245,0.8);">
+                ${productTypeBadge(product)}
+            </div>
             <div class="poster-overlay">
-                <div class="poster-feed-name">${poster.name}</div>
-                <div class="poster-feed-meta">KSH ${poster.price} · ✦ ${poster.points || 0}</div>
+                <div class="poster-feed-name">${product.name}</div>
+                <div class="poster-feed-meta">KSH ${product.price} · ✦ ${product.points || 0}</div>
             </div>
         `;
-        card.querySelector('.poster-fav').addEventListener('click', e => { e.stopPropagation(); toggleFav(poster.id); renderDiscoverFeed(); });
-        card.querySelector('.poster-add').addEventListener('click', e => { e.stopPropagation(); addToCart({ ...poster, itemType: poster.is_limited ? 'limited' : 'standard' }); });
-        card.addEventListener('click', () => openModal(poster));
+        card.querySelector('.poster-fav').addEventListener('click', e => { e.stopPropagation(); toggleFav(product.id); renderDiscoverFeed(); });
+        card.querySelector('.poster-add').addEventListener('click', e => { e.stopPropagation(); addToCart({ ...product, itemType: product.is_limited ? 'limited' : 'standard' }); });
+        card.addEventListener('click', () => openModal(product));
         container.appendChild(card);
     });
     setupScrollCenter(container);
@@ -3334,135 +3331,157 @@ function startAutoScroll(container) {
     }, 4000);
 }
 
-// ─── GALLERY SCREEN (Tonal-inspired) ─────────────────────
+// ─── STORE GALLERY (Universal product grid) ─────────────
 function renderTonalGallery() {
     const container = document.getElementById('galleryGrid');
-    let data = currentGalleryCategory === 'all'
+    if (!container) return;
+
+    const searchQ = (document.getElementById('storeSearch')?.value || '').toLowerCase().trim();
+
+    let data = (activeCategory === 'all')
         ? allPosters
-        : allPosters.filter(p => p.category === currentGalleryCategory);
+        : allPosters.filter(p => (p.category || '').toLowerCase() === activeCategory.toLowerCase());
+
+    if (searchQ) {
+        data = data.filter(p =>
+            (p.name || '').toLowerCase().includes(searchQ) ||
+            (p.category || '').toLowerCase().includes(searchQ) ||
+            (p.product_type || '').toLowerCase().includes(searchQ)
+        );
+    }
 
     if (!data.length) {
-        container.innerHTML = '<div class="loading-state" style="color:var(--text-muted)">No artwork in this category yet</div>';
+        container.innerHTML = `<div class="loading-state" style="color:var(--text-muted)">
+            ${searchQ ? '🔍 No products match your search' : '✨ No products in this section yet'}
+        </div>`;
         return;
     }
 
     container.innerHTML = '';
 
-    // ── Hero Card ──
+    // ── Featured Hero Card ──────────────────────────────────
     const hero = data[0];
     const heroCard = document.createElement('div');
     heroCard.className = 'hero-card';
     heroCard.style.margin = '0 16px 8px';
     const isFavHero = favorites.includes(hero.id);
+    const ptype = hero.product_type || 'poster';
 
-    // Build thumbnail list (next 3 items after hero)
     const thumbPreviews = data.slice(1, 4);
     const thumbsHTML = thumbPreviews.map((p, i) => `
         <img class="hero-thumb${i === 0 ? ' active-thumb' : ''}"
-             src="${posterImg(p)}" alt=""
+             src="${productImg(p)}" alt=""
              loading="lazy"
-             onclick="event.stopPropagation(); switchHero(this, '${posterImg(p)}', '${escapeSafe(p.name)}')">
+             onclick="event.stopPropagation(); switchHero(this, '${productImg(p)}', '${escapeSafe(p.name)}')">
     `).join('');
 
     heroCard.innerHTML = `
-        <img class="hero-img" id="heroMainImg" src="${posterImg(hero)}" alt="${hero.name}" crossorigin="anonymous" loading="lazy">
+        <img class="hero-img" id="heroMainImg" src="${productImg(hero)}" alt="${hero.name}" crossorigin="anonymous" loading="lazy">
         <div class="hero-gradient"></div>
-        <div class="hero-badge">${hero.category || 'Featured'}</div>
+        <div class="hero-badge">${productTypeBadge(hero)}</div>
         <button class="hero-fav ${isFavHero ? 'liked' : ''}" id="heroFavBtn">
             <i class="fas fa-heart"></i>
         </button>
         <div class="hero-info">
             <div class="hero-info-main">
                 <div class="hero-title">${hero.name}</div>
-                <div class="hero-desc">${hero.description || 'Premium art print — limited edition'}</div>
+                <div class="hero-desc">${hero.description || ''}</div>
                 <div class="hero-price">
                     <span class="price-tag">KSH ${hero.price}</span>
-                    <span style="color:rgba(255,255,255,0.5); font-size:0.72rem;">✦ ${hero.points || 0} coins</span>
+                    <span style="color:rgba(255,255,255,0.5);font-size:0.72rem;">✦ ${hero.points || 0} coins</span>
+                    ${hero.is_limited ? '<span style="background:rgba(255,60,172,0.3);border:1px solid rgba(255,60,172,0.5);border-radius:8px;padding:2px 8px;font-size:0.62rem;font-weight:800;color:#FF3CAC;margin-left:4px;">LIMITED</span>' : ''}
                 </div>
             </div>
             ${thumbsHTML ? `<div class="hero-thumbs">${thumbsHTML}</div>` : ''}
         </div>
     `;
-
     heroCard.addEventListener('click', () => openModal(hero));
     heroCard.querySelector('.hero-fav').addEventListener('click', e => {
         e.stopPropagation();
         toggleFav(hero.id);
         heroCard.querySelector('.hero-fav').classList.toggle('liked', favorites.includes(hero.id));
     });
-
-    // Apply theme from hero image after load
     const heroImg = heroCard.querySelector('.hero-img');
-    heroImg.onload = () => extractAndApplyColor(heroImg);
-
+    if (ptype === 'poster') heroImg.onload = () => extractAndApplyColor(heroImg);
     container.appendChild(heroCard);
 
-    // ── "More Like This" horizontal scroll ──
+    // ── Horizontal scroll "More" ────────────────────────────
     if (data.length > 1) {
         const moreHeader = document.createElement('div');
         moreHeader.className = 'section-header';
-        moreHeader.innerHTML = `
-            <span class="section-title">More Like This</span>
-            <span class="section-link">View All</span>
-        `;
+        moreHeader.innerHTML = `<span class="section-title">More Products</span><span class="section-link">View All</span>`;
         container.appendChild(moreHeader);
 
         const hScroll = document.createElement('div');
         hScroll.className = 'h-scroll';
 
-        data.slice(1, 9).forEach(poster => {
-            const isFav = favorites.includes(poster.id);
+        data.slice(1, 9).forEach(product => {
+            const isFav = favorites.includes(product.id);
             const hCard = document.createElement('div');
             hCard.className = 'h-card';
             hCard.innerHTML = `
                 <div class="h-card-img-wrap">
-                    <img class="h-card-img" src="${posterImg(poster)}" alt="${poster.name}" loading="lazy">
+                    <img class="h-card-img" src="${productImg(product)}" alt="${product.name}" loading="lazy">
                     <div class="h-card-overlay"></div>
                     <button class="h-card-fav ${isFav ? 'liked' : ''}"><i class="fas fa-heart"></i></button>
+                    <div style="position:absolute;top:8px;left:8px;background:rgba(7,7,15,0.75);
+                        backdrop-filter:blur(8px);border-radius:8px;padding:3px 8px;
+                        font-size:0.58rem;font-weight:800;color:rgba(255,248,245,0.7);">
+                        ${productTypeBadge(product)}
+                    </div>
                 </div>
                 <div class="h-card-info">
-                    <div class="h-card-name">${poster.name}</div>
-                    <div class="h-card-price">KSH ${poster.price}</div>
+                    <div class="h-card-name">${product.name}</div>
+                    <div class="h-card-price">KSH ${product.price}</div>
                 </div>
             `;
             hCard.querySelector('.h-card-fav').addEventListener('click', e => {
                 e.stopPropagation();
-                toggleFav(poster.id);
-                hCard.querySelector('.h-card-fav').classList.toggle('liked', favorites.includes(poster.id));
+                toggleFav(product.id);
+                hCard.querySelector('.h-card-fav').classList.toggle('liked', favorites.includes(product.id));
             });
-            hCard.addEventListener('click', () => openModal(poster));
+            hCard.addEventListener('click', () => openModal(product));
             hScroll.appendChild(hCard);
         });
-
         container.appendChild(hScroll);
     }
 
-    // ── Grid Section ──
+    // ── Main grid ─────────────────────────────────────────
     if (data.length > 1) {
         const gridHeader = document.createElement('div');
         gridHeader.className = 'section-header';
-        gridHeader.innerHTML = `<span class="section-title">All Artworks</span>`;
+        gridHeader.innerHTML = `<span class="section-title">All Products</span>
+            <span style="font-size:0.72rem;color:var(--text-muted);">${data.length} items</span>`;
         container.appendChild(gridHeader);
 
         const grid = document.createElement('div');
         grid.className = 'gallery-grid';
 
-        data.slice(1).forEach(poster => {
+        data.slice(1).forEach(product => {
             const gc = document.createElement('div');
             gc.className = 'grid-card';
-            const isFav = favorites.includes(poster.id);
+            const isFav = favorites.includes(product.id);
             gc.innerHTML = `
-                <img src="${posterImg(poster)}" alt="${poster.name}" loading="lazy">
+                <img src="${productImg(product)}" alt="${product.name}" loading="lazy">
                 <div class="grid-overlay"></div>
+                <div style="position:absolute;top:8px;left:8px;
+                    background:rgba(7,7,15,0.7);backdrop-filter:blur(8px);
+                    border-radius:8px;padding:2px 7px;
+                    font-size:0.56rem;font-weight:800;color:rgba(255,248,245,0.75);">
+                    ${productTypeBadge(product)}
+                </div>
+                ${product.is_limited ? `<div style="position:absolute;top:8px;right:8px;
+                    background:rgba(255,60,172,0.35);border:1px solid rgba(255,60,172,0.6);
+                    border-radius:8px;padding:2px 7px;font-size:0.56rem;font-weight:800;color:#FF3CAC;">
+                    LIMITED</div>` : ''}
                 <div class="grid-info">
-                    <span class="grid-name">${poster.name}</span>
-                    <span class="grid-price">KSH ${poster.price}</span>
+                    <span class="grid-name">${product.name}</span>
+                    <span class="grid-price">KSH ${product.price}</span>
                 </div>
             `;
-            gc.addEventListener('click', () => openModal(poster));
+            gc.addEventListener('click', () => openModal(product));
             grid.appendChild(gc);
         });
-
         container.appendChild(grid);
     }
 }
@@ -3492,12 +3511,6 @@ document.getElementById('categoryTabs').addEventListener('click', e => {
 
 // ─── Fullscreen Modal ─────────────────────────────────────
 function openModal(poster) {
-    // Route clothing products to the dedicated viewer
-    if (poster.product_type === 'clothing') {
-        openClothingModal(poster);
-        return;
-    }
-
     currentModalPoster = poster;
     addToRecents(poster);
 
@@ -3510,8 +3523,10 @@ function openModal(poster) {
     bg.style.backgroundImage = `url(${src})`;
     document.getElementById('modalTitleBar').textContent = poster.name;
     document.getElementById('modalItemName').textContent = poster.name;
+    const ptype = poster.product_type || 'poster';
+    const ptypeLabel = (shopConfig[ptype] || {}).label || ptype;
     document.getElementById('modalItemMeta').textContent =
-        `${poster.category || 'Art Print'} · ✦ ${poster.points || 0} coins`;
+        `${ptypeLabel}${poster.category ? ' · ' + poster.category : ''} · ✦ ${poster.points || 0} coins`;
     document.getElementById('modalItemPrice').textContent = `KSH ${poster.price}`;
     document.getElementById('modalAddBtn').onclick = () => { addToCart({ ...poster, itemType: poster.is_limited ? 'limited' : 'standard' }); closeModal(); };
 
@@ -4147,377 +4162,12 @@ loadSavedPrizes();
 loadSavedChallenge();
 
 // ─── Init ─────────────────────────────────────────────────
-loadPosters();
+loadShopConfig().then(() => {
+    loadPosters().then(() => buildDiscoverTabs());
+});
 loadProfile().then(() => loadPrizeLeaderboards());
-buildDiscoverTabs();
 renderCart();
 renderRecents();
-
-// ═══════════════════════════════════════════════════════
-//  CLOTHING VIEWER — Rotating Product Photo Display
-// ═══════════════════════════════════════════════════════
-
-let cvProduct      = null;   // current product object
-let cvCurrentColor = 0;      // index into cvColors
-let cvCurrentSlide = 0;
-let cvCurrentSize  = 0;
-let cvColors       = [];     // built from product.variants
-let cvWishlisted   = false;
-let cvAutoPlay     = true;
-let cvAutoTimer    = null;
-let cvDragStartX   = 0;
-let cvDragDeltaX   = 0;
-let cvDragging     = false;
-
-// Default views used when the product has only one image_url
-function cvDefaultViews(imageUrl, colorHex) {
-    const labels = ['FRONT','SIDE','BACK','DETAIL'];
-    const emojis = ['👕','👔','🔄','🔍'];
-    return labels.map((label, i) => ({
-        label,
-        url: imageUrl || null,
-        emoji: emojis[i],
-        bg: colorHex || '#1a1a1a',
-    }));
-}
-
-function openClothingModal(product) {
-    cvProduct    = product;
-    cvWishlisted = favorites.includes(product.id);
-    cvCurrentSlide = 0;
-    cvCurrentColor = 0;
-    cvAutoPlay   = true;
-
-    // Build color list from variants or fallback to single color
-    const variants = product.variants || {};
-    const colorList = variants.colors || ['Default'];
-    cvColors = colorList.map((name, i) => {
-        const hex = name.toLowerCase() === 'black'  ? '#1a1a1a'
-                  : name.toLowerCase() === 'white'  ? '#e8e2d8'
-                  : name.toLowerCase() === 'orange' ? '#FF6B35'
-                  : name.toLowerCase() === 'pink'   ? '#FF3CAC'
-                  : name.toLowerCase() === 'purple' ? '#7B2FFF'
-                  : '#555555';
-        return {
-            name,
-            hex,
-            views: cvDefaultViews(product.image_url, hex),
-        };
-    });
-
-    // Populate static fields
-    document.getElementById('cvName').textContent  = product.name;
-    document.getElementById('cvPrice').textContent = `KSH ${product.price}`;
-    document.getElementById('cvCoins').textContent = `✦ ${(product.points || 0).toLocaleString()} coins`;
-    document.getElementById('cvTypeBadge').textContent = `👕 ${product.category || 'Clothing'}`;
-    document.getElementById('cvColorName').textContent = cvColors[0].name;
-
-    const sizeList = (product.variants || {}).sizes || [];
-    document.getElementById('cvSizeName').textContent = sizeList[0] || '—';
-    cvCurrentSize = 0;
-
-    // Build spec chips from product data
-    const specs = document.getElementById('cvSpecs');
-    specs.innerHTML = '';
-    const specData = [
-        ['Oversized','Fit'], ['100%','Cotton'], ['280','GSM'], ['Dropped','Shoulder'],
-    ];
-    specData.forEach(([strong, label]) => {
-        specs.innerHTML += `<div style="flex-shrink:0;padding:8px 14px;border-radius:14px;
-            border:1px solid rgba(255,255,255,0.07);background:rgba(255,255,255,0.055);
-            font-size:0.7rem;color:rgba(255,248,245,0.6);">
-            <strong style="display:block;font-size:0.78rem;font-weight:800;color:#FFF8F5;margin-bottom:1px;">${strong}</strong>${label}
-        </div>`;
-    });
-
-    // Build sizes
-    cvBuildSizes(sizeList);
-
-    // Build colors + slides
-    cvBuildColorSwatches();
-    cvBuildSlides();
-    cvBuildDots();
-    cvBuildThumbs();
-    cvUpdateLabel();
-
-    // Wishlist button
-    const wb = document.getElementById('clothingWishBtn');
-    wb.textContent = cvWishlisted ? '♥' : '♡';
-    wb.style.color = cvWishlisted ? '#FF3CAC' : '';
-
-    // Show modal
-    const modal = document.getElementById('clothingModal');
-    modal.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-
-    cvStartAuto();
-    cvBindSwipe();
-}
-
-function closeClothingModal() {
-    document.getElementById('clothingModal').style.display = 'none';
-    document.body.style.overflow = '';
-    clearInterval(cvAutoTimer);
-    cvUnbindSwipe();
-}
-
-// ── Slides ────────────────────────────────────────
-function cvBuildSlides() {
-    const track  = document.getElementById('cvTrack');
-    const views  = cvColors[cvCurrentColor].views;
-    track.innerHTML = '';
-    track.style.width = `${views.length * 100}%`;
-
-    views.forEach((v, i) => {
-        const slide = document.createElement('div');
-        slide.style.cssText = `width:${100/views.length}%;height:100%;flex-shrink:0;
-            display:flex;align-items:center;justify-content:center;position:relative;`;
-
-        if (v.url) {
-            slide.innerHTML = `<img src="${v.url}" alt="${v.label}"
-                style="max-width:82%;max-height:88%;object-fit:contain;border-radius:16px;
-                filter:drop-shadow(0 20px 50px rgba(0,0,0,0.8));pointer-events:none;
-                transition:transform 0.5s;${i===cvCurrentSlide?'transform:scale(1.04)':''}" >`;
-        } else {
-            slide.innerHTML = `<div style="width:76%;height:82%;border-radius:20px;
-                background:linear-gradient(160deg,${v.bg}dd,${v.bg}66);
-                display:flex;flex-direction:column;align-items:center;justify-content:center;
-                gap:10px;border:1px solid rgba(255,255,255,0.08);
-                box-shadow:0 24px 60px rgba(0,0,0,0.7);">
-                <div style="font-size:4rem;filter:drop-shadow(0 8px 20px rgba(0,0,0,0.5));">${v.emoji}</div>
-                <div style="font-size:0.65rem;font-weight:800;letter-spacing:2px;
-                    color:rgba(255,255,255,0.3);text-transform:uppercase;">${v.label} VIEW</div>
-            </div>`;
-        }
-        track.appendChild(slide);
-    });
-    cvGoTo(cvCurrentSlide, false);
-}
-
-function cvGoTo(idx, animate=true) {
-    const views = cvColors[cvCurrentColor].views;
-    cvCurrentSlide = ((idx % views.length) + views.length) % views.length;
-    const track = document.getElementById('cvTrack');
-    if (!animate) track.style.transition = 'none';
-    track.style.transform = `translateX(-${cvCurrentSlide*(100/views.length)}%)`;
-    if (!animate) requestAnimationFrame(() => { track.style.transition = ''; });
-
-    // Update dots & thumbs
-    document.querySelectorAll('#cvDots .cv-dot').forEach((d,i) =>
-        d.style.cssText = `width:${i===cvCurrentSlide?'22px':'7px'};height:7px;border-radius:${i===cvCurrentSlide?'4px':'50%'};
-            background:${i===cvCurrentSlide?'var(--primary)':'rgba(255,248,245,0.25)'};
-            cursor:pointer;transition:all 0.3s;`
-    );
-    document.querySelectorAll('#cvThumbs .cv-thumb').forEach((t,i) => {
-        t.style.borderColor = i===cvCurrentSlide ? 'var(--primary)' : 'transparent';
-        t.style.boxShadow   = i===cvCurrentSlide ? '0 0 0 3px rgba(255,107,53,0.25)' : 'none';
-    });
-    cvUpdateLabel();
-}
-
-function cvNext() { cvGoTo(cvCurrentSlide+1); cvResetAuto(); }
-function cvPrev() { cvGoTo(cvCurrentSlide-1); cvResetAuto(); }
-function cvUpdateLabel() {
-    const views = cvColors[cvCurrentColor].views;
-    document.getElementById('cvLabel').textContent = views[cvCurrentSlide]?.label || '';
-}
-
-// ── Dots & thumbs ─────────────────────────────────
-function cvBuildDots() {
-    const dotsEl = document.getElementById('cvDots');
-    const views  = cvColors[cvCurrentColor].views;
-    dotsEl.innerHTML = '';
-    views.forEach((_, i) => {
-        const d = document.createElement('div');
-        d.className = 'cv-dot';
-        d.style.cssText = `width:${i===0?'22px':'7px'};height:7px;
-            border-radius:${i===0?'4px':'50%'};
-            background:${i===0?'var(--primary)':'rgba(255,248,245,0.25)'};
-            cursor:pointer;transition:all 0.3s;`;
-        d.onclick = () => { cvGoTo(i); cvResetAuto(); };
-        dotsEl.appendChild(d);
-    });
-}
-
-function cvBuildThumbs() {
-    const strip = document.getElementById('cvThumbs');
-    const views = cvColors[cvCurrentColor].views;
-    strip.innerHTML = '';
-    views.forEach((v, i) => {
-        const t = document.createElement('div');
-        t.className = 'cv-thumb';
-        t.style.cssText = `flex-shrink:0;width:58px;height:68px;border-radius:14px;
-            border:2px solid ${i===0?'var(--primary)':'transparent'};
-            background:rgba(255,255,255,0.055);overflow:hidden;cursor:pointer;
-            transition:all 0.25s;`;
-        if (v.url) {
-            t.innerHTML = `<img src="${v.url}" style="width:100%;height:100%;object-fit:cover;">`;
-        } else {
-            t.innerHTML = `<div style="width:100%;height:100%;display:flex;align-items:center;
-                justify-content:center;font-size:1.4rem;
-                background:linear-gradient(135deg,${v.bg}cc,${v.bg}66);">${v.emoji}</div>`;
-        }
-        t.onclick = () => { cvGoTo(i); cvResetAuto(); };
-        strip.appendChild(t);
-    });
-}
-
-// ── Color swatches ────────────────────────────────
-function cvBuildColorSwatches() {
-    const row = document.getElementById('cvColorRow');
-    row.innerHTML = '';
-    cvColors.forEach((c, i) => {
-        const sw = document.createElement('div');
-        sw.style.cssText = `width:32px;height:32px;border-radius:50%;cursor:pointer;
-            background:${c.hex};flex-shrink:0;
-            border:2px solid ${i===cvCurrentColor?'rgba(255,255,255,0.8)':'transparent'};
-            transform:${i===cvCurrentColor?'scale(1.18)':'scale(1)'};
-            box-shadow:${i===cvCurrentColor?'0 0 0 3px rgba(255,107,53,0.4)':'none'};
-            transition:all 0.25s;position:relative;`;
-        sw.title = c.name;
-        sw.onclick = () => cvSelectColor(i);
-        row.appendChild(sw);
-    });
-}
-
-function cvSelectColor(idx) {
-    cvCurrentColor = idx;
-    cvCurrentSlide = 0;
-    document.getElementById('cvColorName').textContent = cvColors[idx].name;
-    cvBuildColorSwatches();
-    cvBuildSlides();
-    cvBuildDots();
-    cvBuildThumbs();
-    showToast(`Color: ${cvColors[idx].name}`);
-    cvResetAuto();
-}
-
-// ── Sizes ─────────────────────────────────────────
-function cvBuildSizes(sizes) {
-    const row = document.getElementById('cvSizeRow');
-    row.innerHTML = '';
-    if (!sizes || !sizes.length) {
-        row.innerHTML = '<span style="color:rgba(255,248,245,0.32);font-size:0.8rem;">One size</span>';
-        return;
-    }
-    sizes.forEach((s, i) => {
-        const chip = document.createElement('button');
-        chip.style.cssText = `min-width:46px;padding:9px 14px;border-radius:12px;
-            border:1px solid ${i===0?'transparent':'rgba(255,255,255,0.14)'};
-            background:${i===0?'var(--grad-fire)':'rgba(255,255,255,0.055)'};
-            color:${i===0?'#fff':'rgba(255,248,245,0.6)'};font-size:0.8rem;font-weight:700;
-            cursor:pointer;transition:all 0.25s;text-align:center;font-family:var(--font-body);
-            box-shadow:${i===0?'0 4px 14px rgba(255,107,53,0.4)':'none'};`;
-        chip.textContent = s;
-        chip.onclick = () => cvSelectSize(i, chip, sizes);
-        row.appendChild(chip);
-    });
-}
-
-function cvSelectSize(idx, el, sizes) {
-    cvCurrentSize = idx;
-    document.getElementById('cvSizeName').textContent = sizes[idx];
-    el.closest('div').querySelectorAll('button').forEach((b, i) => {
-        b.style.background   = i===idx ? 'var(--grad-fire)' : 'rgba(255,255,255,0.055)';
-        b.style.borderColor  = i===idx ? 'transparent' : 'rgba(255,255,255,0.14)';
-        b.style.color        = i===idx ? '#fff' : 'rgba(255,248,245,0.6)';
-        b.style.boxShadow    = i===idx ? '0 4px 14px rgba(255,107,53,0.4)' : 'none';
-    });
-    showToast(`Size: ${sizes[idx]}`);
-}
-
-// ── Wishlist ──────────────────────────────────────
-function toggleClothingWish() {
-    if (!cvProduct) return;
-    cvWishlisted = !cvWishlisted;
-    toggleFav(cvProduct.id);
-    const wb = document.getElementById('clothingWishBtn');
-    wb.textContent = cvWishlisted ? '♥' : '♡';
-    wb.style.color = cvWishlisted ? '#FF3CAC' : '';
-    showToast(cvWishlisted ? '❤️ Saved to wishlist' : 'Removed from wishlist');
-}
-
-// ── Add to cart ───────────────────────────────────
-function cvAddToCart() {
-    if (!cvProduct) return;
-    const sizes  = (cvProduct.variants || {}).sizes || [];
-    const size   = sizes[cvCurrentSize] || null;
-    const color  = cvColors[cvCurrentColor]?.name || null;
-    const variant = {};
-    if (size)  variant.size  = size;
-    if (color) variant.color = color;
-    addToCart(cvProduct, Object.keys(variant).length ? variant : null);
-
-    const btn = document.getElementById('cvAddBtn');
-    btn.innerHTML = '✓ Added!';
-    btn.style.background = 'linear-gradient(135deg,#22c55e,#16a34a)';
-    setTimeout(() => {
-        btn.innerHTML = '<i class="fas fa-cart-plus"></i> Add to Cart';
-        btn.style.background = '';
-    }, 2000);
-}
-
-// ── Auto-play ─────────────────────────────────────
-function cvStartAuto() {
-    clearInterval(cvAutoTimer);
-    if (!cvAutoPlay) return;
-    cvAutoTimer = setInterval(() => {
-        cvGoTo((cvCurrentSlide+1) % cvColors[cvCurrentColor].views.length);
-    }, 2800);
-}
-function cvResetAuto() { clearInterval(cvAutoTimer); if (cvAutoPlay) cvStartAuto(); }
-function cvToggleAuto() {
-    cvAutoPlay = !cvAutoPlay;
-    const badge = document.getElementById('cvAutoBadge');
-    if (cvAutoPlay) {
-        badge.textContent = '⟳ AUTO';
-        badge.style.color = 'var(--primary)';
-        badge.style.borderColor = 'rgba(255,107,53,0.4)';
-        cvStartAuto();
-    } else {
-        badge.textContent = '⏸ PAUSED';
-        badge.style.color = 'rgba(255,248,245,0.32)';
-        badge.style.borderColor = 'rgba(255,255,255,0.07)';
-        clearInterval(cvAutoTimer);
-    }
-}
-
-// ── Swipe ─────────────────────────────────────────
-function cvSwipeStart(e) {
-    cvDragStartX = e.touches ? e.touches[0].clientX : e.clientX;
-    cvDragDeltaX = 0;
-    cvDragging   = true;
-    clearInterval(cvAutoTimer);
-}
-function cvSwipeMove(e) {
-    if (!cvDragging) return;
-    cvDragDeltaX = (e.touches ? e.touches[0].clientX : e.clientX) - cvDragStartX;
-}
-function cvSwipeEnd() {
-    cvDragging = false;
-    if (cvDragDeltaX < -45) cvNext();
-    else if (cvDragDeltaX > 45) cvPrev();
-    else cvResetAuto();
-}
-function cvBindSwipe() {
-    const s = document.getElementById('cvStage');
-    s.addEventListener('touchstart', cvSwipeStart, {passive:true});
-    s.addEventListener('touchmove',  cvSwipeMove,  {passive:true});
-    s.addEventListener('touchend',   cvSwipeEnd,   {passive:true});
-    s.addEventListener('mousedown',  cvSwipeStart);
-    window.addEventListener('mousemove', cvSwipeMove);
-    window.addEventListener('mouseup',   cvSwipeEnd);
-}
-function cvUnbindSwipe() {
-    const s = document.getElementById('cvStage');
-    s.removeEventListener('touchstart', cvSwipeStart);
-    s.removeEventListener('touchmove',  cvSwipeMove);
-    s.removeEventListener('touchend',   cvSwipeEnd);
-    s.removeEventListener('mousedown',  cvSwipeStart);
-    window.removeEventListener('mousemove', cvSwipeMove);
-    window.removeEventListener('mouseup',   cvSwipeEnd);
-}
-// ═══════════════════════════════════════════════════════
 </script>
 </body>
 </html>
