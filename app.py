@@ -1120,6 +1120,369 @@ def get_referral_info():
         return jsonify({'error': str(e)}), 500
 
 
+# ==================== SQUADS ====================
+
+def post_squad_activity(squad_id, user_id, activity_type, message, points=0):
+    """Post an activity event to the squad feed."""
+    try:
+        supabase.table('squad_activity').insert({
+            'id':       str(uuid.uuid4()),
+            'squad_id': squad_id,
+            'user_id':  user_id,
+            'type':     activity_type,
+            'message':  message,
+            'points':   points,
+            'created_at': int(datetime.utcnow().timestamp() * 1000)
+        }).execute()
+    except Exception as e:
+        print(f"post_squad_activity error: {e}")
+
+def sync_squad_points(squad_id):
+    """Recalculate squad total and weekly points from all members."""
+    try:
+        members = supabase.table('squad_members').select('user_id').eq('squad_id', squad_id).execute()
+        if not members.data:
+            return
+        user_ids = [m['user_id'] for m in members.data]
+        users    = supabase.table('users').select('points, weekly_points').in_('id', user_ids).execute()
+        total   = sum(u.get('points', 0) or 0 for u in (users.data or []))
+        weekly  = sum(u.get('weekly_points', 0) or 0 for u in (users.data or []))
+        supabase.table('squads').update({
+            'total_points':  total,
+            'weekly_points': weekly,
+            'member_count':  len(user_ids)
+        }).eq('id', squad_id).execute()
+    except Exception as e:
+        print(f"sync_squad_points error: {e}")
+
+
+@app.route('/api/squad/create', methods=['POST'])
+@token_required
+def create_squad():
+    """Create a new squad. User becomes admin. One squad per user."""
+    try:
+        data = request.get_json(silent=True) or {}
+        name        = data.get('name', '').strip()
+        description = data.get('description', '').strip()
+        emoji       = data.get('emoji', 'lightning').strip()
+
+        if not name:
+            return jsonify({'error': 'Squad name is required'}), 400
+        if len(name) > 30:
+            return jsonify({'error': 'Name must be under 30 characters'}), 400
+
+        existing = supabase.table('squad_members').select('id').eq('user_id', request.user_id).execute()
+        if existing.data:
+            return jsonify({'error': 'You are already in a squad. Leave first to create one.'}), 400
+
+        taken = supabase.table('squads').select('id').eq('name', name).execute()
+        if taken.data:
+            return jsonify({'error': 'That squad name is already taken'}), 400
+
+        squad_id    = str(uuid.uuid4())
+        invite_code = name[:3].upper() + str(uuid.uuid4().hex[:5]).upper()
+
+        supabase.table('squads').insert({
+            'id':            squad_id,
+            'name':          name,
+            'description':   description,
+            'emoji':         emoji,
+            'invite_code':   invite_code,
+            'created_by':    request.user_id,
+            'total_points':  0,
+            'weekly_points': 0,
+            'member_count':  1,
+            'created_at':    int(datetime.utcnow().timestamp() * 1000)
+        }).execute()
+
+        supabase.table('squad_members').insert({
+            'id':        str(uuid.uuid4()),
+            'squad_id':  squad_id,
+            'user_id':   request.user_id,
+            'role':      'admin',
+            'joined_at': int(datetime.utcnow().timestamp() * 1000)
+        }).execute()
+
+        user_res  = supabase.table('users').select('name').eq('id', request.user_id).execute()
+        user_name = user_res.data[0]['name'] if user_res.data else 'Someone'
+        post_squad_activity(squad_id, request.user_id, 'joined', f'{user_name} created the squad!')
+        sync_squad_points(squad_id)
+
+        return jsonify({
+            'success':     True,
+            'squad_id':    squad_id,
+            'invite_code': invite_code,
+            'message':     f'Squad "{name}" created!'
+        }), 201
+    except Exception as e:
+        print(f"CREATE SQUAD ERROR: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/squad/join', methods=['POST'])
+@token_required
+def join_squad():
+    """Join a squad via invite code."""
+    try:
+        data        = request.get_json(silent=True) or {}
+        invite_code = data.get('invite_code', '').strip().upper()
+
+        if not invite_code:
+            return jsonify({'error': 'Invite code is required'}), 400
+
+        existing = supabase.table('squad_members').select('id').eq('user_id', request.user_id).execute()
+        if existing.data:
+            return jsonify({'error': 'You are already in a squad. Leave first to join another.'}), 400
+
+        squad_res = supabase.table('squads').select('*').eq('invite_code', invite_code).execute()
+        if not squad_res.data:
+            return jsonify({'error': 'Invalid invite code'}), 404
+        squad = squad_res.data[0]
+
+        if squad['member_count'] >= 20:
+            return jsonify({'error': 'This squad is full (max 20 members)'}), 400
+
+        supabase.table('squad_members').insert({
+            'id':        str(uuid.uuid4()),
+            'squad_id':  squad['id'],
+            'user_id':   request.user_id,
+            'role':      'member',
+            'joined_at': int(datetime.utcnow().timestamp() * 1000)
+        }).execute()
+
+        user_res  = supabase.table('users').select('name').eq('id', request.user_id).execute()
+        user_name = user_res.data[0]['name'] if user_res.data else 'Someone'
+        post_squad_activity(squad['id'], request.user_id, 'joined', f'{user_name} joined the squad!')
+        sync_squad_points(squad['id'])
+        add_points_to_user(request.user_id, 50, 'Squad join bonus')
+
+        return jsonify({
+            'success': True,
+            'squad':   squad,
+            'message': f'Joined {squad["name"]}! +50 coins'
+        })
+    except Exception as e:
+        print(f"JOIN SQUAD ERROR: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/squad/leave', methods=['POST'])
+@token_required
+def leave_squad():
+    """Leave current squad."""
+    try:
+        member = supabase.table('squad_members').select('*').eq('user_id', request.user_id).execute()
+        if not member.data:
+            return jsonify({'error': 'You are not in a squad'}), 400
+
+        squad_id = member.data[0]['squad_id']
+        role     = member.data[0]['role']
+
+        supabase.table('squad_members').delete().eq('user_id', request.user_id).execute()
+
+        if role == 'admin':
+            remaining = supabase.table('squad_members').select('user_id').eq('squad_id', squad_id).execute()
+            if remaining.data:
+                supabase.table('squad_members').update({'role': 'admin'}).eq(
+                    'user_id', remaining.data[0]['user_id']
+                ).execute()
+            else:
+                supabase.table('squads').delete().eq('id', squad_id).execute()
+                return jsonify({'success': True, 'message': 'Squad disbanded'})
+
+        sync_squad_points(squad_id)
+        return jsonify({'success': True, 'message': 'You left the squad'})
+    except Exception as e:
+        print(f"LEAVE SQUAD ERROR: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/squad/me', methods=['GET'])
+@token_required
+def my_squad():
+    """Get current user squad with members and activity."""
+    try:
+        member = supabase.table('squad_members').select('squad_id, role').eq('user_id', request.user_id).execute()
+        if not member.data:
+            return jsonify({'squad': None})
+
+        squad_id = member.data[0]['squad_id']
+        role     = member.data[0]['role']
+
+        squad_res = supabase.table('squads').select('*').eq('id', squad_id).execute()
+        if not squad_res.data:
+            return jsonify({'squad': None})
+        squad = squad_res.data[0]
+
+        members_res = supabase.table('squad_members').select('user_id, role, joined_at').eq('squad_id', squad_id).execute()
+        user_ids    = [m['user_id'] for m in (members_res.data or [])]
+        users_res   = supabase.table('users').select('id, name, points, weekly_points').in_('id', user_ids).execute()
+        users_map   = {u['id']: u for u in (users_res.data or [])}
+
+        members = []
+        for m in (members_res.data or []):
+            u = users_map.get(m['user_id'], {})
+            members.append({
+                'user_id':       m['user_id'],
+                'role':          m['role'],
+                'joined_at':     m['joined_at'],
+                'name':          u.get('name', 'Unknown'),
+                'points':        u.get('points', 0),
+                'weekly_points': u.get('weekly_points', 0),
+            })
+        members.sort(key=lambda x: x['weekly_points'], reverse=True)
+
+        activity_res = supabase.table('squad_activity').select('*')             .eq('squad_id', squad_id).order('created_at', desc=True).limit(20).execute()
+
+        sync_squad_points(squad_id)
+
+        return jsonify({
+            'squad':    squad,
+            'members':  members,
+            'activity': activity_res.data or [],
+            'my_role':  role,
+        })
+    except Exception as e:
+        print(f"MY SQUAD ERROR: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/squad/leaderboard', methods=['GET'])
+@token_required
+def squad_leaderboard():
+    """Top squads by weekly points."""
+    try:
+        result = supabase.table('squads').select(
+            'id, name, emoji, weekly_points, total_points, member_count'
+        ).order('weekly_points', desc=True).limit(20).execute()
+        return jsonify(result.data or [])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/squad/search', methods=['GET'])
+@token_required
+def search_squads():
+    """Search squads by name."""
+    try:
+        q = request.args.get('q', '').strip()
+        if not q:
+            result = supabase.table('squads').select(
+                'id, name, emoji, description, member_count, weekly_points, invite_code'
+            ).order('weekly_points', desc=True).limit(20).execute()
+        else:
+            result = supabase.table('squads').select(
+                'id, name, emoji, description, member_count, weekly_points, invite_code'
+            ).ilike('name', f'%{q}%').limit(20).execute()
+        return jsonify(result.data or [])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# ==================== DAILY SPIN ====================
+
+SPIN_REWARDS = [
+    {'type': 'coins',      'value': '25',  'label': '+25 Coins',      'weight': 30, 'color': '#FF6B35'},
+    {'type': 'coins',      'value': '50',  'label': '+50 Coins',      'weight': 25, 'color': '#FF6B35'},
+    {'type': 'coins',      'value': '100', 'label': '+100 Coins',     'weight': 15, 'color': '#FF3CAC'},
+    {'type': 'coins',      'value': '200', 'label': '+200 Coins',     'weight': 8,  'color': '#FF3CAC'},
+    {'type': 'coins',      'value': '500', 'label': '+500 Coins!',    'weight': 3,  'color': '#7B2FFF'},
+    {'type': 'multiplier', 'value': '1.5', 'label': '1.5x Boost',    'weight': 10, 'color': '#00C6FF'},
+    {'type': 'multiplier', 'value': '2.0', 'label': '2x MEGA Boost', 'weight': 4,  'color': '#7B2FFF'},
+    {'type': 'discount',   'value': '10',  'label': '10% Off Next',  'weight': 3,  'color': '#22C55E'},
+    {'type': 'nothing',    'value': '0',   'label': 'Try Again',      'weight': 2,  'color': '#374151'},
+]
+
+def weighted_spin():
+    import random
+    total      = sum(r['weight'] for r in SPIN_REWARDS)
+    roll       = random.uniform(0, total)
+    cumulative = 0
+    for reward in SPIN_REWARDS:
+        cumulative += reward['weight']
+        if roll <= cumulative:
+            return reward
+    return SPIN_REWARDS[0]
+
+
+@app.route('/api/spin/daily', methods=['POST'])
+@token_required
+def daily_spin():
+    """One free spin per day."""
+    try:
+        today_start = int(datetime.utcnow().replace(
+            hour=0, minute=0, second=0, microsecond=0
+        ).timestamp() * 1000)
+
+        already = supabase.table('spin_logs').select('id', count='exact')             .eq('user_id', request.user_id).gte('spun_at', today_start).execute()
+        if already.count and already.count > 0:
+            tomorrow = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
+            ms_left  = int((tomorrow - datetime.utcnow()).total_seconds() * 1000)
+            return jsonify({'error': 'Already spun today', 'next_spin_ms': ms_left}), 429
+
+        reward = weighted_spin()
+        earned = 0
+
+        if reward['type'] == 'coins':
+            earned = add_points_to_user(request.user_id, int(reward['value']), 'Daily spin')
+        elif reward['type'] == 'multiplier':
+            mult_val = float(reward['value'])
+            expiry   = int(datetime.utcnow().timestamp() * 1000) + (24 * 60 * 60 * 1000)
+            supabase.table('users').update({
+                'multiplier':        mult_val,
+                'multiplier_expiry': expiry
+            }).eq('id', request.user_id).execute()
+
+        supabase.table('spin_logs').insert({
+            'id':           str(uuid.uuid4()),
+            'user_id':      request.user_id,
+            'reward_type':  reward['type'],
+            'reward_value': reward['value'],
+            'spun_at':      int(datetime.utcnow().timestamp() * 1000)
+        }).execute()
+
+        # Post to squad activity
+        try:
+            member = supabase.table('squad_members').select('squad_id').eq('user_id', request.user_id).execute()
+            if member.data and reward['type'] != 'nothing':
+                user_res  = supabase.table('users').select('name').eq('id', request.user_id).execute()
+                user_name = user_res.data[0]['name'] if user_res.data else 'Someone'
+                post_squad_activity(
+                    member.data[0]['squad_id'], request.user_id, 'spin_win',
+                    f'{user_name} spun the wheel and won {reward["label"]}!',
+                    int(reward['value']) if reward['type'] == 'coins' else 0
+                )
+        except Exception:
+            pass
+
+        return jsonify({'success': True, 'reward': reward, 'earned': earned})
+    except Exception as e:
+        print(f"DAILY SPIN ERROR: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/spin/status', methods=['GET'])
+@token_required
+def spin_status():
+    """Check if user can spin today."""
+    try:
+        today_start = int(datetime.utcnow().replace(
+            hour=0, minute=0, second=0, microsecond=0
+        ).timestamp() * 1000)
+        already  = supabase.table('spin_logs').select('reward_type, reward_value, spun_at')             .eq('user_id', request.user_id).gte('spun_at', today_start).execute()
+        can_spin = not (already.data and len(already.data) > 0)
+        tomorrow = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
+        ms_left  = int((tomorrow - datetime.utcnow()).total_seconds() * 1000)
+        return jsonify({
+            'can_spin':     can_spin,
+            'next_spin_ms': ms_left if not can_spin else 0,
+            'last_spin':    already.data[0] if already.data else None,
+            'rewards':      SPIN_REWARDS,
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 # ==================== HEALTH ====================
 
 @app.route('/api/health', methods=['GET'])
@@ -1127,8 +1490,9 @@ def health_check():
     return jsonify({
         'status':  'healthy',
         'app':     'Aura',
-        'version': '3.0.0',
-        'shops':   list(SHOP_CONFIG.keys())
+        'version': '4.0.0',
+        'shops':   list(SHOP_CONFIG.keys()),
+        'features': ['squads', 'daily_spin', 'products', 'qr', 'leaderboard']
     })
 
 
