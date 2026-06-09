@@ -1378,6 +1378,26 @@ def search_squads():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/squad/activity', methods=['POST'])
+@token_required
+def post_activity():
+    try:
+        data   = request.get_json(silent=True) or {}
+        member = supabase.table('squad_members').select('squad_id').eq('user_id', request.user_id).execute()
+        if not member.data:
+            return jsonify({'error': 'Not in a squad'}), 400
+        squad_id = member.data[0]['squad_id']
+        post_squad_activity(
+            squad_id, request.user_id,
+            data.get('type', 'general'),
+            data.get('message', ''),
+            int(data.get('points', 0))
+        )
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 
 # ==================== DAILY SPIN ====================
 

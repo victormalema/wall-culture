@@ -2538,6 +2538,68 @@
                 </button>
             </div>
 
+            <!-- ══ SPIN WHEEL ══ -->
+            <div class="section-header" style="padding-top:4px;">
+                <span class="section-title">🎰 Daily Spin</span>
+                <span id="spinCountdownLabel" style="font-size:0.72rem;color:var(--text-muted);"></span>
+            </div>
+            <div id="spinCard" style="margin:0 16px 16px;border-radius:22px;overflow:hidden;
+                border:1px solid rgba(255,107,53,0.2);background:rgba(7,7,15,0.8);
+                position:relative;cursor:pointer;" onclick="openSpinModal()">
+                <!-- Ambient glow -->
+                <div style="position:absolute;inset:0;
+                    background:radial-gradient(ellipse at 50% 0%,rgba(255,107,53,0.12) 0%,transparent 60%);
+                    pointer-events:none;"></div>
+                <div style="display:flex;align-items:center;gap:16px;padding:16px 18px;position:relative;">
+                    <!-- Wheel preview -->
+                    <div id="spinWheelPreview" style="width:64px;height:64px;border-radius:50%;flex-shrink:0;
+                        border:3px solid rgba(255,107,53,0.4);
+                        background:conic-gradient(
+                            #FF6B35 0% 20%, #FF3CAC 20% 40%, #7B2FFF 40% 55%,
+                            #00C6FF 55% 68%, #22C55E 68% 78%, #FF6B35 78% 90%,
+                            #374151 90% 100%
+                        );
+                        position:relative;display:flex;align-items:center;justify-content:center;
+                        box-shadow:0 0 20px rgba(255,107,53,0.3);">
+                        <div style="width:20px;height:20px;border-radius:50%;
+                            background:var(--bg-base);border:2px solid rgba(255,255,255,0.2);
+                            display:flex;align-items:center;justify-content:center;
+                            font-size:8px;">✦</div>
+                    </div>
+                    <div style="flex:1;">
+                        <div style="font-family:var(--font-display);font-size:0.95rem;font-weight:800;
+                            margin-bottom:3px;" id="spinCardTitle">Spin to Win!</div>
+                        <div style="font-size:0.75rem;color:var(--text-muted);" id="spinCardSub">
+                            Free spin available — win up to 500 coins
+                        </div>
+                    </div>
+                    <div id="spinArrow" style="font-size:1.4rem;">🎰</div>
+                </div>
+            </div>
+
+            <!-- ══ SQUAD CARD on home ══ -->
+            <div id="homeSquadCard" style="display:none;margin:0 16px 16px;border-radius:22px;
+                overflow:hidden;border:1px solid rgba(123,47,255,0.25);
+                background:linear-gradient(135deg,rgba(123,47,255,0.08),rgba(255,60,172,0.05));
+                cursor:pointer;" onclick="switchTab('squad')">
+                <div style="padding:14px 18px;display:flex;align-items:center;gap:14px;">
+                    <div id="homeSquadEmoji" style="font-size:2rem;">⚡</div>
+                    <div style="flex:1;">
+                        <div style="font-family:var(--font-display);font-size:0.85rem;font-weight:800;
+                            color:var(--text-primary);margin-bottom:2px;" id="homeSquadName">Your Squad</div>
+                        <div style="font-size:0.72rem;color:rgba(167,139,250,0.7);" id="homeSquadStats">
+                            Loading...</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-size:0.65rem;color:var(--text-muted);margin-bottom:2px;">WEEKLY</div>
+                        <div style="font-family:var(--font-display);font-size:1rem;font-weight:800;
+                            background:linear-gradient(135deg,#A78BFA,#FF3CAC);
+                            -webkit-background-clip:text;background-clip:text;color:transparent;"
+                            id="homeSquadPts">0</div>
+                    </div>
+                </div>
+            </div>
+
             <!-- ══ PRIZES ══ -->
             <div class="section-header" style="padding-top:4px;">
                 <span class="section-title">🏆 Win Prizes</span>
@@ -2730,6 +2792,148 @@
         </div>
 
         <!-- ════ PROFILE SCREEN ════ -->
+        <!-- ══ SQUAD SCREEN ══ -->
+        <div id="squadScreen" class="screen">
+
+            <!-- No squad state -->
+            <div id="noSquadView">
+                <div style="padding:24px 20px 16px;">
+                    <div style="font-family:var(--font-display);font-size:1.4rem;font-weight:900;
+                        margin-bottom:4px;">Squads</div>
+                    <div style="font-size:0.82rem;color:var(--text-muted);">
+                        Team up. Compete. Flex together.
+                    </div>
+                </div>
+
+                <!-- Hero banner -->
+                <div style="margin:0 16px 20px;border-radius:24px;overflow:hidden;
+                    background:linear-gradient(140deg,#0a0614,#120a24);
+                    border:1px solid rgba(123,47,255,0.25);padding:24px 20px;position:relative;">
+                    <div style="position:absolute;inset:0;
+                        background:radial-gradient(ellipse at 80% 20%,rgba(123,47,255,0.2) 0%,transparent 60%),
+                                   radial-gradient(ellipse at 20% 80%,rgba(255,60,172,0.15) 0%,transparent 60%);
+                        pointer-events:none;"></div>
+                    <div style="position:relative;z-index:1;">
+                        <div style="font-size:3rem;margin-bottom:12px;">⚡</div>
+                        <div style="font-family:var(--font-display);font-size:1.2rem;font-weight:900;
+                            background:linear-gradient(135deg,#A78BFA,#FF3CAC);
+                            -webkit-background-clip:text;background-clip:text;color:transparent;
+                            margin-bottom:8px;">Join a Squad</div>
+                        <div style="font-size:0.8rem;color:rgba(255,248,245,0.5);line-height:1.5;margin-bottom:20px;">
+                            Compete with friends for weekly prizes.<br>
+                            Earn bonus coins together. Flex your squad rank.
+                        </div>
+                        <div style="display:flex;gap:8px;">
+                            <button onclick="openCreateSquad()" style="flex:1;padding:13px;border-radius:14px;
+                                border:none;background:linear-gradient(135deg,#7B2FFF,#FF3CAC);
+                                color:#fff;font-family:var(--font-display);font-size:0.82rem;font-weight:800;
+                                cursor:pointer;box-shadow:0 4px 16px rgba(123,47,255,0.4);">
+                                + Create Squad
+                            </button>
+                            <button onclick="openJoinSquad()" style="flex:1;padding:13px;border-radius:14px;
+                                border:1px solid rgba(123,47,255,0.4);background:rgba(123,47,255,0.1);
+                                color:#A78BFA;font-family:var(--font-display);font-size:0.82rem;font-weight:800;
+                                cursor:pointer;">
+                                Enter Code
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Squad leaderboard preview -->
+                <div style="padding:0 16px;">
+                    <div class="section-header" style="padding:0;margin-bottom:12px;">
+                        <span class="section-title">🏆 Top Squads This Week</span>
+                    </div>
+                    <div id="squadLeaderboardList"></div>
+                </div>
+            </div>
+
+            <!-- Has squad state -->
+            <div id="mySquadView" style="display:none;">
+
+                <!-- Squad header -->
+                <div style="margin:16px 16px 0;border-radius:24px;overflow:hidden;
+                    background:linear-gradient(140deg,#0a0614,#120a24);
+                    border:1px solid rgba(123,47,255,0.25);padding:20px;position:relative;">
+                    <div style="position:absolute;inset:0;
+                        background:radial-gradient(ellipse at 70% 30%,rgba(123,47,255,0.18) 0%,transparent 60%);
+                        pointer-events:none;"></div>
+                    <div style="position:relative;z-index:1;">
+                        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;">
+                            <div style="display:flex;align-items:center;gap:12px;">
+                                <div id="squadEmoji" style="font-size:2.2rem;">⚡</div>
+                                <div>
+                                    <div style="font-family:var(--font-display);font-size:1.1rem;font-weight:900;
+                                        color:var(--text-primary);margin-bottom:2px;" id="squadName">—</div>
+                                    <div style="font-size:0.7rem;color:rgba(167,139,250,0.6);" id="squadDesc">—</div>
+                                </div>
+                            </div>
+                            <button onclick="showSquadOptions()" style="width:32px;height:32px;border-radius:10px;
+                                border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);
+                                color:var(--text-muted);cursor:pointer;font-size:16px;">⋯</button>
+                        </div>
+                        <!-- Squad stats row -->
+                        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;">
+                            <div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:10px;text-align:center;">
+                                <div style="font-family:var(--font-display);font-size:1rem;font-weight:800;
+                                    background:linear-gradient(135deg,#A78BFA,#FF3CAC);
+                                    -webkit-background-clip:text;background-clip:text;color:transparent;"
+                                    id="squadWeeklyPts">0</div>
+                                <div style="font-size:0.58rem;color:var(--text-muted);margin-top:2px;">WEEKLY PTS</div>
+                            </div>
+                            <div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:10px;text-align:center;">
+                                <div style="font-family:var(--font-display);font-size:1rem;font-weight:800;
+                                    color:var(--text-primary);" id="squadMemberCount">0</div>
+                                <div style="font-size:0.58rem;color:var(--text-muted);margin-top:2px;">MEMBERS</div>
+                            </div>
+                            <div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:10px;text-align:center;">
+                                <div style="font-family:var(--font-display);font-size:1rem;font-weight:800;
+                                    color:#FFD700;" id="squadRankBadge">#—</div>
+                                <div style="font-size:0.58rem;color:var(--text-muted);margin-top:2px;">RANK</div>
+                            </div>
+                        </div>
+                        <!-- Invite code -->
+                        <div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:10px 14px;
+                            display:flex;align-items:center;justify-content:space-between;cursor:pointer;"
+                            onclick="copyInviteCode()">
+                            <div>
+                                <div style="font-size:0.58rem;color:var(--text-muted);margin-bottom:2px;">INVITE CODE</div>
+                                <div style="font-family:var(--font-display);font-size:1rem;font-weight:800;
+                                    color:#A78BFA;letter-spacing:2px;" id="squadInviteCode">——</div>
+                            </div>
+                            <div style="font-size:0.7rem;color:var(--text-muted);">Tap to copy 📋</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabs: Members | Activity -->
+                <div style="display:flex;gap:0;margin:14px 16px 0;border-radius:14px;overflow:hidden;
+                    border:1px solid rgba(255,255,255,0.07);background:rgba(255,255,255,0.03);">
+                    <button id="squadTabMembers" onclick="switchSquadTab('members')"
+                        style="flex:1;padding:11px;border:none;
+                        background:linear-gradient(135deg,rgba(123,47,255,0.3),rgba(255,60,172,0.2));
+                        color:#A78BFA;font-size:0.78rem;font-weight:800;cursor:pointer;
+                        font-family:var(--font-body);">
+                        👥 Members
+                    </button>
+                    <button id="squadTabActivity" onclick="switchSquadTab('activity')"
+                        style="flex:1;padding:11px;border:none;background:transparent;
+                        color:var(--text-muted);font-size:0.78rem;font-weight:700;cursor:pointer;
+                        font-family:var(--font-body);">
+                        ⚡ Activity
+                    </button>
+                </div>
+
+                <!-- Members list -->
+                <div id="squadMembersList" style="padding:12px 16px 0;"></div>
+
+                <!-- Activity feed -->
+                <div id="squadActivityFeed" style="display:none;padding:12px 16px 0;"></div>
+
+            </div>
+        </div>
+
         <div id="profileScreen" class="screen">
             <div class="profile-hero">
                 <div class="avatar-wrap">👤</div>
@@ -2778,14 +2982,179 @@
             <i class="fas fa-store"></i>
             <span>Store</span>
         </button>
+        <button class="tab-item" data-tab="squad">
+            <i class="fas fa-users"></i>
+            <span>Squad</span>
+        </button>
         <button class="tab-item" data-tab="shop">
             <i class="fas fa-bag-shopping"></i>
-            <span>Shop</span>
+            <span>Cart</span>
         </button>
         <button class="tab-item" data-tab="profile">
             <i class="fas fa-user"></i>
             <span>Profile</span>
         </button>
+    </div>
+</div>
+
+<!-- ══ SPIN WHEEL MODAL ══ -->
+<div id="spinModal" style="display:none;position:fixed;inset:0;z-index:2000;
+    background:rgba(7,7,15,0.97);backdrop-filter:blur(20px);
+    flex-direction:column;align-items:center;justify-content:center;
+    padding:20px;">
+
+    <div style="width:100%;max-width:400px;">
+        <!-- Header -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+            <div>
+                <div style="font-family:var(--font-display);font-size:1.3rem;font-weight:900;
+                    background:linear-gradient(135deg,#FF6B35,#FF3CAC);
+                    -webkit-background-clip:text;background-clip:text;color:transparent;">
+                    Daily Spin
+                </div>
+                <div style="font-size:0.72rem;color:var(--text-muted);">One free spin every 24 hours</div>
+            </div>
+            <button onclick="closeSpinModal()" style="width:36px;height:36px;border-radius:12px;
+                border:1px solid rgba(255,255,255,0.14);background:rgba(255,255,255,0.07);
+                color:var(--text-secondary);cursor:pointer;font-size:16px;">✕</button>
+        </div>
+
+        <!-- Wheel -->
+        <div style="position:relative;display:flex;align-items:center;justify-content:center;margin-bottom:20px;">
+            <!-- Pointer -->
+            <div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);
+                width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;
+                border-top:20px solid #FF6B35;z-index:10;
+                filter:drop-shadow(0 2px 6px rgba(255,107,53,0.6));"></div>
+
+            <canvas id="spinCanvas" width="280" height="280"
+                style="border-radius:50%;box-shadow:0 0 40px rgba(255,107,53,0.3),0 0 80px rgba(123,47,255,0.15);
+                display:block;"></canvas>
+
+            <!-- Center button -->
+            <div id="spinCenterBtn" onclick="triggerSpin()"
+                style="position:absolute;width:52px;height:52px;border-radius:50%;
+                background:linear-gradient(135deg,#FF6B35,#FF3CAC);
+                border:3px solid rgba(255,255,255,0.15);
+                display:flex;align-items:center;justify-content:center;
+                cursor:pointer;font-size:1.2rem;
+                box-shadow:0 4px 20px rgba(255,107,53,0.5);
+                transition:transform 0.2s;">🎰</div>
+        </div>
+
+        <!-- Spin button -->
+        <button id="spinMainBtn" onclick="triggerSpin()" style="width:100%;padding:16px;
+            border-radius:18px;border:none;
+            background:linear-gradient(135deg,#FF6B35,#FF3CAC);
+            color:#fff;font-family:var(--font-display);font-size:1rem;font-weight:800;
+            cursor:pointer;box-shadow:0 6px 24px rgba(255,107,53,0.4);
+            transition:all 0.3s;margin-bottom:12px;">
+            🎰 SPIN NOW — FREE
+        </button>
+
+        <!-- Result display -->
+        <div id="spinResult" style="display:none;text-align:center;padding:16px;
+            border-radius:16px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);">
+            <div id="spinResultEmoji" style="font-size:2.5rem;margin-bottom:8px;"></div>
+            <div id="spinResultLabel" style="font-family:var(--font-display);font-size:1.1rem;
+                font-weight:800;color:var(--text-primary);margin-bottom:4px;"></div>
+            <div id="spinResultSub" style="font-size:0.75rem;color:var(--text-muted);"></div>
+        </div>
+
+        <!-- Next spin countdown -->
+        <div id="spinCooldown" style="display:none;text-align:center;padding:14px;
+            border-radius:14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);">
+            <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:4px;">Next free spin in</div>
+            <div id="spinCooldownTimer" style="font-family:var(--font-display);font-size:1.3rem;
+                font-weight:800;color:var(--primary);"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ══ CREATE SQUAD MODAL ══ -->
+<div id="createSquadModal" style="display:none;position:fixed;inset:0;z-index:2000;
+    background:rgba(7,7,15,0.97);backdrop-filter:blur(20px);
+    flex-direction:column;align-items:center;justify-content:center;padding:24px;">
+    <div style="width:100%;max-width:400px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+            <div style="font-family:var(--font-display);font-size:1.2rem;font-weight:800;">Create Squad</div>
+            <button onclick="closeCreateSquad()" style="width:36px;height:36px;border-radius:12px;
+                border:1px solid rgba(255,255,255,0.14);background:rgba(255,255,255,0.07);
+                color:var(--text-secondary);cursor:pointer;font-size:16px;">✕</button>
+        </div>
+        <!-- Emoji picker -->
+        <div style="margin-bottom:16px;">
+            <div style="font-size:0.65rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;
+                color:var(--text-muted);margin-bottom:8px;">Squad Vibe</div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                ${['⚡','🔥','👑','💎','🌙','🎨','🏆','🦋','⚔️','🌊'].map(e =>
+                    `<div class="squad-emoji-opt" data-e="${e}" onclick="selectSquadEmoji(this)"
+                        style="width:40px;height:40px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);
+                        background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;
+                        font-size:1.3rem;cursor:pointer;transition:all 0.2s;">${e}</div>`
+                ).join('')}
+            </div>
+        </div>
+        <div style="margin-bottom:14px;">
+            <div style="font-size:0.65rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;
+                color:var(--text-muted);margin-bottom:8px;">Squad Name</div>
+            <input id="squadNameInput" maxlength="30" placeholder="e.g. Aura Elites"
+                style="width:100%;padding:13px 14px;border-radius:14px;border:1px solid var(--border);
+                background:rgba(255,255,255,0.05);color:var(--text-primary);
+                font-family:var(--font-body);font-size:0.9rem;outline:none;box-sizing:border-box;">
+        </div>
+        <div style="margin-bottom:20px;">
+            <div style="font-size:0.65rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;
+                color:var(--text-muted);margin-bottom:8px;">Description (optional)</div>
+            <input id="squadDescInput" maxlength="60" placeholder="What's your squad about?"
+                style="width:100%;padding:13px 14px;border-radius:14px;border:1px solid var(--border);
+                background:rgba(255,255,255,0.05);color:var(--text-primary);
+                font-family:var(--font-body);font-size:0.9rem;outline:none;box-sizing:border-box;">
+        </div>
+        <button onclick="submitCreateSquad()" style="width:100%;padding:15px;border-radius:16px;border:none;
+            background:linear-gradient(135deg,#7B2FFF,#FF3CAC);color:#fff;
+            font-family:var(--font-display);font-size:0.95rem;font-weight:800;cursor:pointer;
+            box-shadow:0 6px 20px rgba(123,47,255,0.4);">
+            Create Squad ⚡
+        </button>
+    </div>
+</div>
+
+<!-- ══ JOIN SQUAD MODAL ══ -->
+<div id="joinSquadModal" style="display:none;position:fixed;inset:0;z-index:2000;
+    background:rgba(7,7,15,0.97);backdrop-filter:blur(20px);
+    flex-direction:column;align-items:center;justify-content:center;padding:24px;">
+    <div style="width:100%;max-width:400px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+            <div style="font-family:var(--font-display);font-size:1.2rem;font-weight:800;">Join a Squad</div>
+            <button onclick="closeJoinSquad()" style="width:36px;height:36px;border-radius:12px;
+                border:1px solid rgba(255,255,255,0.14);background:rgba(255,255,255,0.07);
+                color:var(--text-secondary);cursor:pointer;font-size:16px;">✕</button>
+        </div>
+        <div style="margin-bottom:20px;">
+            <div style="font-size:0.65rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;
+                color:var(--text-muted);margin-bottom:8px;">Invite Code</div>
+            <input id="joinCodeInput" maxlength="8" placeholder="e.g. AUR5F3E1"
+                style="width:100%;padding:13px 14px;border-radius:14px;border:1px solid var(--border);
+                background:rgba(255,255,255,0.05);color:var(--text-primary);
+                font-family:var(--font-display);font-size:1.1rem;letter-spacing:3px;
+                font-weight:700;outline:none;box-sizing:border-box;text-transform:uppercase;"
+                oninput="this.value=this.value.toUpperCase()">
+        </div>
+        <button onclick="submitJoinSquad()" style="width:100%;padding:15px;border-radius:16px;border:none;
+            background:linear-gradient(135deg,#7B2FFF,#FF3CAC);color:#fff;
+            font-family:var(--font-display);font-size:0.95rem;font-weight:800;cursor:pointer;
+            box-shadow:0 6px 20px rgba(123,47,255,0.4);margin-bottom:12px;">
+            Join Squad 🔥
+        </button>
+        <!-- Search squads -->
+        <div style="text-align:center;font-size:0.75rem;color:var(--text-muted);margin-bottom:12px;">or search by name</div>
+        <input id="squadSearchInput" placeholder="Search squads..."
+            style="width:100%;padding:11px 14px;border-radius:14px;border:1px solid var(--border);
+            background:rgba(255,255,255,0.05);color:var(--text-primary);
+            font-family:var(--font-body);font-size:0.85rem;outline:none;box-sizing:border-box;margin-bottom:10px;"
+            oninput="searchSquadsList(this.value)">
+        <div id="squadSearchResults"></div>
     </div>
 </div>
 
@@ -3095,6 +3464,7 @@ function showScreen(name) {
     if (name === 'gallery') renderTonalGallery();
     if (name === 'profile') loadProfile();
     if (name === 'shop') renderCart();
+    if (name === 'squad') { loadSquadData(); }
 }
 
 document.querySelectorAll('.tab-item').forEach(tab => {
@@ -4328,6 +4698,19 @@ async function checkout() {
         });
         if (result.success) {
             showToast(`✅ Order placed! ✦ +${result.coinsEarned || result.pointsEarned || 0} coins!`);
+            // Post purchase flex to squad activity
+            try {
+                if (mySquadData?.squad) {
+                    const user = JSON.parse(localStorage.getItem('aura_user')||'{}');
+                    const names = items.slice(0,2).map(i=>i.name).join(', ');
+                    await apiRequest('/squad/activity', { method:'POST',
+                        body: JSON.stringify({ type:'purchase',
+                            message:`${user.name||'Someone'} just copped: ${names} 🛍️`,
+                            points: result.pointsEarned||0 })
+                    }).catch(()=>{});
+                    loadSquadData();
+                }
+            } catch(_) {}
             cart = [];
             renderCart();
             loadProfile();
@@ -4810,8 +5193,525 @@ loadShopConfig().then(() => {
     loadPosters().then(() => buildDiscoverTabs());
 });
 loadProfile().then(() => loadPrizeLeaderboards());
+loadSquadData();
 renderCart();
 renderRecents();
+
+// ═══════════════════════════════════════════════════════
+//  SQUAD SYSTEM
+// ═══════════════════════════════════════════════════════
+
+let mySquadData   = null;
+let selectedSquadEmoji = '⚡';
+
+async function loadSquadData() {
+    try {
+        const res = await apiRequest('/squad/me');
+        mySquadData = res.squad ? res : null;
+        updateHomeSquadCard(res);
+        if (document.getElementById('squadScreen')?.classList.contains('active') ||
+            document.getElementById('mySquadView')) {
+            renderSquadScreen(res);
+        }
+    } catch(e) { console.error('loadSquadData:', e); }
+}
+
+function updateHomeSquadCard(res) {
+    const card = document.getElementById('homeSquadCard');
+    if (!card) return;
+    if (!res.squad) { card.style.display = 'none'; return; }
+    card.style.display = 'block';
+    document.getElementById('homeSquadEmoji').textContent = res.squad.emoji || '⚡';
+    document.getElementById('homeSquadName').textContent  = res.squad.name;
+    document.getElementById('homeSquadPts').textContent   = (res.squad.weekly_points||0).toLocaleString();
+    document.getElementById('homeSquadStats').textContent =
+        `${res.squad.member_count||0} members · #${getSquadRank(res.squad.id)}`;
+}
+
+function getSquadRank(squadId) { return '—'; } // populated after leaderboard loads
+
+function renderSquadScreen(res) {
+    if (!res || !res.squad) {
+        document.getElementById('noSquadView').style.display  = 'block';
+        document.getElementById('mySquadView').style.display  = 'none';
+        loadSquadLeaderboard();
+        return;
+    }
+    document.getElementById('noSquadView').style.display = 'none';
+    document.getElementById('mySquadView').style.display  = 'block';
+
+    const s = res.squad;
+    document.getElementById('squadEmoji').textContent      = s.emoji || '⚡';
+    document.getElementById('squadName').textContent       = s.name;
+    document.getElementById('squadDesc').textContent       = s.description || 'No description';
+    document.getElementById('squadWeeklyPts').textContent  = (s.weekly_points||0).toLocaleString();
+    document.getElementById('squadMemberCount').textContent= s.member_count || 0;
+    document.getElementById('squadInviteCode').textContent = s.invite_code || '——';
+
+    renderSquadMembers(res.members || []);
+    renderSquadActivity(res.activity || []);
+    loadSquadLeaderboard(s.id);
+}
+
+function renderSquadMembers(members) {
+    const el = document.getElementById('squadMembersList');
+    if (!el) return;
+    const currentUserId = JSON.parse(localStorage.getItem('aura_user')||'{}').id;
+    el.innerHTML = members.map((m, i) => `
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 0;
+            border-bottom:1px solid rgba(255,255,255,0.05);">
+            <div style="width:32px;height:32px;border-radius:50%;flex-shrink:0;
+                background:linear-gradient(135deg,#7B2FFF,#FF3CAC);
+                display:flex;align-items:center;justify-content:center;
+                font-family:var(--font-display);font-size:0.8rem;font-weight:800;color:#fff;">
+                ${m.name.charAt(0).toUpperCase()}
+            </div>
+            <div style="flex:1;">
+                <div style="font-size:0.82rem;font-weight:700;color:var(--text-primary);">
+                    ${m.name} ${m.user_id === currentUserId ? '<span style="font-size:0.6rem;color:rgba(167,139,250,0.6);">(you)</span>' : ''}
+                    ${m.role==='admin' ? '<span style="font-size:0.58rem;background:rgba(255,198,0,0.2);color:#FFD700;border-radius:6px;padding:1px 6px;margin-left:4px;">ADMIN</span>' : ''}
+                </div>
+                <div style="font-size:0.68rem;color:var(--text-muted);">
+                    ✦ ${(m.weekly_points||0).toLocaleString()} this week
+                </div>
+            </div>
+            <div style="font-family:var(--font-display);font-size:0.9rem;font-weight:800;
+                color:${i===0?'#FFD700':i===1?'#C0C0C0':i===2?'#CD7F32':'var(--text-muted)'};">
+                ${i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1)}
+            </div>
+        </div>
+    `).join('');
+}
+
+function renderSquadActivity(activity) {
+    const el = document.getElementById('squadActivityFeed');
+    if (!el) return;
+    if (!activity.length) {
+        el.innerHTML = '<div style="color:var(--text-muted);font-size:0.8rem;text-align:center;padding:20px;">No activity yet. Start earning coins!</div>';
+        return;
+    }
+    const icons = { purchase:'🛍️', spin_win:'🎰', qr:'📱', checkin:'✅', joined:'👋', default:'⚡' };
+    el.innerHTML = activity.map(a => `
+        <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;
+            border-bottom:1px solid rgba(255,255,255,0.04);">
+            <div style="width:28px;height:28px;border-radius:50%;flex-shrink:0;
+                background:rgba(255,255,255,0.06);
+                display:flex;align-items:center;justify-content:center;font-size:0.85rem;">
+                ${icons[a.type]||icons.default}
+            </div>
+            <div style="flex:1;">
+                <div style="font-size:0.78rem;color:var(--text-primary);line-height:1.4;">${a.message}</div>
+                <div style="font-size:0.62rem;color:var(--text-muted);margin-top:2px;">
+                    ${timeAgo(a.created_at)}
+                    ${a.points > 0 ? `· <span style="color:var(--primary);">+${a.points} coins</span>` : ''}
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+async function loadSquadLeaderboard(mySquadId) {
+    try {
+        const squads = await apiRequest('/squad/leaderboard');
+        const el = document.getElementById('squadLeaderboardList');
+        if (!el) return;
+        el.innerHTML = squads.slice(0,10).map((s, i) => `
+            <div style="display:flex;align-items:center;gap:12px;padding:10px 0;
+                border-bottom:1px solid rgba(255,255,255,0.05);
+                ${s.id===mySquadId?'background:rgba(123,47,255,0.08);border-radius:12px;padding:10px 12px;':''}" >
+                <div style="font-size:1rem;min-width:24px;text-align:center;">
+                    ${i===0?'🥇':i===1?'🥈':i===2?'🥉':'<span style="font-size:0.75rem;color:var(--text-muted);">#'+(i+1)+'</span>'}
+                </div>
+                <div style="font-size:1.3rem;">${s.emoji||'⚡'}</div>
+                <div style="flex:1;">
+                    <div style="font-size:0.82rem;font-weight:700;color:var(--text-primary);">${s.name}</div>
+                    <div style="font-size:0.65rem;color:var(--text-muted);">${s.member_count||0} members</div>
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-family:var(--font-display);font-size:0.85rem;font-weight:800;
+                        background:linear-gradient(135deg,#A78BFA,#FF3CAC);
+                        -webkit-background-clip:text;background-clip:text;color:transparent;">
+                        ${(s.weekly_points||0).toLocaleString()}
+                    </div>
+                    <div style="font-size:0.58rem;color:var(--text-muted);">this week</div>
+                </div>
+            </div>
+        `).join('');
+
+        // Update rank badge
+        if (mySquadId) {
+            const rank = squads.findIndex(s => s.id === mySquadId) + 1;
+            const rb = document.getElementById('squadRankBadge');
+            if (rb) rb.textContent = rank > 0 ? '#' + rank : '#—';
+        }
+    } catch(e) { console.error('loadSquadLeaderboard:', e); }
+}
+
+function switchSquadTab(tab) {
+    const isMem = tab === 'members';
+    document.getElementById('squadMembersList').style.display  = isMem ? 'block' : 'none';
+    document.getElementById('squadActivityFeed').style.display = isMem ? 'none' : 'block';
+    document.getElementById('squadTabMembers').style.background  = isMem ? 'linear-gradient(135deg,rgba(123,47,255,0.3),rgba(255,60,172,0.2))' : 'transparent';
+    document.getElementById('squadTabMembers').style.color       = isMem ? '#A78BFA' : 'var(--text-muted)';
+    document.getElementById('squadTabActivity').style.background = isMem ? 'transparent' : 'linear-gradient(135deg,rgba(123,47,255,0.3),rgba(255,60,172,0.2))';
+    document.getElementById('squadTabActivity').style.color      = isMem ? 'var(--text-muted)' : '#A78BFA';
+}
+
+// ── Create squad ────────────────────────────────────────
+function openCreateSquad() {
+    document.getElementById('createSquadModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+function closeCreateSquad() {
+    document.getElementById('createSquadModal').style.display = 'none';
+    document.body.style.overflow = '';
+}
+function selectSquadEmoji(el) {
+    document.querySelectorAll('.squad-emoji-opt').forEach(e => {
+        e.style.borderColor = 'rgba(255,255,255,0.1)';
+        e.style.background  = 'rgba(255,255,255,0.05)';
+    });
+    el.style.borderColor = 'rgba(167,139,250,0.6)';
+    el.style.background  = 'rgba(123,47,255,0.2)';
+    selectedSquadEmoji   = el.dataset.e;
+}
+async function submitCreateSquad() {
+    const name = document.getElementById('squadNameInput').value.trim();
+    const desc = document.getElementById('squadDescInput').value.trim();
+    if (!name) { showToast('Enter a squad name'); return; }
+    try {
+        const res = await apiRequest('/squad/create', {
+            method:'POST', body: JSON.stringify({ name, description: desc, emoji: selectedSquadEmoji })
+        });
+        if (res.error) { showToast(res.error); return; }
+        showToast(`Squad created! Code: ${res.invite_code}`);
+        closeCreateSquad();
+        await loadSquadData();
+        renderSquadScreen(mySquadData || {});
+    } catch(e) { showToast('Failed to create squad'); }
+}
+
+// ── Join squad ──────────────────────────────────────────
+function openJoinSquad() {
+    document.getElementById('joinSquadModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+function closeJoinSquad() {
+    document.getElementById('joinSquadModal').style.display = 'none';
+    document.body.style.overflow = '';
+}
+async function submitJoinSquad() {
+    const code = document.getElementById('joinCodeInput').value.trim().toUpperCase();
+    if (!code) { showToast('Enter an invite code'); return; }
+    try {
+        const res = await apiRequest('/squad/join', {
+            method:'POST', body: JSON.stringify({ invite_code: code })
+        });
+        if (res.error) { showToast(res.error); return; }
+        showToast(res.message || 'Joined squad!');
+        closeJoinSquad();
+        await loadSquadData();
+        renderSquadScreen(mySquadData || {});
+    } catch(e) { showToast('Failed to join squad'); }
+}
+async function searchSquadsList(q) {
+    if (q.length < 2) { document.getElementById('squadSearchResults').innerHTML = ''; return; }
+    try {
+        const res = await apiRequest(`/squad/search?q=${encodeURIComponent(q)}`);
+        const el  = document.getElementById('squadSearchResults');
+        if (!res.length) { el.innerHTML = '<div style="font-size:0.75rem;color:var(--text-muted);text-align:center;padding:8px;">No squads found</div>'; return; }
+        el.innerHTML = res.map(s => `
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;
+                background:rgba(255,255,255,0.04);margin-bottom:6px;cursor:pointer;"
+                onclick="document.getElementById('joinCodeInput').value='${s.invite_code}';document.getElementById('squadSearchResults').innerHTML='';">
+                <span style="font-size:1.2rem;">${s.emoji||'⚡'}</span>
+                <div style="flex:1;">
+                    <div style="font-size:0.82rem;font-weight:700;color:var(--text-primary);">${s.name}</div>
+                    <div style="font-size:0.65rem;color:var(--text-muted);">${s.member_count} members</div>
+                </div>
+                <div style="font-size:0.65rem;color:rgba(167,139,250,0.6);">${s.invite_code}</div>
+            </div>
+        `).join('');
+    } catch(e) {}
+}
+
+function copyInviteCode() {
+    const code = document.getElementById('squadInviteCode')?.textContent;
+    if (!code || code === '——') return;
+    navigator.clipboard?.writeText(code).catch(()=>{});
+    showToast(`Copied: ${code} — Share with friends!`);
+}
+
+function showSquadOptions() {
+    const role = mySquadData?.my_role;
+    const opts = role === 'admin'
+        ? [{ label:'Leave Squad', action: leaveSquad, color:'#EF4444' }]
+        : [{ label:'Leave Squad', action: leaveSquad, color:'#EF4444' }];
+
+    // Simple confirm
+    if (confirm('Leave your current squad?')) leaveSquad();
+}
+
+async function leaveSquad() {
+    try {
+        const res = await apiRequest('/squad/leave', { method:'POST' });
+        if (res.error) { showToast(res.error); return; }
+        showToast(res.message || 'Left squad');
+        mySquadData = null;
+        await loadSquadData();
+        renderSquadScreen({});
+    } catch(e) { showToast('Failed to leave squad'); }
+}
+
+// ── Time ago helper ─────────────────────────────────────
+function timeAgo(ms) {
+    if (!ms) return '';
+    const diff = Date.now() - ms;
+    if (diff < 60000)      return 'just now';
+    if (diff < 3600000)    return Math.floor(diff/60000) + 'm ago';
+    if (diff < 86400000)   return Math.floor(diff/3600000) + 'h ago';
+    return Math.floor(diff/86400000) + 'd ago';
+}
+
+// ═══════════════════════════════════════════════════════
+//  DAILY SPIN WHEEL
+// ═══════════════════════════════════════════════════════
+
+let spinRewards   = [];
+let spinIsSpinning = false;
+let spinCanSpin   = false;
+let spinNextMs    = 0;
+let spinCooldownInterval = null;
+
+const SPIN_COLORS = [
+    '#FF6B35','#FF3CAC','#7B2FFF','#00C6FF',
+    '#22C55E','#FF6B35','#FF3CAC','#374151','#7B2FFF'
+];
+
+function drawWheel(rotation) {
+    const canvas = document.getElementById('spinCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const cx  = canvas.width  / 2;
+    const cy  = canvas.height / 2;
+    const r   = cx - 6;
+    const n   = spinRewards.length || 9;
+    const arc = (Math.PI * 2) / n;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Outer ring
+    ctx.beginPath();
+    ctx.arc(cx, cy, r + 4, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(255,107,53,0.3)';
+    ctx.lineWidth   = 3;
+    ctx.stroke();
+
+    spinRewards.forEach((reward, i) => {
+        const startAngle = rotation + i * arc;
+        const endAngle   = startAngle + arc;
+        const midAngle   = startAngle + arc / 2;
+
+        // Segment
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, r, startAngle, endAngle);
+        ctx.closePath();
+        ctx.fillStyle = reward.color || SPIN_COLORS[i % SPIN_COLORS.length];
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(7,7,15,0.6)';
+        ctx.lineWidth   = 2;
+        ctx.stroke();
+
+        // Label
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(midAngle);
+        ctx.textAlign    = 'right';
+        ctx.fillStyle    = '#fff';
+        ctx.font         = 'bold 10px Plus Jakarta Sans, sans-serif';
+        ctx.shadowColor  = 'rgba(0,0,0,0.5)';
+        ctx.shadowBlur   = 3;
+        ctx.fillText(reward.label, r - 8, 4);
+        ctx.restore();
+    });
+
+    // Center circle
+    ctx.beginPath();
+    ctx.arc(cx, cy, 26, 0, Math.PI * 2);
+    ctx.fillStyle = '#07070F';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+    ctx.lineWidth   = 2;
+    ctx.stroke();
+}
+
+async function openSpinModal() {
+    document.getElementById('spinModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    document.getElementById('spinResult').style.display   = 'none';
+    document.getElementById('spinCooldown').style.display = 'none';
+
+    try {
+        const status = await apiRequest('/spin/status');
+        spinRewards  = status.rewards || [];
+        spinCanSpin  = status.can_spin;
+        spinNextMs   = status.next_spin_ms || 0;
+
+        drawWheel(0);
+
+        const btn = document.getElementById('spinMainBtn');
+        if (!spinCanSpin) {
+            btn.textContent = '✓ Already spun today';
+            btn.style.background = 'rgba(255,255,255,0.05)';
+            btn.style.color = 'var(--text-muted)';
+            btn.style.boxShadow = 'none';
+            showSpinCooldown(spinNextMs);
+        } else {
+            btn.textContent = '🎰 SPIN NOW — FREE';
+            btn.style.background = 'linear-gradient(135deg,#FF6B35,#FF3CAC)';
+            btn.style.color = '#fff';
+            btn.style.boxShadow = '0 6px 24px rgba(255,107,53,0.4)';
+        }
+    } catch(e) {
+        spinRewards = [
+            {type:'coins',value:'25',label:'+25 Coins',color:'#FF6B35'},
+            {type:'coins',value:'50',label:'+50 Coins',color:'#FF6B35'},
+            {type:'coins',value:'100',label:'+100 Coins',color:'#FF3CAC'},
+            {type:'coins',value:'200',label:'+200 Coins',color:'#FF3CAC'},
+            {type:'coins',value:'500',label:'+500 Coins!',color:'#7B2FFF'},
+            {type:'multiplier',value:'1.5',label:'1.5x Boost',color:'#00C6FF'},
+            {type:'multiplier',value:'2.0',label:'2x Boost',color:'#7B2FFF'},
+            {type:'discount',value:'10',label:'10% Off',color:'#22C55E'},
+            {type:'nothing',value:'0',label:'Try Again',color:'#374151'},
+        ];
+        spinCanSpin = true;
+        drawWheel(0);
+    }
+}
+
+function closeSpinModal() {
+    document.getElementById('spinModal').style.display = 'none';
+    document.body.style.overflow = '';
+    clearInterval(spinCooldownInterval);
+}
+
+async function triggerSpin() {
+    if (spinIsSpinning || !spinCanSpin) return;
+    spinIsSpinning = true;
+
+    const btn = document.getElementById('spinMainBtn');
+    btn.textContent  = 'Spinning...';
+    btn.style.opacity = '0.7';
+    btn.disabled = true;
+
+    try {
+        const res = await apiRequest('/spin/daily', { method:'POST' });
+        if (res.error) {
+            showToast(res.error);
+            spinIsSpinning = false;
+            btn.disabled = false;
+            btn.style.opacity = '1';
+            if (res.next_spin_ms) showSpinCooldown(res.next_spin_ms);
+            return;
+        }
+
+        const reward     = res.reward;
+        const rewardIdx  = spinRewards.findIndex(r => r.type === reward.type && r.value === reward.value);
+        const targetIdx  = rewardIdx >= 0 ? rewardIdx : 0;
+        const n          = spinRewards.length;
+        const arc        = (Math.PI * 2) / n;
+
+        // Spin animation
+        const spins      = 5 + Math.random() * 3;
+        const targetAngle = (spins * Math.PI * 2) - (targetIdx * arc) - (arc / 2);
+        const duration   = 4000;
+        const startTime  = performance.now();
+        let   lastAngle  = 0;
+
+        function animate(now) {
+            const elapsed = now - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            // Ease out cubic
+            const ease    = 1 - Math.pow(1 - progress, 3);
+            const angle   = ease * targetAngle;
+            lastAngle     = angle;
+            drawWheel(angle);
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            } else {
+                // Done spinning
+                spinIsSpinning = false;
+                spinCanSpin    = false;
+                showSpinResult(reward, res.earned || 0);
+                updateSpinHomeCard();
+            }
+        }
+        requestAnimationFrame(animate);
+
+    } catch(e) {
+        showToast('Spin failed, try again');
+        spinIsSpinning = false;
+        btn.disabled   = false;
+        btn.style.opacity = '1';
+        btn.textContent  = '🎰 SPIN NOW — FREE';
+    }
+}
+
+function showSpinResult(reward, earned) {
+    const resultEl = document.getElementById('spinResult');
+    resultEl.style.display = 'block';
+
+    const emojis = { coins:'🪙', multiplier:'⚡', discount:'🎟️', nothing:'😅' };
+    document.getElementById('spinResultEmoji').textContent = emojis[reward.type] || '🎁';
+    document.getElementById('spinResultLabel').textContent = reward.label;
+    document.getElementById('spinResultSub').textContent  =
+        earned > 0 ? `+${earned} Aura Coins added to your wallet!` :
+        reward.type === 'multiplier' ? `${reward.value}× point multiplier active for 24 hours!` :
+        reward.type === 'discount'   ? `Use at checkout for ${reward.value}% off your next order` :
+        'Better luck tomorrow!';
+
+    const btn = document.getElementById('spinMainBtn');
+    btn.textContent = '✓ Come back tomorrow';
+    btn.style.background = 'rgba(255,255,255,0.05)';
+    btn.style.color = 'var(--text-muted)';
+    btn.style.boxShadow = 'none';
+
+    // Update profile points display
+    loadProfile();
+}
+
+function showSpinCooldown(ms) {
+    const el = document.getElementById('spinCooldown');
+    el.style.display = 'block';
+    clearInterval(spinCooldownInterval);
+    function updateTimer() {
+        const h = Math.floor(ms / 3600000);
+        const m = Math.floor((ms % 3600000) / 60000);
+        const s = Math.floor((ms % 60000) / 1000);
+        document.getElementById('spinCooldownTimer').textContent =
+            `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        ms -= 1000;
+        if (ms < 0) { clearInterval(spinCooldownInterval); el.style.display='none'; }
+    }
+    updateTimer();
+    spinCooldownInterval = setInterval(updateTimer, 1000);
+}
+
+function updateSpinHomeCard() {
+    const title = document.getElementById('spinCardTitle');
+    const sub   = document.getElementById('spinCardSub');
+    const arrow = document.getElementById('spinArrow');
+    if (title) title.textContent = 'Spun today!';
+    if (sub)   sub.textContent   = 'Come back tomorrow for your free spin';
+    if (arrow) arrow.textContent = '✓';
+    // Update countdown label
+    const label = document.getElementById('spinCountdownLabel');
+    if (label && spinNextMs) {
+        const h = Math.floor(spinNextMs / 3600000);
+        label.textContent = `Next spin in ${h}h`;
+    }
+}
 </script>
 </body>
 </html>
