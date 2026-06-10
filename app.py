@@ -1503,6 +1503,209 @@ def spin_status():
         return jsonify({'error': str(e)}), 500
 
 
+
+# ==================== FLASH DROPS ====================
+
+@app.route('/api/flash/active', methods=['GET'])
+@token_required
+def get_active_flash_drops():
+    """Get all currently active flash drops with product details."""
+    try:
+        now = int(datetime.utcnow().timestamp() * 1000)
+        result = supabase.table('flash_drops').select('*') \
+            .eq('is_active', True) \
+            .lte('starts_at', now) \
+            .gte('ends_at', now) \
+            .order('ends_at').execute()
+
+        drops = []
+        for d in (result.data or []):
+            # Attach product info
+            prod_res = supabase.table('products').select(
+                'id, name, price, image_url, product_type, category, points, variants'
+            ).eq('id', d['product_id']).execute()
+            product = prod_res.data[0] if prod_res.data else None
+            if not product:
+                continue
+
+            # Calculate discounted price
+            original_price   = float(product['price'])
+            discount_pct     = d.get('discount_pct', 0)
+            discounted_price = round(original_price * (1 - discount_pct / 100))
+            ms_remaining     = max(0, d['ends_at'] - now)
+            slots_left       = max(0, d['max_claims'] - d.get('claimed', 0))
+
+            drops.append({
+                'id':               d['id'],
+                'title':            d['title'],
+                'description':      d.get('description', ''),
+                'discount_pct':     discount_pct,
+                'bonus_coins':      d.get('bonus_coins', 0),
+                'starts_at':        d['starts_at'],
+                'ends_at':          d['ends_at'],
+                'ms_remaining':     ms_remaining,
+                'max_claims':       d['max_claims'],
+                'claimed':          d.get('claimed', 0),
+                'slots_left':       slots_left,
+                'sold_out':         slots_left <= 0,
+                'product':          product,
+                'original_price':   original_price,
+                'discounted_price': discounted_price,
+            })
+
+        return jsonify(drops)
+    except Exception as e:
+        print(f"GET FLASH DROPS ERROR: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/flash/upcoming', methods=['GET'])
+@token_required
+def get_upcoming_flash_drops():
+    """Get drops starting in the next 24 hours."""
+    try:
+        now        = int(datetime.utcnow().timestamp() * 1000)
+        in_24h     = now + (24 * 60 * 60 * 1000)
+        result     = supabase.table('flash_drops').select('*') \
+            .eq('is_active', True) \
+            .gt('starts_at', now) \
+            .lte('starts_at', in_24h) \
+            .order('starts_at').execute()
+        return jsonify(result.data or [])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/flash/claim/<drop_id>', methods=['POST'])
+@token_required
+def claim_flash_drop(drop_id):
+    """Claim a flash drop — adds product to cart with discount applied."""
+    try:
+        now      = int(datetime.utcnow().timestamp() * 1000)
+        drop_res = supabase.table('flash_drops').select('*').eq('id', drop_id).execute()
+
+        if not drop_res.data:
+            return jsonify({'error': 'Flash drop not found'}), 404
+
+        drop = drop_res.data[0]
+
+        if not drop.get('is_active'):
+            return jsonify({'error': 'This drop is no longer active'}), 400
+        if now < drop['starts_at']:
+            return jsonify({'error': 'This drop has not started yet'}), 400
+        if now > drop['ends_at']:
+            return jsonify({'error': 'This drop has ended'}), 400
+        if drop.get('claimed', 0) >= drop.get('max_claims', 50):
+            return jsonify({'error': 'Sold out! All slots have been claimed'}), 400
+
+        # Get product
+        prod_res = supabase.table('products').select('*').eq('id', drop['product_id']).execute()
+        if not prod_res.data:
+            return jsonify({'error': 'Product not found'}), 404
+        product = prod_res.data[0]
+
+        # Calculate final price
+        original_price   = float(product['price'])
+        discount_pct     = drop.get('discount_pct', 0)
+        discounted_price = round(original_price * (1 - discount_pct / 100))
+        bonus_coins      = drop.get('bonus_coins', 0)
+
+        # Increment claimed count atomically
+        supabase.table('flash_drops').update({
+            'claimed': drop['claimed'] + 1
+        }).eq('id', drop_id).execute()
+
+        # Award bonus coins immediately
+        earned = 0
+        if bonus_coins > 0:
+            earned = add_points_to_user(request.user_id, bonus_coins, f'Flash drop bonus: {drop["title"]}')
+
+        # Post to squad activity
+        try:
+            member    = supabase.table('squad_members').select('squad_id').eq('user_id', request.user_id).execute()
+            user_res  = supabase.table('users').select('name').eq('id', request.user_id).execute()
+            user_name = user_res.data[0]['name'] if user_res.data else 'Someone'
+            if member.data:
+                post_squad_activity(
+                    member.data[0]['squad_id'], request.user_id, 'purchase',
+                    f'{user_name} claimed the flash drop: {drop["title"]} ⚡',
+                    bonus_coins
+                )
+        except Exception:
+            pass
+
+        return jsonify({
+            'success':          True,
+            'product':          product,
+            'original_price':   original_price,
+            'discounted_price': discounted_price,
+            'discount_pct':     discount_pct,
+            'bonus_coins_earned': earned,
+            'message':          f'Flash drop claimed! {discount_pct}% off + {earned} bonus coins'
+        })
+    except Exception as e:
+        print(f"CLAIM FLASH DROP ERROR: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/admin/flash', methods=['POST'])
+@admin_required
+def admin_create_flash_drop():
+    """Admin: create a new flash drop."""
+    try:
+        data       = request.get_json(silent=True) or {}
+        product_id = data.get('product_id', '').strip()
+        title      = data.get('title', '').strip()
+
+        if not product_id or not title:
+            return jsonify({'error': 'product_id and title are required'}), 400
+
+        # Validate product exists
+        prod = supabase.table('products').select('id, name').eq('id', product_id).execute()
+        if not prod.data:
+            return jsonify({'error': 'Product not found'}), 404
+
+        now         = int(datetime.utcnow().timestamp() * 1000)
+        duration_h  = int(data.get('duration_hours', 4))
+        starts_at   = int(data.get('starts_at', now))
+        ends_at     = int(data.get('ends_at',   starts_at + duration_h * 3600 * 1000))
+
+        drop = {
+            'id':           str(uuid.uuid4()),
+            'product_id':   product_id,
+            'title':        title,
+            'description':  data.get('description', ''),
+            'discount_pct': int(data.get('discount_pct', 20)),
+            'bonus_coins':  int(data.get('bonus_coins', 100)),
+            'starts_at':    starts_at,
+            'ends_at':      ends_at,
+            'max_claims':   int(data.get('max_claims', 50)),
+            'claimed':      0,
+            'is_active':    True,
+            'created_at':   now,
+        }
+
+        supabase.table('flash_drops').insert(drop).execute()
+        return jsonify({'success': True, 'drop': drop}), 201
+    except Exception as e:
+        print(f"ADMIN CREATE FLASH DROP ERROR: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/admin/flash/<drop_id>', methods=['PATCH'])
+@admin_required
+def admin_update_flash_drop(drop_id):
+    """Admin: deactivate or update a flash drop."""
+    try:
+        data = request.get_json(silent=True) or {}
+        for field in ['id', 'created_at']:
+            data.pop(field, None)
+        supabase.table('flash_drops').update(data).eq('id', drop_id).execute()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 # ==================== HEALTH ====================
 
 @app.route('/api/health', methods=['GET'])

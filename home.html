@@ -2448,6 +2448,16 @@
             box-shadow: 0 0 0 3px rgba(255,107,53,0.12);
         }
         #storeSearch::placeholder { color: var(--text-muted); }
+
+        /* ── Flash drop animations ── */
+        @keyframes gradientMove {
+            0%   { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50%       { opacity: 0.5; }
+        }
     </style>
 <body>
 
@@ -2512,6 +2522,11 @@
                 <div class="progress-track">
                     <div class="progress-fill" id="milestoneFill" style="width:0%"></div>
                 </div>
+            </div>
+
+            <!-- ══ FLASH DROP BANNER ══ -->
+            <div id="flashDropBanner" style="display:none;margin:0 16px 14px;">
+                <!-- Injected dynamically by JS -->
             </div>
 
             <!-- Quick Actions -->
@@ -2994,6 +3009,123 @@
             <i class="fas fa-user"></i>
             <span>Profile</span>
         </button>
+    </div>
+</div>
+
+<!-- ══ FLASH DROP MODAL ══ -->
+<div id="flashDropModal" style="display:none;position:fixed;inset:0;z-index:2000;
+    background:rgba(7,7,15,0.97);backdrop-filter:blur(20px);
+    flex-direction:column;align-items:center;justify-content:flex-end;
+    animation:modalIn 0.35s ease;">
+
+    <div style="width:100%;max-width:430px;border-radius:28px 28px 0 0;
+        background:linear-gradient(160deg,#0a0614,#0d0618);
+        border:1px solid rgba(255,107,53,0.25);border-bottom:none;
+        padding:0 0 40px;overflow:hidden;">
+
+        <!-- Urgency bar -->
+        <div style="height:4px;background:linear-gradient(90deg,#FF6B35,#FF3CAC,#7B2FFF);"></div>
+
+        <!-- Header -->
+        <div style="padding:20px 20px 0;display:flex;align-items:flex-start;justify-content:space-between;">
+            <div>
+                <div style="font-size:0.6rem;font-weight:800;letter-spacing:2px;
+                    text-transform:uppercase;color:rgba(255,107,53,0.8);margin-bottom:4px;">
+                    ⚡ FLASH DROP
+                </div>
+                <div style="font-family:var(--font-display);font-size:1.2rem;font-weight:900;
+                    color:var(--text-primary);" id="flashModalTitle">—</div>
+            </div>
+            <button onclick="closeFlashModal()" style="width:34px;height:34px;border-radius:10px;
+                border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);
+                color:var(--text-muted);cursor:pointer;font-size:16px;flex-shrink:0;">✕</button>
+        </div>
+
+        <!-- Product image + info -->
+        <div style="margin:16px 20px;border-radius:20px;overflow:hidden;
+            background:rgba(255,255,255,0.04);border:1px solid rgba(255,107,53,0.15);
+            display:flex;align-items:center;gap:0;">
+            <div style="width:110px;height:110px;flex-shrink:0;overflow:hidden;">
+                <img id="flashModalImg" src="" alt="" loading="lazy"
+                    style="width:100%;height:100%;object-fit:cover;">
+            </div>
+            <div style="flex:1;padding:14px 16px;">
+                <div style="font-size:0.85rem;font-weight:800;color:var(--text-primary);
+                    margin-bottom:4px;" id="flashModalProductName">—</div>
+                <div style="font-size:0.7rem;color:var(--text-muted);
+                    margin-bottom:10px;" id="flashModalDesc">—</div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="font-family:var(--font-display);font-size:1.1rem;font-weight:900;
+                        background:var(--grad-fire);-webkit-background-clip:text;
+                        background-clip:text;color:transparent;" id="flashModalPrice">—</span>
+                    <span style="font-size:0.75rem;color:var(--text-muted);
+                        text-decoration:line-through;" id="flashModalOldPrice">—</span>
+                    <span style="background:rgba(255,107,53,0.2);border:1px solid rgba(255,107,53,0.4);
+                        border-radius:8px;padding:2px 8px;font-size:0.65rem;font-weight:800;
+                        color:var(--primary);" id="flashModalDiscount">—% OFF</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Countdown + slots -->
+        <div style="margin:0 20px;display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+            <div style="background:rgba(255,107,53,0.08);border:1px solid rgba(255,107,53,0.2);
+                border-radius:16px;padding:12px;text-align:center;">
+                <div style="font-family:var(--font-display);font-size:1.3rem;font-weight:900;
+                    color:#FF6B35;" id="flashModalCountdown">00:00:00</div>
+                <div style="font-size:0.6rem;font-weight:700;text-transform:uppercase;
+                    letter-spacing:1px;color:rgba(255,107,53,0.6);margin-top:2px;">Time Left</div>
+            </div>
+            <div style="background:rgba(123,47,255,0.08);border:1px solid rgba(123,47,255,0.2);
+                border-radius:16px;padding:12px;text-align:center;">
+                <div style="font-family:var(--font-display);font-size:1.3rem;font-weight:900;
+                    color:#A78BFA;" id="flashModalSlots">—</div>
+                <div style="font-size:0.6rem;font-weight:700;text-transform:uppercase;
+                    letter-spacing:1px;color:rgba(123,47,255,0.6);margin-top:2px;">Slots Left</div>
+            </div>
+        </div>
+
+        <!-- Bonus coins pill -->
+        <div id="flashModalBonusRow" style="display:none;margin:0 20px 16px;
+            background:rgba(255,198,0,0.08);border:1px solid rgba(255,198,0,0.2);
+            border-radius:14px;padding:10px 16px;
+            display:flex;align-items:center;gap:10px;">
+            <span style="font-size:1.2rem;">✦</span>
+            <div>
+                <div style="font-size:0.75rem;font-weight:800;color:#FFD700;">
+                    +<span id="flashModalBonus">0</span> Bonus Coins
+                </div>
+                <div style="font-size:0.62rem;color:rgba(255,248,245,0.4);">
+                    Awarded instantly on claim
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress bar -->
+        <div style="margin:0 20px 16px;">
+            <div style="display:flex;justify-content:space-between;
+                margin-bottom:6px;font-size:0.62rem;color:var(--text-muted);">
+                <span id="flashModalClaimedText">0 claimed</span>
+                <span id="flashModalMaxText">of 50</span>
+            </div>
+            <div style="height:6px;border-radius:3px;background:rgba(255,255,255,0.06);overflow:hidden;">
+                <div id="flashModalProgress" style="height:100%;border-radius:3px;
+                    background:linear-gradient(90deg,#FF6B35,#FF3CAC);
+                    transition:width 0.5s ease;width:0%;"></div>
+            </div>
+        </div>
+
+        <!-- CTA -->
+        <div style="padding:0 20px;">
+            <button id="flashClaimBtn" onclick="claimCurrentFlashDrop()"
+                style="width:100%;padding:16px;border-radius:18px;border:none;
+                background:linear-gradient(135deg,#FF6B35,#FF3CAC);color:#fff;
+                font-family:var(--font-display);font-size:1rem;font-weight:800;
+                cursor:pointer;box-shadow:0 6px 24px rgba(255,107,53,0.45);
+                transition:all 0.3s;">
+                ⚡ Claim This Drop
+            </button>
+        </div>
     </div>
 </div>
 
@@ -5194,6 +5326,7 @@ loadShopConfig().then(() => {
 });
 loadProfile().then(() => loadPrizeLeaderboards());
 loadSquadData();
+loadFlashDrops();
 renderCart();
 renderRecents();
 
@@ -5712,6 +5845,272 @@ function updateSpinHomeCard() {
         label.textContent = `Next spin in ${h}h`;
     }
 }
+
+// ═══════════════════════════════════════════════════════
+//  FLASH DROPS
+// ═══════════════════════════════════════════════════════
+
+let activeFlashDrops  = [];
+let currentFlashDrop  = null;
+let flashCountdownInt = null;
+let flashPollInt      = null;
+
+// ── Load + render flash drop banner on home screen ────────
+async function loadFlashDrops() {
+    try {
+        const drops = await apiRequest('/flash/active');
+        activeFlashDrops = Array.isArray(drops) ? drops : [];
+        renderFlashBanner();
+    } catch(e) {
+        console.error('loadFlashDrops:', e);
+        activeFlashDrops = [];
+    }
+}
+
+function renderFlashBanner() {
+    const banner = document.getElementById('flashDropBanner');
+    if (!banner) return;
+
+    if (!activeFlashDrops.length) {
+        banner.style.display = 'none';
+        return;
+    }
+
+    banner.style.display = 'block';
+    const drop    = activeFlashDrops[0]; // show most urgent
+    const product = drop.product || {};
+    const pct     = drop.slots_left / drop.max_claims;
+    const urgency = pct < 0.2 ? '#EF4444' : pct < 0.5 ? '#FF6B35' : '#FF3CAC';
+
+    banner.innerHTML = `
+        <div onclick="openFlashModal('${drop.id}')"
+            style="border-radius:22px;overflow:hidden;cursor:pointer;
+            background:linear-gradient(140deg,#0f0514,#1a0a24);
+            border:1px solid rgba(255,107,53,0.35);
+            box-shadow:0 0 30px rgba(255,107,53,0.15);
+            position:relative;">
+
+            <!-- Animated top bar -->
+            <div style="height:3px;background:linear-gradient(90deg,#FF6B35,#FF3CAC,#7B2FFF,#FF6B35);
+                background-size:200%;animation:gradientMove 2s linear infinite;"></div>
+
+            <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;">
+                <!-- Product thumb -->
+                <div style="width:58px;height:58px;border-radius:14px;overflow:hidden;flex-shrink:0;
+                    border:1px solid rgba(255,107,53,0.3);">
+                    <img src="${product.image_url || ''}" alt="${product.name||''}"
+                        style="width:100%;height:100%;object-fit:cover;"
+                        onerror="this.parentElement.innerHTML='<div style=\"width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:1.5rem;background:rgba(255,107,53,0.1)\">⚡</div>'">
+                </div>
+
+                <!-- Info -->
+                <div style="flex:1;min-width:0;">
+                    <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;">
+                        <span style="font-size:0.56rem;font-weight:900;letter-spacing:1.5px;
+                            text-transform:uppercase;color:#FF6B35;
+                            animation:pulse 1.5s ease-in-out infinite;">⚡ FLASH DROP</span>
+                        ${drop.discount_pct > 0 ? `<span style="background:rgba(255,107,53,0.25);
+                            border:1px solid rgba(255,107,53,0.5);border-radius:6px;
+                            padding:1px 7px;font-size:0.58rem;font-weight:800;color:#FF6B35;">
+                            ${drop.discount_pct}% OFF</span>` : ''}
+                    </div>
+                    <div style="font-family:var(--font-display);font-size:0.88rem;font-weight:800;
+                        color:var(--text-primary);white-space:nowrap;overflow:hidden;
+                        text-overflow:ellipsis;">${drop.title}</div>
+                    <div style="display:flex;align-items:center;gap:8px;margin-top:3px;">
+                        <span style="font-size:0.82rem;font-weight:800;
+                            background:var(--grad-fire);-webkit-background-clip:text;
+                            background-clip:text;color:transparent;">
+                            KSH ${drop.discounted_price}</span>
+                        ${drop.discount_pct > 0 ? `<span style="font-size:0.7rem;
+                            color:var(--text-muted);text-decoration:line-through;">
+                            KSH ${drop.original_price}</span>` : ''}
+                    </div>
+                </div>
+
+                <!-- Countdown + arrow -->
+                <div style="text-align:right;flex-shrink:0;">
+                    <div style="font-family:var(--font-display);font-size:0.88rem;font-weight:900;
+                        color:${urgency};" id="bannerCountdown_${drop.id}">
+                        ${formatMs(drop.ms_remaining)}
+                    </div>
+                    <div style="font-size:0.55rem;color:var(--text-muted);margin-bottom:4px;">
+                        ${drop.slots_left} left
+                    </div>
+                    <div style="font-size:10px;color:rgba(255,107,53,0.6);">TAP →</div>
+                </div>
+            </div>
+
+            <!-- Slots progress bar -->
+            <div style="height:3px;background:rgba(255,255,255,0.06);">
+                <div style="height:100%;background:${urgency};
+                    width:${Math.round((drop.claimed/drop.max_claims)*100)}%;
+                    transition:width 0.5s;"></div>
+            </div>
+        </div>
+
+        ${activeFlashDrops.length > 1 ? `
+        <div style="text-align:center;margin-top:6px;font-size:0.65rem;
+            color:var(--text-muted);cursor:pointer;" onclick="openFlashListScreen()">
+            +${activeFlashDrops.length - 1} more drop${activeFlashDrops.length > 2 ? 's' : ''} active →
+        </div>` : ''}
+    `;
+
+    // Start banner countdown
+    clearInterval(flashCountdownInt);
+    flashCountdownInt = setInterval(() => {
+        activeFlashDrops.forEach(d => {
+            d.ms_remaining = Math.max(0, d.ms_remaining - 1000);
+            const el = document.getElementById(`bannerCountdown_${d.id}`);
+            if (el) el.textContent = formatMs(d.ms_remaining);
+            if (d.ms_remaining <= 0) {
+                clearInterval(flashCountdownInt);
+                loadFlashDrops(); // refresh
+            }
+        });
+    }, 1000);
+}
+
+// ── Open flash drop modal ─────────────────────────────────
+function openFlashModal(dropId) {
+    const drop = activeFlashDrops.find(d => d.id === dropId);
+    if (!drop) return;
+    currentFlashDrop = drop;
+
+    const product = drop.product || {};
+    document.getElementById('flashModalTitle').textContent       = drop.title;
+    document.getElementById('flashModalImg').src                 = product.image_url || '';
+    document.getElementById('flashModalProductName').textContent = product.name || '—';
+    document.getElementById('flashModalDesc').textContent        = drop.description || product.category || '';
+    document.getElementById('flashModalPrice').textContent       = `KSH ${drop.discounted_price}`;
+    document.getElementById('flashModalOldPrice').textContent    = `KSH ${drop.original_price}`;
+    document.getElementById('flashModalDiscount').textContent    = `${drop.discount_pct}% OFF`;
+    document.getElementById('flashModalSlots').textContent       = drop.slots_left;
+    document.getElementById('flashModalClaimedText').textContent = `${drop.claimed} claimed`;
+    document.getElementById('flashModalMaxText').textContent     = `of ${drop.max_claims}`;
+    document.getElementById('flashModalProgress').style.width    =
+        `${Math.round((drop.claimed / drop.max_claims) * 100)}%`;
+
+    // Bonus coins
+    const bonusRow = document.getElementById('flashModalBonusRow');
+    if (drop.bonus_coins > 0) {
+        bonusRow.style.display = 'flex';
+        document.getElementById('flashModalBonus').textContent = drop.bonus_coins;
+    } else {
+        bonusRow.style.display = 'none';
+    }
+
+    // Sold out state
+    const claimBtn = document.getElementById('flashClaimBtn');
+    if (drop.sold_out) {
+        claimBtn.textContent = 'Sold Out';
+        claimBtn.disabled    = true;
+        claimBtn.style.background = 'rgba(255,255,255,0.05)';
+        claimBtn.style.color      = 'var(--text-muted)';
+        claimBtn.style.boxShadow  = 'none';
+    } else {
+        claimBtn.textContent = '⚡ Claim This Drop';
+        claimBtn.disabled    = false;
+        claimBtn.style.background = 'linear-gradient(135deg,#FF6B35,#FF3CAC)';
+        claimBtn.style.color      = '#fff';
+        claimBtn.style.boxShadow  = '0 6px 24px rgba(255,107,53,0.45)';
+    }
+
+    // Live countdown inside modal
+    updateModalCountdown(drop.ms_remaining);
+    clearInterval(flashCountdownInt);
+    flashCountdownInt = setInterval(() => {
+        drop.ms_remaining = Math.max(0, drop.ms_remaining - 1000);
+        updateModalCountdown(drop.ms_remaining);
+        if (drop.ms_remaining <= 0) {
+            clearInterval(flashCountdownInt);
+            document.getElementById('flashModalCountdown').textContent = 'ENDED';
+            claimBtn.textContent = 'Drop Ended';
+            claimBtn.disabled    = true;
+            claimBtn.style.background = 'rgba(255,255,255,0.05)';
+            claimBtn.style.color = 'var(--text-muted)';
+        }
+    }, 1000);
+
+    document.getElementById('flashDropModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function updateModalCountdown(ms) {
+    const el = document.getElementById('flashModalCountdown');
+    if (el) el.textContent = formatMs(ms);
+}
+
+function closeFlashModal() {
+    document.getElementById('flashDropModal').style.display = 'none';
+    document.body.style.overflow = '';
+    clearInterval(flashCountdownInt);
+}
+
+// ── Claim a flash drop ────────────────────────────────────
+async function claimCurrentFlashDrop() {
+    if (!currentFlashDrop) return;
+    const btn = document.getElementById('flashClaimBtn');
+    btn.textContent = 'Claiming...';
+    btn.disabled    = true;
+
+    try {
+        const res = await apiRequest(`/flash/claim/${currentFlashDrop.id}`, { method: 'POST' });
+
+        if (res.error) {
+            showToast(res.error);
+            btn.textContent = '⚡ Claim This Drop';
+            btn.disabled    = false;
+            return;
+        }
+
+        // Add to cart at discounted price
+        const product = res.product;
+        addToCart({
+            ...product,
+            price:        res.discounted_price,
+            name:         product.name + ` (Flash Drop)`,
+            itemType:     'limited',
+            product_type: product.product_type || 'poster',
+            flash_drop_id: currentFlashDrop.id,
+        });
+
+        btn.textContent = '✓ Added to Cart!';
+        btn.style.background = 'linear-gradient(135deg,#22c55e,#16a34a)';
+        btn.style.boxShadow  = '0 6px 24px rgba(34,197,94,0.3)';
+
+        showToast(`⚡ Claimed! ${res.discount_pct}% off${res.bonus_coins_earned > 0 ? ` + ${res.bonus_coins_earned} bonus coins` : ''}`);
+
+        // Update slots count
+        currentFlashDrop.claimed++;
+        currentFlashDrop.slots_left--;
+        document.getElementById('flashModalSlots').textContent       = currentFlashDrop.slots_left;
+        document.getElementById('flashModalClaimedText').textContent = `${currentFlashDrop.claimed} claimed`;
+        document.getElementById('flashModalProgress').style.width    =
+            `${Math.round((currentFlashDrop.claimed / currentFlashDrop.max_claims) * 100)}%`;
+
+        loadProfile(); // refresh coins
+        setTimeout(() => closeFlashModal(), 2000);
+    } catch(e) {
+        showToast('Failed to claim drop. Try again.');
+        btn.textContent = '⚡ Claim This Drop';
+        btn.disabled    = false;
+    }
+}
+
+// ── Format ms → HH:MM:SS ─────────────────────────────────
+function formatMs(ms) {
+    if (!ms || ms <= 0) return '00:00:00';
+    const totalSec = Math.floor(ms / 1000);
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    return [h, m, s].map(n => String(n).padStart(2, '0')).join(':');
+}
+
+// ── Poll for new drops every 5 minutes ───────────────────
+flashPollInt = setInterval(loadFlashDrops, 5 * 60 * 1000);
+
 </script>
 </body>
 </html>
