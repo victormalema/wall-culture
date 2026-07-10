@@ -62,9 +62,6 @@ ADMIN_SECRET = os.getenv('ADMIN_SECRET', 'aura-admin-secret')
 SHOP_CONFIG = {
     'poster':    {'points_rate': 10, 'multiplier_cap': 2.0, 'label': 'Wall Art',  'emoji': '🖼️'},
     'clothing':  {'points_rate': 15, 'multiplier_cap': 2.5, 'label': 'Fits',      'emoji': '👕'},
-    'food':      {'points_rate': 5,  'multiplier_cap': 1.5, 'label': 'Bites',     'emoji': '🍔'},
-    'accessory': {'points_rate': 12, 'multiplier_cap': 2.0, 'label': 'Extras',    'emoji': '💎'},
-    'digital':   {'points_rate': 20, 'multiplier_cap': 3.0, 'label': 'Digital',   'emoji': '📲'},
 }
 
 # ==================== POINTS CONSTANTS ====================
