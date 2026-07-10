@@ -3473,7 +3473,18 @@
    Premium dark gallery with dynamic color theming
 ═══════════════════════════════════════════════════════════ */
 
-window.onerror = function(msg, src, line, col, err) { document.body.style.cssText = 'background:#07070F;color:#fff;padding:20px;font-family:monospace;font-size:13px;'; document.body.innerHTML = '<h3 style="color:#FF6B35">JS Error</h3><b>' + msg + '</b><br><br>Line: ' + line + '<br><br>' + (err ? err.stack : ''); };
+window.onerror = function(msg, src, line, col, err) {
+    console.error('Uncaught error:', msg, 'at', src + ':' + line, err ? err.stack : '');
+    // Only show the full-page error overlay the FIRST time, so a later,
+    // unrelated error (e.g. a 60s interval tick hitting a now-missing element)
+    // doesn't overwrite/hide the original crash that actually broke things.
+    if (window.__jsErrorShown) return;
+    window.__jsErrorShown = true;
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:999999;background:#07070F;color:#fff;padding:20px;font-family:monospace;font-size:13px;overflow:auto;';
+    overlay.innerHTML = '<h3 style="color:#FF6B35">JS Error</h3><b>' + msg + '</b><br><br>Line: ' + line + '<br><br>' + (err ? err.stack : '') + '<br><br><button onclick="location.reload()" style="padding:8px 14px;">Reload</button>';
+    document.body.appendChild(overlay);
+};
 
 const API_URL = '/api';
 let token = localStorage.getItem('aura_token');
@@ -4507,7 +4518,7 @@ async function checkout() {
             try {
                 if (mySquadData?.squad) {
                     const user = JSON.parse(localStorage.getItem('aura_user')||'{}');
-                    const names = items.slice(0,2).map(i=>i.name).join(', ');
+                    const names = cart.slice(0,2).map(i=>i.name).join(', ');
                     await apiRequest('/squad/activity', { method:'POST',
                         body: JSON.stringify({ type:'purchase',
                             message:`${user.name||'Someone'} just copped: ${names} 🛍️`,
@@ -4708,8 +4719,10 @@ function updatePrizeCountdowns() {
     const wDeadline = getWeeklyDeadline();
     const mDeadline = getMonthlyDeadline();
     const now = Date.now();
-    document.getElementById('weeklyCountdown').textContent  = formatCountdown(wDeadline - now);
-    document.getElementById('monthlyCountdown').textContent = formatCountdown(mDeadline - now);
+    const weeklyEl  = document.getElementById('weeklyCountdown');
+    const monthlyEl = document.getElementById('monthlyCountdown');
+    if (weeklyEl)  weeklyEl.textContent  = formatCountdown(wDeadline - now);
+    if (monthlyEl) monthlyEl.textContent = formatCountdown(mDeadline - now);
 }
 
 async function loadPrizeLeaderboards() {
