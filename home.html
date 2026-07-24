@@ -3752,6 +3752,17 @@ function productImg(product) {
     return product.image_url || `https://picsum.photos/seed/${product.id || Math.random()}/400/600`;
 }
 
+// Escapes a value for safe embedding inside an HTML attribute string
+// (e.g. inline onclick="...('${escapeSafe(name)}')" handlers).
+function escapeSafe(str) {
+    return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
 // backwards compat alias
 function posterImg(poster) { return productImg(poster); }
 
