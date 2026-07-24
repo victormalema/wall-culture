@@ -1,4 +1,4 @@
-# app.py - Aura Flask Backend v3.0.0 (Multi-Product Architecture)
+# app.py - Echora Flask Backend v3.0.0 (Multi-Product Architecture)
 from flask import Flask, request, jsonify, send_from_directory, Response, redirect as flask_redirect
 from flask_cors import CORS
 from flask_limiter import Limiter
@@ -12,6 +12,7 @@ import secrets
 from datetime import datetime, timedelta
 from functools import wraps
 import json
+import mimetypes
 from dotenv import load_dotenv
 from werkzeug.utils import secure_filename
 
@@ -32,7 +33,7 @@ app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
 
 # CORS
 ALLOWED_ORIGINS = os.getenv('ALLOWED_ORIGINS',
-    'http://localhost:5000,http://127.0.0.1:5000,https://aura-api.onrender.com'
+    'http://localhost:5000,http://127.0.0.1:5000,https://echora-api.onrender.com'
 ).split(',')
 CORS(app, origins=[o.strip() for o in ALLOWED_ORIGINS])
 
@@ -55,7 +56,7 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 print("✅ Connected to Supabase")
 
 # Admin secret
-ADMIN_SECRET = os.getenv('ADMIN_SECRET', 'aura-admin-secret')
+ADMIN_SECRET = os.getenv('ADMIN_SECRET', 'echora-admin-secret')
 
 # ==================== SHOP CONFIG ====================
 # To add a new business: add one entry here. Nothing else in the backend needs changing.
@@ -198,7 +199,8 @@ def serve_file(filename):
         return f"File not found: {filepath}", 404
     with open(filepath, 'rb') as f:
         content = f.read()
-    mimetype = 'text/html' if filename.endswith('.html') else 'application/octet-stream'
+    guessed, _ = mimetypes.guess_type(filename)
+    mimetype = guessed or ('text/html' if filename.endswith('.html') else 'application/octet-stream')
     return Response(content, mimetype=mimetype)
 
 @app.route('/')
@@ -212,6 +214,10 @@ def serve_home():
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(os.path.join(BASE_DIR, 'uploads'), filename)
+
+@app.route('/favicon.ico')
+def favicon():
+    return serve_file('favicon.png')
 
 @app.route('/<path:path>')
 def serve_static(path):
@@ -404,8 +410,8 @@ def google_oauth_callback():
     .then(r => r.json())
     .then(data => {{
       if (data.token) {{
-        localStorage.setItem('aura_token', data.token);
-        localStorage.setItem('aura_user', JSON.stringify(data.user));
+        localStorage.setItem('echora_token', data.token);
+        localStorage.setItem('echora_user', JSON.stringify(data.user));
         window.location.replace('{base_url}/home.html');
       }} else {{
         window.location.replace('{base_url}/index.html?error=' + encodeURIComponent(data.error || 'exchange_failed'));
@@ -1709,7 +1715,7 @@ def admin_update_flash_drop(drop_id):
 def health_check():
     return jsonify({
         'status':  'healthy',
-        'app':     'Aura',
+        'app':     'Echora',
         'version': '4.0.0',
         'shops':   list(SHOP_CONFIG.keys()),
         'features': ['squads', 'daily_spin', 'products', 'qr', 'leaderboard']
@@ -1720,7 +1726,7 @@ def health_check():
 
 if __name__ == '__main__':
     print("\n" + "=" * 55)
-    print("🎨  AURA BACKEND v3.0.0 — Multi-Product Architecture")
+    print("🎨  ECHORA BACKEND v3.0.0 — Multi-Product Architecture")
     print("=" * 55)
     print(f"📍  Running on: http://localhost:5000")
     print(f"🛍️   Active shop types: {', '.join(SHOP_CONFIG.keys())}")

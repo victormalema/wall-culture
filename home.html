@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
-    <title>Aura Gallery</title>
+    <title>Echora Gallery</title>
+    <link rel="icon" type="image/png" href="/favicon.ico">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
@@ -163,11 +164,7 @@
             width: 34px;
             height: 34px;
             border-radius: 10px;
-            background: var(--grad-fire);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
+            object-fit: cover;
             box-shadow: 0 4px 18px var(--primary-glow), 0 0 0 1px rgba(255,107,53,0.3);
             animation: floatUp 3s ease-in-out infinite;
         }
@@ -2469,8 +2466,8 @@
     <!-- ══ HEADER ══ -->
     <div class="app-header">
         <div class="logo-group">
-            <div class="logo-icon">✦</div>
-            <span class="logo-text">Aura</span>
+            <img src="/favicon.ico" alt="Echora" class="logo-icon">
+            <span class="logo-text">Echora</span>
         </div>
         <div class="header-actions">
             <div class="coin-badge">
@@ -3230,7 +3227,7 @@
         <div style="margin-bottom:14px;">
             <div style="font-size:0.65rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;
                 color:var(--text-muted);margin-bottom:8px;">Squad Name</div>
-            <input id="squadNameInput" maxlength="30" placeholder="e.g. Aura Elites"
+            <input id="squadNameInput" maxlength="30" placeholder="e.g. Echora Elites"
                 style="width:100%;padding:13px 14px;border-radius:14px;border:1px solid var(--border);
                 background:rgba(255,255,255,0.05);color:var(--text-primary);
                 font-family:var(--font-body);font-size:0.9rem;outline:none;box-sizing:border-box;">
@@ -3355,7 +3352,7 @@
 <div class="modal-overlay" id="storyModal">
     <div class="modal-box">
         <h3>📸 Instagram Story</h3>
-        <p>Post a story tagging <strong>@auragallery</strong> and paste your story link to earn coins.</p>
+        <p>Post a story tagging <strong>@echoragallery</strong> and paste your story link to earn coins.</p>
         <input type="text" id="storyLink" class="modal-input" placeholder="Paste Instagram story URL…">
         <button class="modal-btn-full primary" id="submitStoryBtn">Submit & Earn</button>
         <button class="modal-btn-full ghost" id="closeStoryModal">Cancel</button>
@@ -3366,7 +3363,7 @@
 <div class="modal-overlay" id="roomTourModal">
     <div class="modal-box">
         <h3>🏠 Room Tour</h3>
-        <p>Post a photo of your room featuring Aura posters, then paste the link below to earn <strong>+250 coins</strong> (once per month).</p>
+        <p>Post a photo of your room featuring Echora posters, then paste the link below to earn <strong>+250 coins</strong> (once per month).</p>
         <div style="background:rgba(255,107,53,0.08);border:1px solid rgba(255,107,53,0.2);border-radius:12px;padding:10px 14px;margin:12px 0;font-size:0.78rem;color:var(--text-secondary);display:flex;gap:8px;align-items:center;">
             <i class="fas fa-clock" style="color:var(--primary);"></i>
             Points awarded after admin review (usually within 24h)
@@ -3469,7 +3466,7 @@
 
 <script>
 /* ═══════════════════════════════════════════════════════════
-   AURA GALLERY — MAIN APPLICATION
+   ECHORA GALLERY — MAIN APPLICATION
    Premium dark gallery with dynamic color theming
 ═══════════════════════════════════════════════════════════ */
 
@@ -3487,7 +3484,7 @@ window.onerror = function(msg, src, line, col, err) {
 };
 
 const API_URL = '/api';
-let token = localStorage.getItem('aura_token');
+let token = localStorage.getItem('echora_token');
 if (!token) window.location.href = 'index.html';
 
 // ─── State ───────────────────────────────────────────────
@@ -3495,8 +3492,8 @@ let cart = [];
 let allPosters = [];
 let currentGalleryCategory = 'all';
 let discoverCategory = 'all';
-let favorites = JSON.parse(localStorage.getItem('aura_favorites') || '[]');
-let recentlyViewed = JSON.parse(localStorage.getItem('aura_recents') || '[]');
+let favorites = JSON.parse(localStorage.getItem('echora_favorites') || '[]');
+let recentlyViewed = JSON.parse(localStorage.getItem('echora_recents') || '[]');
 let currentModalPoster = null;
 
 // Touch state for pinch zoom in modal
@@ -3591,7 +3588,7 @@ async function apiRequest(endpoint, options = {}) {
         }
     });
     if (res.status === 401) {
-        localStorage.removeItem('aura_token');
+        localStorage.removeItem('echora_token');
         window.location.href = 'index.html';
     }
     return res.json();
@@ -3776,7 +3773,7 @@ function productTypeBadge(product) {
 // ─── Recently Viewed ─────────────────────────────────────
 function addToRecents(poster) {
     recentlyViewed = [poster, ...recentlyViewed.filter(p => p.id !== poster.id)].slice(0, 8);
-    localStorage.setItem('aura_recents', JSON.stringify(recentlyViewed));
+    localStorage.setItem('echora_recents', JSON.stringify(recentlyViewed));
     renderRecents();
 }
 
@@ -4528,7 +4525,7 @@ async function checkout() {
             // Post purchase flex to squad activity
             try {
                 if (mySquadData?.squad) {
-                    const user = JSON.parse(localStorage.getItem('aura_user')||'{}');
+                    const user = JSON.parse(localStorage.getItem('echora_user')||'{}');
                     const names = cart.slice(0,2).map(i=>i.name).join(', ');
                     await apiRequest('/squad/activity', { method:'POST',
                         body: JSON.stringify({ type:'purchase',
@@ -4800,7 +4797,7 @@ async function submitStory() {
 // ─── Misc Actions ─────────────────────────────────────────
 function shareItem() {
     if (navigator.share && currentModalPoster) {
-        navigator.share({ title: currentModalPoster.name, text: `Check out this print on Aura Gallery!` })
+        navigator.share({ title: currentModalPoster.name, text: `Check out this print on Echora Gallery!` })
             .catch(() => {});
     } else showToast('🔗 Link copied!');
 }
@@ -4833,7 +4830,7 @@ function copyReferralCode() {
 }
 
 function logout() {
-    localStorage.removeItem('aura_token');
+    localStorage.removeItem('echora_token');
     window.location.href = 'index.html';
 }
 
@@ -4924,7 +4921,7 @@ function openPrizeEditor(type) {
     const modal = document.getElementById('prizeEditorModal');
     document.getElementById('prizeEditorType').value = type;
     document.getElementById('prizeEditorTitle').textContent = type === 'weekly' ? '✏️ Edit This Week Prize' : '✏️ Edit This Month Prize';
-    const saved = JSON.parse(localStorage.getItem('aura_prize_' + type) || '{}');
+    const saved = JSON.parse(localStorage.getItem('echora_prize_' + type) || '{}');
     document.getElementById('prizeEditorIcon').value  = saved.icon  || (type === 'weekly' ? '🖼️' : '🎁');
     document.getElementById('prizeEditorName').value  = saved.name  || (type === 'weekly' ? 'Free Poster' : 'Room Bundle');
     document.getElementById('prizeEditorValue').value = saved.value || (type === 'weekly' ? 'Worth KSH 200' : 'Worth KSH 600');
@@ -4940,7 +4937,7 @@ function savePrize() {
     const icon  = document.getElementById('prizeEditorIcon').value.trim()  || (type === 'weekly' ? '🖼️' : '🎁');
     const name  = document.getElementById('prizeEditorName').value.trim()  || (type === 'weekly' ? 'Free Poster' : 'Room Bundle');
     const value = document.getElementById('prizeEditorValue').value.trim() || (type === 'weekly' ? 'Worth KSH 200' : 'Worth KSH 600');
-    localStorage.setItem('aura_prize_' + type, JSON.stringify({ icon, name, value }));
+    localStorage.setItem('echora_prize_' + type, JSON.stringify({ icon, name, value }));
     applyPrize(type, { icon, name, value });
     closePrizeEditor();
     showToast('✅ Prize updated!');
@@ -4956,7 +4953,7 @@ function applyPrize(type, data) {
 
 function loadSavedPrizes() {
     ['weekly', 'monthly'].forEach(type => {
-        const saved = JSON.parse(localStorage.getItem('aura_prize_' + type) || '{}');
+        const saved = JSON.parse(localStorage.getItem('echora_prize_' + type) || '{}');
         if (saved.name) applyPrize(type, saved);
     });
 }
@@ -4968,7 +4965,7 @@ document.getElementById('prizeEditorModal').addEventListener('click', e => {
 
 // ─── Challenge Editor ─────────────────────────────────────
 function openChallengeEditor() {
-    const saved = JSON.parse(localStorage.getItem('aura_daily_challenge') || '{}');
+    const saved = JSON.parse(localStorage.getItem('echora_daily_challenge') || '{}');
     document.getElementById('challengeEditorIcon').value   = saved.icon   || '🎯';
     document.getElementById('challengeEditorTitle').value  = saved.title  || 'Complete Your Daily Check-In';
     document.getElementById('challengeEditorDesc').value   = saved.desc   || 'Check in every day to build your streak and earn bonus coins. The longer the streak, the bigger the reward!';
@@ -4989,7 +4986,7 @@ function saveChallenge() {
         reward: document.getElementById('challengeEditorReward').value.trim() || '+50 coins',
         btn:    document.getElementById('challengeEditorBtn').value.trim()    || 'Claim Reward',
     };
-    localStorage.setItem('aura_daily_challenge', JSON.stringify(data));
+    localStorage.setItem('echora_daily_challenge', JSON.stringify(data));
     applyChallenge(data);
     closeChallengeEditor();
     showToast('✅ Challenge updated!');
@@ -5004,7 +5001,7 @@ function applyChallenge(data) {
 }
 
 function loadSavedChallenge() {
-    const saved = JSON.parse(localStorage.getItem('aura_daily_challenge') || '{}');
+    const saved = JSON.parse(localStorage.getItem('echora_daily_challenge') || '{}');
     if (saved.title) applyChallenge(saved);
 }
 
@@ -5086,7 +5083,7 @@ function renderSquadScreen(res) {
 function renderSquadMembers(members) {
     const el = document.getElementById('squadMembersList');
     if (!el) return;
-    const currentUserId = JSON.parse(localStorage.getItem('aura_user')||'{}').id;
+    const currentUserId = JSON.parse(localStorage.getItem('echora_user')||'{}').id;
     el.innerHTML = members.map((m, i) => `
         <div style="display:flex;align-items:center;gap:12px;padding:12px 0;
             border-bottom:1px solid rgba(255,255,255,0.05);">
@@ -5496,7 +5493,7 @@ function showSpinResult(reward, earned) {
     document.getElementById('spinResultEmoji').textContent = emojis[reward.type] || '🎁';
     document.getElementById('spinResultLabel').textContent = reward.label;
     document.getElementById('spinResultSub').textContent  =
-        earned > 0 ? `+${earned} Aura Coins added to your wallet!` :
+        earned > 0 ? `+${earned} Echora Coins added to your wallet!` :
         reward.type === 'multiplier' ? `${reward.value}× point multiplier active for 24 hours!` :
         reward.type === 'discount'   ? `Use at checkout for ${reward.value}% off your next order` :
         'Better luck tomorrow!';

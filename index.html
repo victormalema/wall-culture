@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
-    <title>Aura · Sign In</title>
+    <title>Echora · Sign In</title>
+    <link rel="icon" type="image/png" href="/favicon.ico">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
@@ -111,31 +112,18 @@
             animation: fadeIn 0.5s ease;
         }
 
-        .logo-wrap {
-            display: inline-flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 8px;
-        }
-
-        .logo-icon {
-            width: 44px;
-            height: 44px;
-            border-radius: 14px;
-            background: var(--grad-fire);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            box-shadow: 0 6px 24px var(--primary-glow), 0 0 0 1px rgba(255,107,53,0.3);
+        .brand-logo-img {
+            width: min(280px, 78vw);
+            height: auto;
+            margin-bottom: 4px;
             animation: floatUp 3s ease-in-out infinite;
+            filter: drop-shadow(0 6px 24px var(--primary-glow));
         }
 
-        .brand h1 {
-            font-family: var(--font-display);
-            font-size: 2.4rem;
-            font-weight: 900;
-            letter-spacing: -1px;
+        .brand-tagline {
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.3px;
             background: var(--grad-text);
             background-size: 200% 200%;
             -webkit-background-clip: text;
@@ -523,11 +511,8 @@
     <div class="auth-container">
 
         <div class="brand">
-            <div class="logo-wrap">
-                <div class="logo-icon">✦</div>
-                <h1>Aura</h1>
-            </div>
-            <p>decorate your world · build your legacy</p>
+            <img src="/logo.png" alt="Echora" class="brand-logo-img">
+            <p class="brand-tagline">Every Voice. Every Share. Every Purchase Counts.</p>
         </div>
 
         <div class="auth-card">
@@ -618,7 +603,7 @@
                         <i class="fas fa-user-friends"></i>
                         <input type="text" id="referralCode" placeholder="Friend's referral code (optional)" autocomplete="off">
                     </div>
-                    <button type="submit" class="btn-primary" id="signupBtn">Join Aura &nbsp;<i class="fas fa-gem"></i></button>
+                    <button type="submit" class="btn-primary" id="signupBtn">Join Echora &nbsp;<i class="fas fa-gem"></i></button>
                 </form>
             </div>
 
@@ -648,7 +633,7 @@
 
     // ── Redirect if already logged in ────────────────────────
     (function checkExistingSession() {
-        if (localStorage.getItem('aura_token')) {
+        if (localStorage.getItem('echora_token')) {
             window.location.href = 'home.html';
         }
     })();
@@ -736,8 +721,8 @@
     }
 
     function storeAuthData(token, user) {
-        localStorage.setItem('aura_token', token);
-        localStorage.setItem('aura_user', JSON.stringify(user));
+        localStorage.setItem('echora_token', token);
+        localStorage.setItem('echora_user', JSON.stringify(user));
     }
 
     // ── Login ─────────────────────────────────────────────────
@@ -797,7 +782,7 @@
 
             if (res.ok) {
                 storeAuthData(data.token, data.user);
-                showMessage(`Welcome to Aura, ${name}! You earned 100 bonus coins.`, 'success');
+                showMessage(`Welcome to Echora, ${name}! You earned 100 bonus coins.`, 'success');
                 setTimeout(() => window.location.href = 'home.html', 1500);
             } else {
                 showMessage(data.error || 'Registration failed. Please try again.');
