@@ -2596,7 +2596,7 @@
             <div id="homeSquadCard" style="display:none;margin:0 16px 16px;border-radius:22px;
                 overflow:hidden;border:1px solid rgba(123,47,255,0.25);
                 background:linear-gradient(135deg,rgba(123,47,255,0.08),rgba(255,60,172,0.05));
-                cursor:pointer;" onclick="switchTab('squad')">
+                cursor:pointer;" onclick="showScreen('squad')">
                 <div style="padding:14px 18px;display:flex;align-items:center;gap:14px;">
                     <div id="homeSquadEmoji" style="font-size:2rem;">⚡</div>
                     <div style="flex:1;">
@@ -4797,6 +4797,68 @@ async function submitStory() {
     } catch(e) { showToast('Network error'); }
 }
 
+// ─── Hero gallery thumb switch ───────────────────────────────
+function switchHero(thumbEl, imgSrc, name) {
+    const heroImg = document.getElementById('heroMainImg');
+    if (!heroImg) return;
+    heroImg.src = imgSrc;
+    heroImg.onload = () => extractAndApplyColor(heroImg);
+
+    const heroCard = thumbEl.closest('.hero-card');
+    if (heroCard) {
+        const titleEl = heroCard.querySelector('.hero-title');
+        if (titleEl) titleEl.textContent = name;
+        heroCard.querySelectorAll('.hero-thumb').forEach(t => t.classList.remove('active-thumb'));
+        thumbEl.classList.add('active-thumb');
+    }
+}
+
+// ─── Favorites ──────────────────────────────────────────────
+function toggleFav(id) {
+    const idx = favorites.indexOf(id);
+    if (idx === -1) {
+        favorites.push(id);
+        showToast('❤️ Added to favorites');
+    } else {
+        favorites.splice(idx, 1);
+        showToast('Removed from favorites');
+    }
+    localStorage.setItem('echora_favorites', JSON.stringify(favorites));
+    const countEl = document.getElementById('homeFavCount');
+    if (countEl) countEl.textContent = favorites.length;
+}
+
+// ─── Image Modal ────────────────────────────────────────────
+function openModal(product) {
+    currentModalPoster = product;
+    addToRecents(product);
+
+    document.getElementById('modalImg').src = productImg(product);
+    document.getElementById('modalTitleBar').textContent = product.name || '—';
+    document.getElementById('modalItemName').textContent = product.name || '—';
+    document.getElementById('modalItemMeta').textContent = productTypeBadge(product);
+    document.getElementById('modalItemPrice').textContent = `KSH ${product.price}`;
+
+    const favBtn = document.getElementById('modalFavBtn');
+    favBtn.classList.toggle('active', favorites.includes(product.id));
+
+    const addBtn = document.getElementById('modalAddBtn');
+    addBtn.onclick = () => addToCart({ ...product, itemType: product.is_limited ? 'limited' : 'standard' });
+
+    document.getElementById('imageModal').classList.add('open');
+}
+
+function closeModal() {
+    document.getElementById('imageModal').classList.remove('open');
+    currentModalPoster = null;
+}
+
+function toggleModalFav() {
+    if (!currentModalPoster) return;
+    toggleFav(currentModalPoster.id);
+    document.getElementById('modalFavBtn').classList.toggle('active', favorites.includes(currentModalPoster.id));
+}
+
 // ─── Misc Actions ─────────────────────────────────────────
 function shareItem() {
     if (navigator.share && currentModalPoster) {
@@ -5669,6 +5731,12 @@ function renderFlashBanner() {
 }
 
 // ── Open flash drop modal ─────────────────────────────────
+function openFlashListScreen() {
+    // No dedicated "all drops" screen exists yet — fall back to opening
+    // the next most urgent drop's detail modal.
+    if (activeFlashDrops.length > 1) openFlashModal(activeFlashDrops[1].id);
+}
+
 function openFlashModal(dropId) {
     const drop = activeFlashDrops.find(d => d.id === dropId);
     if (!drop) return;
