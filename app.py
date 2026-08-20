@@ -260,7 +260,7 @@ def register():
             "id": user_id, "name": name, "email": email, "password": hashed_password,
             "referral_code": user_referral_code, "referred_by": referral_code,
             "points": 100, "streak": 0, "weekly_points": 0,
-            "created_at": datetime.utcnow().isoformat() + 'Z'
+            "created_at": int(datetime.utcnow().timestamp() * 1000)
         }).execute()
 
         if referrer_id:
@@ -455,7 +455,7 @@ def google_oauth_exchange():
                 'id': user_id, 'name': name, 'email': email,
                 'password': '', 'referral_code': user_referral_code,
                 'referred_by': None, 'points': 100, 'streak': 0,
-                'weekly_points': 0, 'created_at': datetime.utcnow().isoformat() + 'Z',
+                'weekly_points': 0, 'created_at': int(datetime.utcnow().timestamp() * 1000),
             }).execute()
             user_row = {
                 'id': user_id, 'name': name, 'email': email,
