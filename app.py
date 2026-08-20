@@ -232,10 +232,10 @@ def serve_static(path):
 def register():
     try:
         data = request.get_json(silent=True) or {}
-        name          = data.get("name", "").strip()
-        email         = data.get("email", "").strip().lower()
-        password      = data.get("password", "")
-        referral_code = data.get("referralCode", "").strip() or None
+        name          = (data.get("name") or "").strip()
+        email         = (data.get("email") or "").strip().lower()
+        password      = data.get("password") or ""
+        referral_code = (data.get("referralCode") or "").strip() or None
 
         if not name or not email or not password:
             return jsonify({"error": "Missing fields"}), 400
@@ -287,8 +287,8 @@ def register():
 def login():
     try:
         data     = request.get_json(silent=True) or {}
-        email    = data.get("email", "").strip().lower()
-        password = data.get("password", "")
+        email    = (data.get("email") or "").strip().lower()
+        password = data.get("password") or ""
 
         if not email or not password:
             return jsonify({"error": "Missing fields"}), 400
@@ -336,7 +336,7 @@ def reset_password():
     """Send password reset email via Supabase Auth."""
     try:
         data  = request.get_json(silent=True) or {}
-        email = data.get("email", "").strip().lower()
+        email = (data.get("email") or "").strip().lower()
         if not email:
             return jsonify({"error": "Email is required"}), 400
         supabase.auth.reset_password_email(email)
